@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5" >
+    <h2>Liste des Congés</h2>
+    <a href="{% url 'ajouter_conge' %}" class="btn btn-primary mb-3">+Congé</a>
+
+    <table class="table table-striped" id="liste_Vaccination">
+        <thead>
+            <tr>
+                <th>Matricule</th>
+                <th>Employé</th>
+                <th>Type</th>
+                <th>Date Début</th>
+                <th>Date Fin</th>
+                <th>Statut</th>
+                <th>Nbre jours autorisés</th>
+                <th>Nbre jours pris</th>
+                <th>Solde</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for conge_detail in conges_details %}
+            <tr>
+                <td>{{ conge_detail.employe.matricule }}</td>
+                <td>{{ conge_detail.employe.nom }} {{ conge_detail.employe.prenom }}</td>
+                <td>{{ conge_detail.type_conge.nom }}</td>
+                <td>{{ conge_detail.conge.date_debut }}</td>
+                <td>{{ conge_detail.conge.date_fin }}</td>
+                <td><span class="badge {% if conge_detail.conge.statut == 'approuvé' %}bg-success{% elif conge_detail.conge.statut == 'refusé' %}bg-danger{% else %}bg-warning{% endif %}">
+                    {{ conge_detail.conge.statut }}</span>
+                </td>
+                <td>{{ conge_detail.nombre_jour_autorise }}</td>
+                <td>{{ conge_detail.conge.duree }}</td>
+                <td>{{ conge_detail.conge.solde }}</td>
+                <td>
+                    <a href="{% url 'modifier_conge' conge_detail.conge.id %}" class="btn btn-warning btn-sm">Modifier</a>
+                </td>
+                <td>
+                    <a href="{% url 'supprimer_conge' conge_detail.conge.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center">Aucun congé enregistré.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

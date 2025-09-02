@@ -1,0 +1,19 @@
+{% extends '../base.html' %}
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <h3 class="text-center mb-4">Nouvelle Campagne</h3>
+
+    {% if message %}
+        <div class="alert alert-warning text-center">{{ message }}</div>
+    {% endif %}
+
+    <form method="post" class="shadow p-4 bg-light">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="text-center">
+            <button type="submit" class="btn btn-success">Créer la Campagne</button>
+            <a href="{% url 'liste_campagnes' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,340 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+    <h1 style="text-align: center;">Tableau de bord  sur les demandes d'analyses</h1></br>
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label mb-1">Site</label>
+        <select class="form-select form-select-sm" name="site">
+          <option value="">Tous</option>
+          {% for s in sites %}
+            <option value="{{ s.id }}" {% if request.GET.site|default:'' == s.id|stringformat:"s" %}selected{% endif %}>{{ s.nom }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-1">Section</label>
+        <select class="form-select form-select-sm" name="section">
+          <option value="">Toutes</option>
+          {% for v,l in sections %}
+            <option value="{{ v }}" {% if request.GET.section == v %}selected{% endif %}>{{ l }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-1">Méthode</label>
+        <select class="form-select form-select-sm" name="methode">
+          <option value="">Toutes</option>
+          {% for v,l in methodes %}
+            <option value="{{ v }}" {% if request.GET.methode == v %}selected{% endif %}>{{ l }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-1">Suspicion</label>
+        <select class="form-select form-select-sm" name="suspicion">
+          <option value="">Toutes</option>
+          <option value="non_evaluee" {% if request.GET.suspicion == "non_evaluee" %}selected{% endif %}>Non évaluée</option>
+          <option value="confirmee" {% if request.GET.suspicion == "confirmee" %}selected{% endif %}>Confirmée</option>
+          <option value="infirmee" {% if request.GET.suspicion == "infirmee" %}selected{% endif %}>Infirmée</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-1">Du</label>
+        <input class="form-control form-control-sm" type="date" name="start" value="{{ default_start }}">
+      </div>
+      <div class="col-auto">
+        <label class="form-label mb-1">Au</label>
+        <input class="form-control form-control-sm" type="date" name="end" value="{{ default_end }}">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-sm btn-primary">Filtrer</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Demandes</div>
+          <div class="h4 mb-0">{{ total_demandes }}</div>
+          <div class="small mt-1">Conclues : {{ conclues }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Analyses</div>
+          <div class="h4 mb-0">{{ total_analyses }}</div>
+          <div class="small mt-1">Terminées : {{ terminees }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">TAT médian</div>
+          <div class="h4 mb-0">{{ tat_median_h }} h</div>
+          <div class="small mt-1">SLA à l'heure : {{ sla_on_time }} / retard : {{ sla_late }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Statut suspicions</div>
+          <div class="small mb-0">Confirmées : <strong>{{ confirmees }}</strong></div>
+          <div class="small">Infirmées : <strong>{{ infirmees }}</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activité (graphiques) -->
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Tendance</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Demandes par mois"
+               src="{% url 'lims:chart_series' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Par section</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Sections"
+               src="{% url 'lims:chart_sections' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Par méthode</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Méthodes"
+               src="{% url 'lims:chart_methods' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Top 10 tests</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Top tests"
+               src="{% url 'lims:chart_top_tests' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Analyses par analyste</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Analystes"
+               src="{% url 'lims:chart_analysts' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Top 10 maladies</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Maladies"
+               src="{% url 'lims:chart_diseases' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">SLA</div>
+        <div class="card-body d-flex justify-content-center">
+          <img class="img-fluid" alt="SLA"
+               src="{% url 'lims:chart_sla' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Top 10 clients</div>
+        <div class="card-body">
+          <img class="img-fluid" alt="Clients"
+               src="{% url 'lims:chart_clients' %}?{{ qs }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listes opérationnelles -->
+  <div class="row g-3 mb-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Analyses en cours</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Échantillon</th>
+                <th>Test</th>
+                <th>Analyste</th>
+                <th>Début</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in analyses_en_cours %}
+                <tr>
+                  <td>{{ r.echantillon__code_echantillon }}</td>
+                  <td><span class="text-muted small">{{ r.test__code_test }}</span><br>{{ r.test__nom_test }}</td>
+                  <td>{{ r.analyste_label }}</td>
+                  <td>{% if r.debute_le %}{{ r.debute_le|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" class="text-muted text-center small">Aucune</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Analyses en retard</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Échantillon</th>
+                <th>Test</th>
+                <th>Jours retard</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in analyses_en_retard %}
+                <tr>
+                  <td>{{ r.echantillon__code_echantillon }}</td>
+                  <td>
+                    <span class="text-muted small">{{ r.test__code_test }}</span><br>
+                    {{ r.test__nom_test }}
+                  </td>
+                  <td><span class="badge text-bg-danger">{{ r.jours_retard }}</span></td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="3" class="text-muted text-center small">Aucune</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer small text-muted">
+          Le retard est calculé sur l’échéance de la demande (terminée tard ou non terminée).
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Analyses non affectées</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Échantillon</th>
+                <th>Test</th>
+                <th>Demandé le</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in analyses_non_affectees %}
+                <tr>
+                  <td>{{ r.echantillon__code_echantillon }}</td>
+                  <td><span class="text-muted small">{{ r.test__code_test }}</span><br>{{ r.test__nom_test }}</td>
+                  <td>{% if r.echantillon__demande__cree_le %}{{ r.echantillon__demande__cree_le|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="3" class="text-muted text-center small">Aucune</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Épidémiologie & Clients -->
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Situation par maladie</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Maladie</th>
+                <th>Demandes</th>
+                <th>Exposés</th>
+                <th>Malades</th>
+                <th>Morts</th>
+                <th>Morbidité %</th>
+                <th>Létalité %</th>
+                <th>Mortalité %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in epi_rows %}
+                <tr>
+                  <td>{{ e.maladie }}</td>
+                  <td>{{ e.nb }}</td>
+                  <td>{{ e.expo }}</td>
+                  <td>{{ e.sick }}</td>
+                  <td>{{ e.dead }}</td>
+                  <td>{{ e.morbid }}</td>
+                  <td>{{ e.leth }}</td>
+                  <td>{{ e.mort }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="8" class="text-muted text-center small">Aucune donnée</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer small text-muted">
+          Taux calculés sur les effectifs exposés et malades saisis dans les demandes.
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Demandes par client (top 10)</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Client</th><th>Demandes</th></tr>
+            </thead>
+            <tbody>
+              {% for c in clients_rows %}
+                <tr><td>{{ c.soumissionnaire__nom_complet|default:"—" }}</td><td>{{ c.nb }}</td></tr>
+              {% empty %}
+                <tr><td colspan="2" class="text-muted text-center small">Aucune donnée</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

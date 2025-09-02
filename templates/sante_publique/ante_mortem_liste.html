@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" >
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="text-primary text-center w-100">
+      👁️ Liste des inspections ante-mortem
+    </h2>
+    
+ {% with user.groups.all|first as first_group %}
+ {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+    <a href="{% url 'ajouter_ante_mortem' %}" class="btn btn-primary">+ Nouvelle</a>
+  {% endif %}
+    {% endwith %}
+
+  </div>
+  <table class="table table-bordered table-striped" id="liste_Vaccination">
+    <thead>
+      <tr>
+        <th>Espèce</th>
+        <th>Commune</th>
+        <th>Anomalies</th>
+        <th>Symptomes</th>
+        <th>Nombre</th>
+        <th>Poids (kg)</th>
+        <th>Valeur (FCFA)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for enr in enregistrements %}
+      <tr>
+        <td>{{ enr.espece }}</td>
+        <td>{{ enr.commune }}</td>
+        <td>{{ enr.anomalies }}</td>
+        <td>{{ enr.symptomes }}</td>
+        <td>{{ enr.nombres }}</td>
+        <td>{{ enr.poids }}</td>
+        <td>{{ enr.valeur_financiere }}</td>
+        {% with user.groups.all|first as first_group %}
+        {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+        <td>
+          <a href="{% url 'modifier_ante_mortem' enr.id %}" class="btn btn-sm btn-primary">Modifier</a>
+          <a href="{% url 'supprimer_ante_mortem' enr.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+        </td>
+         {% endif %}
+    {% endwith %}
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

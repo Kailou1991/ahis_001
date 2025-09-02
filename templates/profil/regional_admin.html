@@ -1,0 +1,102 @@
+{% extends '../base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<center>
+
+    <h2 class="text-center mb-5 fw-bold">
+        <i class="fas fa-chart-bar"></i> Tableau de bord synthétique
+    </h2>
+
+    <!-- Section Vaccination -->
+    <h4 class="text-primary fw-bold mb-3 border-bottom pb-1">💉 Campagne de vaccination</h4>
+    <div class="row mb-4 text-center">
+        <div class="col-md-3">
+            <div class="p-3 bg-primary text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ total_vaccines|intcomma }}</h2>
+                <p class="mb-0">Animaux vaccinés</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-success text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_campagnes }}</h2>
+                <p class="mb-0">Campagnes</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-success text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_especes_vaccination }}</h2>
+                <p class="mb-0">Espèces vaccinées</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Surveillance -->
+    <h4 class="text-danger fw-bold mb-3 border-bottom pb-1">🦠 Surveillance des maladies</h4>
+    <div class="row mb-4 text-center">
+        <div class="col-md-3">
+            <div class="p-3 bg-info text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_foyers|intcomma }}</h2>
+                <p class="mb-0">Foyers notifiés</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-success text-white rounded shadow-sm">
+                <h2 class="fw-bold">
+                    {% if nb_foyers > 0 %}
+                        {% widthratio nb_foyers_confirmes nb_foyers 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h2>
+                <p class="mb-0">Taux de cas confirmés</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-warning text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_especes_surveillees }}</h2>
+                <p class="mb-0">Espèces touchées</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte des foyers -->
+    {% if carte_html %}
+    <h5 class="text-muted fw-bold mt-4">🗺️ Carte des foyers de maladies</h5>
+    <div class="mb-5">
+        {{ carte_html|safe }}
+    </div>
+    {% endif %}
+
+    <!-- Section Infrastructures -->
+    <h4 class="text-secondary fw-bold mb-3 border-bottom pb-1">🏥 Infrastructures vétérinaires</h4>
+    <div class="row mb-5 text-center">
+        <div class="col-md-3">
+            <div class="p-3 bg-primary text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_infrastructures }}</h2>
+                <p class="mb-0">Infrastructures recensées</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-success text-white rounded shadow-sm">
+                <h2 class="fw-bold">{{ nb_types_infra }}</h2>
+                <p class="mb-0">Types d'infrastructures</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-info text-white rounded shadow-sm">
+                <h2 class="fw-bold">
+                    {% if nb_infrastructures > 0 %}
+                        {% widthratio nb_non_fonctionnelles nb_infrastructures 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h2>
+                <p class="mb-0">Non fonctionnelles</p>
+            </div>
+        </div>
+    </div>
+
+</center>
+{% endblock %}

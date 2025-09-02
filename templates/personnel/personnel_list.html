@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2 style="text-align: center;">Formulaire de gestion de la situation du Personnel vétérinaire</h2>
+    <a href="{% url 'personnel_create' %}" class="btn btn-primary mb-3"> <i class="fa fa-circle"> </i>Nouveau</a>
+    <table id="liste_Vaccination" class="display fa-table" style="width:150%">
+        <thead>
+            <tr>
+              
+                
+                <th>Entité Administrative</th>
+                <th>Titre</th>
+                <th>Position</th>
+                <th>Nombre</th>
+                <th>Région</th>
+                <th>Année</th>
+                <th>Date de mise à jour</th>
+                <th>Modification</th>
+                <th>Détails</th>
+                <th>Suppression</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in personnel %}
+            <tr>
+               
+                
+                <td>{{ p.entite_administrative }}</td>
+                <td>{{ p.titre }}</td>
+                <td>{{ p.position }}</td>
+                <td>{{ p.nbre }}</td>
+                <td>{{ p.region }}</td>
+                <td>{{ p.annee }}</td>
+                <td>{{ p.updated_date }}</td>
+                <td>
+                    <a href="{% url 'personnel_detail' p.pk %}" class="btn btn-info btn-sm"><i class="fa fa-table"></i>Détails</a>
+                </td> 
+                <td>
+                <a href="{% url 'personnel_update' p.pk %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i>Modifier</a>
+            </td>
+                <td>  
+                <a href="{% url 'personnel_delete' p.pk %}" class="btn btn-danger btn-sm"><i class="fa fa-warning"></i>Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

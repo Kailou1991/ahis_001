@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2 style="text-align: center;">Liste des factures non controlées </h2>
+  <table class="table table-bordered table-striped" id="liste_Vaccination">
+    <thead><tr>
+     <th>Structure importatrice</th>
+     <th>Numéro</th>
+     <th>Date visa</th>
+     <th>Facture</th>
+     <th>Visa PIF</th>
+     <th>Validation</th>
+    </tr></thead>
+    <tbody>
+      {% for facture in factures %}
+        <tr>
+          <td>{{ facture.Structure }}</td>
+           <td>{{ facture.numero_facture }}</td>
+          <td>{{ facture.date_visa_dsv }}</td>
+          <td><a href="{{ facture.fichier_facture.url }}" target="_blank">Voir</a></td>
+          <td>{% if facture.est_visa_pif %}✅{% else %}❌{% endif %}</td>
+        
+         
+              <td>
+  {% if not facture.est_visa_pif %}
+    {% with user.groups.all|first as first_group %}
+      {% if first_group.name == "Administrateur Système" or first_group.name == "Services vétérinaires à l'aéroport" or first_group.name == "Services vétérinaires au port" %}
+        <a href="{% url 'valider_facture_pif' facture.id %}" class="btn btn-warning btn-sm">
+          <i class="fa fa-edit"></i> Valider
+        </a>
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

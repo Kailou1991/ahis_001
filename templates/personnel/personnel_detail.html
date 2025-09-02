@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Détail de la situation du Personnel</h2>
+    <dl class="row">
+        
+
+        <dt class="col-sm-3">Titre</dt>
+        <dd class="col-sm-9">{{ personnel.titre }}</dd>
+        <dt class="col-sm-3">Position</dt>
+        <dd class="col-sm-9">{{ personnel.position }}</dd>
+
+        <dt class="col-sm-3">Entité Administrative</dt>
+        <dd class="col-sm-9">{{ personnel.entite_administrative }}</dd>
+
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">{{ personnel.nbre }}</dd>
+
+        <dt class="col-sm-3">Région</dt>
+        <dd class="col-sm-9">{{ personnel.region }}</dd>
+
+        <dt class="col-sm-3">Département</dt>
+        <dd class="col-sm-9">{{ personnel.departement }}</dd>
+
+        <dt class="col-sm-3">Commune</dt>
+        <dd class="col-sm-9">{{ personnel.commune }}</dd>
+
+        <dt class="col-sm-3">Année</dt>
+        <dd class="col-sm-9">{{ personnel.annee }}</dd>
+
+        <dt class="col-sm-3">Date de Création</dt>
+        <dd class="col-sm-9">{{ personnel.created_date }}</dd>
+
+        <dt class="col-sm-3">Date de Mise à Jour</dt>
+        <dd class="col-sm-9">{{ personnel.updated_date }}</dd>
+
+         </dl>
+
+    <a href="{% url 'personnel_list' %}" class="btn btn-secondary">Retour à la liste</a>
+</div>
+{% endblock %}

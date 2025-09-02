@@ -1,0 +1,149 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4" style="text-align: center;">Tableau de bord des enquêtes seromonitoring PPR </h2>
+
+    <!-- Formulaire de filtre par type_enquete -->
+    <form method="get" class="mb-4" style="align-content: center; margin-left: 5%;">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="type_enquete" class="form-label fw-bold">Type d'enquête :</label>
+                <select name="type_enquete" id="type_enquete" class="form-control" onchange="this.form.submit()">
+                    {% for te in type_enquete_disponibles %}
+                        <option value="{{ te }}" {% if te == type_enquete %}selected{% endif %}>{{ te }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+</br></br>
+
+    <!-- Statistiques globales -->
+    <div class="row my-4">
+        <div class="col-md-3">
+            <div class="alert alert-info text-center">
+                <h6>Animaux enquêtés</h6>
+                <h4>{{ total_animaux }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-success text-center">
+                <h6>Positifs</h6>
+                <h4>{{ n_pos }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-danger text-center">
+                <h6>Négatifs</h6>
+                <h4>{{ n_neg }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-warning text-center">
+                <h6>Douteux</h6>
+                <h4>{{ n_douteux }}</h4>
+            </div>
+        </div>
+    
+    
+</br></br>
+    <!-- Nouvelle ligne : communes enquêtées et total communes -->
+    
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4 class="card-title">Nombre de communes enquêtées</h4>
+                    <h3 class="text-primary">{{ nb_communes }}</h3>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4 class="card-title">Nombre de communes avec taux de séroconversion individuelle ≥ 70% </h4>
+                    <h3 class="text-primary">{{ communes_conv }}</h3>
+                </div>
+            </div>
+        </div>
+    
+
+    <!-- Taux de séroconversion -->
+    
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4 class="card-title">Taux séroconversion des animaux vaccinés</h4>
+                    <h3 class="text-primary">{{ taux_vac }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4 class="card-title">Taux séroconversion des animaux non vaccinés</h4>
+                    <h3 class="text-danger">{{ taux_non_vac }}%</h3>
+                </div>
+            </div>
+        </div>
+    </br></br>
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4 class="card-title">Probabilité de protection nationale</h4>
+                    <h3 class="text-success">{{ prevalence_nationale }}%</h3>
+                </div>
+            </div>
+        </div>
+    
+    
+</br></br>
+    <!-- Graphe camembert : répartition des communes -->
+    <div class="my-4">
+        <img src="data:image/png;base64,{{ graph_pie }}" class="img-fluid rounded shadow" alt="Camembert de répartition">
+    </div>
+
+    <!-- Tableau des communes protégées -->
+    <div class="my-4">
+        <h3 style="text-align: center;">Liste des communes protégées (probabilité ≥ 70%)</h3>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Commune</th>
+                        <th>Région</th>
+                        <th>Probabilité de protection (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for commune in tableau_communes %}
+                    <tr>
+                        <td>{{ commune.commune }}</td>
+                        <td>{{ commune.region }}</td>
+                        <td>{{ commune.probabilite|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">Aucune commune protégée</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Efficacité par sexe 
+    <div class="my-4">
+        <img src="data:image/png;base64,{{ graph_eff_sexe }}" class="img-fluid rounded shadow" alt="Efficacité par sexe">
+    </div>
+-->
+    <!-- Histogramme par région -->
+    <div class="my-4">
+        <img src="data:image/png;base64,{{ graph_region }}" class="img-fluid rounded shadow" alt="Histogramme des régions">
+    </div>
+
+    
+</div>
+{% endblock %}

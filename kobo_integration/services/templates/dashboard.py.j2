@@ -1,0 +1,7 @@
+{% autoescape off %}
+def get_kpis(Model):
+    # KPIs de base : total de lignes
+    return {
+        "total": Model.objects.count(),
+    }
+{% endautoescape %}

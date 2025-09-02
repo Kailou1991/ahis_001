@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%; max-width: 90%;">
+    <h4 class="text-center text-primary mb-4">🗺️ Carte des Infrastructures vétérinaires</h4>
+</br>
+    <form method="get" class="row mb-4">
+        <div class="col-md-4">
+            <select name="etat" class="form-control">
+                <option value="">-- Tous les états --</option>
+                {% for etat in etats %}
+                    <option value="{{ etat.libelle }}" {% if etat.libelle == selected_etat %}selected{% endif %}>
+                        {{ etat.libelle }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="annee" class="form-control">
+                <option value="">-- Toutes les années --</option>
+                {% for y in annees %}
+                    <option value="{{ y }}" {% if y == selected_annee %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-success">🔍 Filtrer</button>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'export_infrastructures_csv' %}?etat={{ selected_etat }}&annee={{ selected_annee }}" class="btn btn-warning">📥 Exporter CSV</a>
+        </div>
+    </form>
+</br>
+    <div class="card mb-5 shadow-sm">
+        <div class="card-body">
+            {{ map_html|safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}

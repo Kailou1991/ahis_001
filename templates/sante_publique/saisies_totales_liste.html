@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between mb-3">
+    <h3 class="text-primary" style="text-align: center;">❌ Liste des saisies totales</h3>
+    {% with user.groups.all|first as first_group %}
+    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+    <a href="{% url 'ajouter_saisies_totales' %}" class="btn btn-primary">+ Nouvelle</a>
+  {% endif %}
+    {% endwith %}
+
+  </div>
+  <table class="table table-bordered table-striped" id="liste_Vaccination">
+    <thead>
+      <tr>
+        <th>Espèce</th>
+        <th>Commune</th>
+        <th>Motifs</th>
+        <th>Nombre</th>
+        <th>Poids (kg)</th>
+        <th>Valeur (FCFA)</th>
+ {% with user.groups.all|first as first_group %}
+ {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+
+        <th>Actions</th>
+          {% endif %}
+          {% endwith %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for enr in enregistrements %}
+      <tr>
+        <td>{{ enr.espece }}</td>
+        <td>{{ enr.commune }}</td>
+        <td>{{ enr.motifs_saisies }}</td>
+        <td>{{ enr.nombres }}</td>
+        <td>{{ enr.poids }}</td>
+        <td>{{ enr.valeur_financiere }}</td>
+         {% with user.groups.all|first as first_group %}
+         {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+
+        <td>
+          <a href="{% url 'modifier_saisies_totales' enr.id %}" class="btn btn-sm btn-primary">Modifier</a>
+          <a href="{% url 'supprimer_saisies_totales' enr.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+        </td>
+        {% endif %}
+          {% endwith %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

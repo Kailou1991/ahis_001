@@ -1,0 +1,253 @@
+{% extends '../base.html' %}
+{% load static %}
+{% block content %}
+{% if messages %}
+    <ul style="margin-left: 17%; font-size: large;">
+    {% for message in messages %}
+        <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+<div class="container mt-4" style="margin-left: 17%; max-width: 85%;">
+    <h2 class="text-center mb-4 text-uppercase text-dark border-bottom pb-2">
+        {% if form.instance.pk %}Modification{% else %}Déclaration{% endif %} d'un Foyer
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" id="submit_form">
+        {% csrf_token %}
+        <div class="form-group text-danger">
+            {{ form.non_field_errors }}
+        </div>
+
+        <div class="row">
+            {% for field in form.visible_fields %}
+                <div class="col-md-6 mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="form-text text-muted">{{ field.help_text }}</small>{% endif %}
+                    {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div></br></br>
+
+        <div class="form-group mt-4 text-center">
+            <button type="submit" class="btn btn-success me-3 px-5">💾 Enregistrer</button>
+            <a href="{% url 'foyer_list' %}" class="btn btn-secondary px-5">↩ Retour</a>
+        </div>
+    </form>
+</div>
+
+<!-- SCRIPT DE FILTRAGE -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 🔁 Espece -> Maladie
+        const especeSelect = document.getElementById('id_espece');
+        const maladieSelect = document.getElementById('id_maladie');
+    
+        if (especeSelect && maladieSelect) {
+            especeSelect.addEventListener('change', function () {
+                const especeId = this.value;
+                
+                // Réinitialise le champ maladie
+                maladieSelect.innerHTML = '<option value="">Sélectionner une maladie</option>';
+    
+                if (especeId) {
+                    fetch(`/foyer_create/get_maladies/?espece_id=${especeId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.length === 0) {
+                                const option = document.createElement('option');
+                                option.value = "";
+                                option.textContent = "Aucune maladie disponible";
+                                maladieSelect.appendChild(option);
+                            } else {
+                                data.forEach(m => {
+                                    const option = document.createElement('option');
+                                    option.value = m.id;
+                                    option.textContent = m.Maladie;
+                                    
+                                    maladieSelect.appendChild(option);
+                                });
+                            }
+                            toggleChampsMorsure();
+                        })
+                        .catch(error => {
+                            console.error("Erreur lors du chargement des maladies :", error);
+                            const option = document.createElement('option');
+                            option.value = "";
+                            option.textContent = "Erreur de chargement";
+                            maladieSelect.appendChild(option);
+                        });
+                } else {
+                    toggleChampsMorsure();
+                }
+            });
+        }
+    
+        // 🔁 Région -> Département -> Commune
+        const regionSelect = document.getElementById('id_region');
+        const departementSelect = document.getElementById('id_departement');
+        const communeSelect = document.getElementById('id_commune');
+    
+        if (regionSelect && departementSelect) {
+            regionSelect.addEventListener('change', function () {
+                const regionId = this.value;
+                if (regionId) {
+                    fetch(`/foyer_create/get_departements/?region_id=${regionId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            departementSelect.innerHTML = '<option value="">Sélectionner un département</option>';
+                            data.forEach(dep => {
+                                const option = document.createElement('option');
+                                option.value = dep.id;
+                                option.textContent = dep.Nom;
+                                departementSelect.appendChild(option);
+                            });
+                            if (communeSelect) {
+                                communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+                            }
+                        });
+                }
+            });
+        }
+    
+        if (departementSelect && communeSelect) {
+            departementSelect.addEventListener('change', function () {
+                const departementId = this.value;
+                if (departementId) {
+                    fetch(`/foyer_create/get_communes/?departement_id=${departementId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+                            data.forEach(com => {
+                                const option = document.createElement('option');
+                                option.value = com.id;
+                                option.textContent = com.Nom;
+                                communeSelect.appendChild(option);
+                            });
+                        });
+                }
+            });
+        }
+    
+        // 🔁 Rage → champs morsure
+        const champMorsureHumain = document.getElementById('id_nbre_des_cas_de_morsure_humains')?.closest('.mb-3');
+        const champMorsureAnimal = document.getElementById('id_nbre_des_cas_de_morsure_animaux')?.closest('.mb-3');
+    
+        function toggleChampsMorsure() {
+            const selectedText = maladieSelect.options[maladieSelect.selectedIndex]?.text?.toLowerCase() || '';
+            const estRage = selectedText.includes('rage');
+            if (champMorsureHumain && champMorsureAnimal) {
+                champMorsureHumain.style.display = estRage ? 'block' : 'none';
+                champMorsureAnimal.style.display = estRage ? 'block' : 'none';
+            }
+        }
+    
+        if (maladieSelect) {
+            maladieSelect.addEventListener('change', toggleChampsMorsure);
+            toggleChampsMorsure();
+        }
+    
+        // 🔁 Vaccination récente == OUI
+        const vaccinationsRecentes = document.getElementById('id_vaccinations_recentes');
+        const champDateVaccination = document.getElementById('id_date_vaccination')?.closest('.mb-3');
+        const champMaladieVaccination = document.getElementById('id_maladie_vaccination')?.closest('.mb-3');
+    
+        function toggleChampsVaccination() {
+            const afficher = vaccinationsRecentes.value === 'OUI';
+            if (champDateVaccination) champDateVaccination.style.display = afficher ? 'block' : 'none';
+            if (champMaladieVaccination) champMaladieVaccination.style.display = afficher ? 'block' : 'none';
+        }
+    
+        if (vaccinationsRecentes) {
+            vaccinationsRecentes.addEventListener('change', toggleChampsVaccination);
+            toggleChampsVaccination();
+        }
+    
+        // 🔁 Mesure contrôle
+        const mesureSelect = document.getElementById('id_mesure_controle');
+        const champAbattus = document.getElementById('id_nbre_sujets_abattus')?.closest('.mb-3');
+        const champQuarantaine = document.getElementById('id_nbre_sujets_en_quarantaine')?.closest('.mb-3');
+        const champVaccines = document.getElementById('id_nbre_sujets_vaccines')?.closest('.mb-3');
+        const champTraites = document.getElementById('id_nbre_sujets_traites')?.closest('.mb-3');
+    
+        function toggleChampsMesure() {
+            const selectedValues = Array.from(mesureSelect.selectedOptions).map(opt => opt.value);
+            if (champAbattus) champAbattus.style.display = selectedValues.includes('abattage_sanitaire') ? 'block' : 'none';
+            if (champQuarantaine) champQuarantaine.style.display = selectedValues.includes('mise_en_quarantaine') ? 'block' : 'none';
+            if (champVaccines) champVaccines.style.display = selectedValues.includes('vaccination_en_reponse') ? 'block' : 'none';
+            if (champTraites) champTraites.style.display = selectedValues.includes('traitement') ? 'block' : 'none';
+        }
+    
+        if (mesureSelect) {
+            mesureSelect.addEventListener('change', toggleChampsMesure);
+            toggleChampsMesure();
+        }
+    
+        // 🔁 Prélèvement envoyé == OUI
+        const prelevementEnvoye = document.getElementById('id_prelevement_envoye');
+        const champDateEnvoi = document.getElementById('id_date_envoi_prelevement')?.closest('.mb-3');
+        const champNature = document.getElementById('id_nature_prelevement')?.closest('.mb-3');
+        const champResultatLab = document.getElementById('id_resultat_laboratoire')?.closest('.mb-3');
+    
+        function toggleChampsPrelevement() {
+            const afficher = prelevementEnvoye.value === 'OUI';
+            if (champDateEnvoi) champDateEnvoi.style.display = afficher ? 'block' : 'none';
+            if (champNature) champNature.style.display = afficher ? 'block' : 'none';
+            if (champResultatLab) champResultatLab.style.display = afficher ? 'block' : 'none';
+        }
+    
+        if (prelevementEnvoye) {
+            prelevementEnvoye.addEventListener('change', toggleChampsPrelevement);
+            toggleChampsPrelevement();
+        }
+    
+        // 🔁 Résultat labo == OUI
+        const resultatLabo = document.getElementById('id_resultat_laboratoire');
+        const champsLabo = [
+            'date_reception_prelevement', 'date_resultat',
+            'nbre_echant_recu','absence_reactifs'
+            
+        ].map(id => document.getElementById(`id_${id}`)?.closest('.mb-3'));
+    
+        function toggleChampsResultatLabo() {
+            const afficher = resultatLabo.value === 'OUI';
+            champsLabo.forEach(champ => {
+                if (champ) champ.style.display = afficher ? 'block' : 'none';
+            });
+        }
+    
+        if (resultatLabo) {
+            resultatLabo.addEventListener('change', toggleChampsResultatLabo);
+            toggleChampsResultatLabo();
+        }
+
+
+
+        // 🔁 reactif labo == NON
+        const abscencereactif = document.getElementById('id_absence_reactifs');
+        const champsLaboreactif = [
+             'nbre_echant_positif',
+            'nbre_echant_inexploitable', 'nbre_echant_nonconforme',
+            'laboratoire', 'type_test_labo', 'service_labo',
+            'recommandations', 'fichier_resultat'
+        ].map(id => document.getElementById(`id_${id}`)?.closest('.mb-3'));
+    
+        function toggleChampsReactifsLabo() {
+            const afficher = abscencereactif.value === 'NON';
+            champsLaboreactif.forEach(champ => {
+                if (champ) champ.style.display = afficher ? 'block' : 'none';
+            });
+        }
+    
+        if (abscencereactif) {
+            abscencereactif.addEventListener('change', toggleChampsReactifsLabo);
+            toggleChampsReactifsLabo();
+        }
+    });
+    </script>
+    
+    
+{% endblock %}

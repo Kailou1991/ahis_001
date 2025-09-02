@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+<div class="content-wrapper">
+  <section class="content-header">
+    <h1>Tableau de bord – campagnes de vaccinations</h1>
+  </section>
+
+  <section class="content">
+
+    <!-- Filtres -->
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">Filtres</h3></div>
+      <div class="box-body">
+        <form id="filters-form" method="get" class="form-inline" style="gap:8px; display:flex; flex-wrap:wrap;">
+
+          <div class="form-group">
+            <label for="campagne">Campagne</label>
+            <select id="campagne" name="campagne" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for c in campaigns %}
+                <option value="{{ c }}" {% if filters.campagne == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="type_campagne">Type de campagne</label>
+            <select id="type_campagne" name="type_campagne" class="form-control">
+              <option value="">— Tous —</option>
+              {% for t in types_campagne %}
+                <option value="{{ t }}" {% if filters.type_campagne == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maladie">Maladie</label>
+            <select id="maladie" name="maladie" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for m in maladies %}
+                <option value="{{ m }}" {% if filters.maladie == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="region">Région</label>
+            <select id="region" name="region" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for r in regions %}
+                <option value="{{ r }}" {% if filters.region == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="departement">Département</label>
+            <select id="departement" name="departement" class="form-control">
+              <option value="">— Tous —</option>
+              {% for d in departements %}
+                <option value="{{ d }}" {% if filters.departement == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-filter"></i> Filtrer
+          </button>
+
+          <a href="{% url 'vaccination_sn:vaccination_dashboard' %}" class="btn btn-default">Réinitialiser</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tuiles Totaux -->
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="small-box bg-blue">
+          <div class="inner">
+            <h3>{{ totals.objectif|default:0|intcomma }}</h3>
+            <p>Objectif (cible)</p>
+          </div>
+          <div class="icon"><i class="fa fa-bullseye"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-teal">
+          <div class="inner">
+            <h3>{{ totals.eligible|default:0|intcomma }}</h3>
+            <p>Éligibles</p>
+          </div>
+          <div class="icon"><i class="fa fa-users"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-green">
+          <div class="inner">
+            <h3>{{ totals.vacc_total|default:0|intcomma }}</h3>
+            <p>Total vaccinés</p>
+          </div>
+          <div class="icon"><i class="fa fa-check"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3>{{ totals.marques|default:0|intcomma }}</h3>
+            <p>Animaux marqués</p>
+          </div>
+          <div class="icon"><i class="fa fa-tag"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Détails vaccinés: public/privé + taux -->
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3>{{ totals.vacc_public|default:0|intcomma }}</h3>
+            <p>Vaccinés (Public)</p>
+          </div>
+          <div class="icon"><i class="fa fa-hospital-o"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-olive">
+          <div class="inner">
+            <h3>{{ totals.vacc_prive|default:0|intcomma }}</h3>
+            <p>Vaccinés (Privé)</p>
+          </div>
+          <div class="icon"><i class="fa fa-user-md"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-purple">
+          <div class="inner">
+            <h3>{{ totals.taux_realisation|default:0 }}%</h3>
+            <p>Taux de réalisation</p>
+          </div>
+          <div class="icon"><i class="fa fa-line-chart"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-3">
+        <div class="small-box bg-orange">
+          <div class="inner">
+            <h3>{{ totals.taux_couverture|default:0 }}%</h3>
+            <p>Taux de couverture</p>
+          </div>
+          <div class="icon"><i class="fa fa-pie-chart"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphes -->
+<style>
+  /* Empêche tout débordement horizontal des images de graphe */
+  .chart-wrap{max-width:100%; overflow:hidden;}
+  .chart-wrap img.chart-img{
+    display:block;           /* évite les petits espaces inline */
+    max-width:100%;          /* ne dépasse jamais son conteneur */
+    width:100%;              /* s’adapte à la largeur de la boîte */
+    height:auto;             /* garde les proportions */
+    margin:0 auto;           /* centré */
+  }
+  /* Optionnel: évite qu'un canvas trop large crée un scroll horizontal */
+  .box .box-body{overflow:hidden;}
+</style>
+
+<div class="row">
+  <div class="col-sm-6">
+    <div class="box">
+      <div class="box-header with-border">
+        <h3 class="box-title">Objectifs vs Vaccinés (par région)</h3>
+      </div>
+      <div class="box-body" style="text-align:center">
+        {% if graph_region_grouped %}
+          <div class="chart-wrap">
+            <img src="data:image/png;base64,{{ graph_region_grouped }}" class="chart-img" alt="Graph régions">
+          </div>
+        {% else %}
+          <em>Aucune donnée</em>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6">
+    <div class="box">
+      <div class="box-header with-border">
+        <h3 class="box-title">Tendance mensuelle (soumissions)</h3>
+      </div>
+      <div class="box-body" style="text-align:center">
+        {% if graph_mensuel %}
+          <div class="chart-wrap">
+            <img src="data:image/png;base64,{{ graph_mensuel }}" class="chart-img" alt="Graph mensuel">
+          </div>
+        {% else %}
+          <em>Aucune donnée</em>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- Tableau par département -->
+    <div class="box">
+      <div class="box-header with-border"><h3 class="box-title">Synthèse par département</h3></div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Département</th>
+              <th class="text-right">Objectif</th>
+              <th class="text-right">Éligibles</th>
+              <th class="text-right">Vaccinés</th>
+              <th class="text-right">Marqués</th>
+              <th class="text-right">Taux réalisation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in tableau_departements %}
+              <tr>
+                <td>{{ r.departement }}</td>
+                <td class="text-right">{{ r.objectif|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.eligible|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.vaccines|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.marques|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.taux_realisation|default:0 }}%</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center">Aucune donnée.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== DOTATIONS – DOSES ===================== -->
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="small-box bg-purple">
+          <div class="inner">
+            <h3>{{ total_doses|default:0|intcomma }}</h3>
+            <p>Total doses dotées</p>
+          </div>
+          <div class="icon"><i class="fa fa-medkit"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="box">
+          <div class="box-header with-border"><h3 class="box-title">Dotations (doses) par maladie</h3></div>
+          <div class="box-body" style="text-align:center">
+            {% if graph_doses_by_maladie %}
+              <img src="data:image/png;base64,{{ graph_doses_by_maladie }}" class="img-responsive" alt="Graph doses par maladie">
+            {% else %}
+              <em>Aucune donnée</em>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-header with-border"><h3 class="box-title">Détail des dotations en doses</h3></div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Campagne</th>
+              <th>Maladie</th>
+              <th class="text-right">Doses</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in doses_rows %}
+              <tr>
+                <td>{{ r.campagne__Campagne }}</td>
+                <td>{{ r.maladie__Maladie }}</td>
+                <td class="text-right">{{ r.doses|default:0|intcomma }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-center">Aucune dotation</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===================== DOTATIONS – MATÉRIEL ===================== -->
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="small-box bg-orange">
+          <div class="inner">
+            <h3>{{ total_matos|default:0|intcomma }}</h3>
+            <p>Total matériel doté</p>
+          </div>
+          <div class="icon"><i class="fa fa-cubes"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="box">
+          <div class="box-header with-border"><h3 class="box-title">Dotations matériel par type</h3></div>
+          <div class="box-body" style="text-align:center">
+            {% if graph_matos_by_type %}
+              <img src="data:image/png;base64,{{ graph_matos_by_type }}" class="img-responsive" alt="Graph matériel par type">
+            {% else %}
+              <em>Aucune donnée</em>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-header with-border"><h3 class="box-title">Détail des dotations matériel</h3></div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Campagne</th>
+              <th>Région</th>
+              <th>Type de matériel</th>
+              <th class="text-right">Quantité</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in materiel_rows %}
+              <tr>
+                <td>{{ r.campagne__Campagne }}</td>
+                <td>{{ r.region__Nom }}</td>
+                <td>{{ r.type_materiel__nom }}</td>
+                <td class="text-right">{{ r.quantite|default:0|intcomma }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-center">Aucune dotation</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<!-- Dépendance Région -> Département (AJAX) -->
+<script>
+(function() {
+  const regionSel = document.getElementById('region');
+  const deptSel   = document.getElementById('departement');
+  const campSel   = document.getElementById('campagne');
+  const typeSel   = document.getElementById('type_campagne');
+  const malSel    = document.getElementById('maladie');
+
+  function option(text, value, selected) {
+    const o = document.createElement('option');
+    o.textContent = text;
+    o.value = value;
+    if (selected) o.selected = true;
+    return o;
+  }
+
+  async function refreshDepartements() {
+    const params = new URLSearchParams();
+    if (campSel.value) params.set('campagne', campSel.value);
+    if (typeSel.value) params.set('type_campagne', typeSel.value);
+    if (malSel.value)  params.set('maladie',  malSel.value);
+    if (regionSel.value) params.set('region', regionSel.value);
+
+    try {
+      const url = "{% url 'vaccination_sn:api_departements' %}?" + params.toString();
+      const res = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      const current = deptSel.value;
+      deptSel.innerHTML = '';
+      deptSel.appendChild(option('— Tous —', '', !current));
+
+      let found = false;
+      (data.departements || []).forEach(d => {
+        const isSelected = (current && current === d);
+        if (isSelected) found = true;
+        deptSel.appendChild(option(d, d, isSelected));
+      });
+
+      if (current && !found) {
+        deptSel.value = '';
+      }
+    } catch (e) {
+      console.error('Departements refresh failed:', e);
+    }
+  }
+
+  regionSel.addEventListener('change', refreshDepartements);
+  campSel.addEventListener('change', refreshDepartements);
+  typeSel.addEventListener('change', refreshDepartements);
+  malSel.addEventListener('change', refreshDepartements);
+
+  if (regionSel.value) {
+    refreshDepartements();
+  }
+})();
+</script>
+{% endblock %}

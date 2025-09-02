@@ -1,0 +1,5 @@
+<ul class="nav">
+  {% for it in items %}
+    <li class="nav-item"><a class="nav-link" href="{% url it.url_name %}">{{ it.label }}</a></li>
+  {% endfor %}
+</ul>

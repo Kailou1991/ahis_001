@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="width: 60%; margin-left: 17%; text-align: center;" >
+    <h2>{% if form.instance.pk %}Modifier un enregistrement de la mobilité animale{% else %}Creér un nouvel enregistrement pour la mobilité animale {% endif %}</h2>
+
+    <form method="post" enctype="multipart/form-data" class="mt-3">
+        {% csrf_token %}
+
+        <div class="form-group">
+            {{ form.non_field_errors }}
+        </div>
+
+        <!-- Espèce -->
+        <div class="form-group">
+            {{ form.espece.label_tag }} {{ form.espece }} {{ form.espece.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.nombre_animaux.label_tag }} {{ form.nombre_animaux }} {{ form.nombre_animaux.errors }}
+        </div>
+<!-- Contrôles et certificats -->
+<div class="form-group">
+    {{ form.nombre_certificats_vaccination_controles.label_tag }}
+    {{ form.nombre_certificats_vaccination_controles }}
+    {{ form.nombre_certificats_vaccination_controles.errors }}
+</div>
+
+<div class="form-group">
+    {{ form.nombre_certificats_vaccination_delivres.label_tag }}
+    {{ form.nombre_certificats_vaccination_delivres }}
+    {{ form.nombre_certificats_vaccination_delivres.errors }}
+</div>
+
+<div class="form-group">
+    {{ form.nombre_laisser_passer_controles.label_tag }}
+    {{ form.nombre_laisser_passer_controles }}
+    {{ form.nombre_laisser_passer_controles.errors }}
+</div>
+
+<div class="form-group">
+    {{ form.nombre_laisser_passer_delivres.label_tag }}
+    {{ form.nombre_laisser_passer_delivres }}
+    {{ form.nombre_laisser_passer_delivres.errors }}
+</div>
+
+
+        <!-- Provenance et destination -->
+        <div class="form-group">
+            {{ form.region_provenance.label_tag }} {{ form.region_provenance }} {{ form.region_provenance.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.departement_provenance.label_tag }} {{ form.departement_provenance }} {{ form.departement_provenance.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.commune_provenance.label_tag }} {{ form.commune_provenance }} {{ form.commune_provenance.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.region_destination.label_tag }} {{ form.region_destination }} {{ form.region_destination.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.departement_destination.label_tag }} {{ form.departement_destination }} {{ form.departement_destination.errors }}
+        </div>
+        <div class="form-group">
+            {{ form.commune_destination.label_tag }} {{ form.commune_destination }} {{ form.commune_destination.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.etablissement_origine.label_tag }} {{ form.etablissement_origine }} {{ form.etablissement_origine.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.etablissement_destination.label_tag }} {{ form.etablissement_destination }} {{ form.etablissement_destination.errors }}
+        </div>
+
+        <!-- Infos générales -->
+        <div class="form-group">
+            {{ form.date_deplacement.label_tag }} {{ form.date_deplacement }} {{ form.date_deplacement.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.duree_deplacement.label_tag }} (en jours) {{ form.duree_deplacement }} {{ form.duree_deplacement.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.mode_transport.label_tag }} {{ form.mode_transport }} {{ form.mode_transport.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.raison_deplacement.label_tag }} {{ form.raison_deplacement }} {{ form.raison_deplacement.errors }}
+        </div>
+
+        <!-- Propriétaire et transporteur -->
+        <div class="form-group">
+            {{ form.nom_proprietaire.label_tag }} {{ form.nom_proprietaire }} {{ form.nom_proprietaire.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.contact_proprietaire.label_tag }} {{ form.contact_proprietaire }} {{ form.contact_proprietaire.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.nom_transporteur.label_tag }} {{ form.nom_transporteur }} {{ form.nom_transporteur.errors }}
+        </div>
+
+        <div class="form-group">
+            {{ form.contact_transporteur.label_tag }} {{ form.contact_transporteur }} {{ form.contact_transporteur.errors }}
+        </div>
+
+        <!-- Coordonnées GPS du poste de contrôle -->
+<div class="form-group">
+    {{ form.latitude_poste_controle.label_tag }}
+    {{ form.latitude_poste_controle }}
+    {{ form.latitude_poste_controle.errors }}
+</div>
+
+<div class="form-group">
+    {{ form.longitude_poste_controle.label_tag }}
+    {{ form.longitude_poste_controle }}
+    {{ form.longitude_poste_controle.errors }}
+</div>
+
+
+        <!-- 🔎 Maladie suspectée -->
+        <div class="form-group">
+            {{ form.maladie_detectee.label_tag }} {{ form.maladie_detectee }} {{ form.maladie_detectee.errors }}
+        </div>
+
+        <div id="zone-surveillance" style="display: none;">
+            <div class="form-group">
+                {{ form.maladie_suspectee.label_tag }} {{ form.maladie_suspectee }} {{ form.maladie_suspectee.errors }}
+            </div>
+            <div class="form-group">
+                {{ form.nombre_animaux_malades.label_tag }} {{ form.nombre_animaux_malades }} {{ form.nombre_animaux_malades.errors }}
+            </div>
+            <div class="form-group">
+                {{ form.nombre_animaux_traites.label_tag }} {{ form.nombre_animaux_traites }} {{ form.nombre_animaux_traites.errors }}
+            </div>
+            <div class="form-group">
+                {{ form.nombre_animaux_vaccines.label_tag }} {{ form.nombre_animaux_vaccines }} {{ form.nombre_animaux_vaccines.errors }}
+            </div>
+            <div class="form-group">
+                {{ form.nombre_animaux_quarantaine.label_tag }} {{ form.nombre_animaux_quarantaine }} {{ form.nombre_animaux_quarantaine.errors }}
+            </div>
+            <div class="form-group">
+                {{ form.mesures_prises.label_tag }} {{ form.mesures_prises }} {{ form.mesures_prises.errors }}
+            </div>
+
+        </div>
+        
+
+        <button type="submit" class="btn btn-success" style="margin-left: 20%; width: 20%; height: 40%;">
+            {% if form.instance.pk %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+        <a href="{% url 'deplacementanimaux_list' %}" class="btn btn-default" style="width: 20%;">Retour</a>
+    </form>
+</div>
+
+<script>
+    // Cascade région → département → commune : PROVENANCE
+    const regionProv = document.getElementById("id_region_provenance");
+    const departementProv = document.getElementById("id_departement_provenance");
+    const communeProv = document.getElementById("id_commune_provenance");
+
+    regionProv?.addEventListener("change", function () {
+        fetch(`/ajax/departements/?region_id=${regionProv.value}`)
+            .then(response => response.json())
+            .then(data => {
+                departementProv.innerHTML = '<option value="">---------</option>';
+                communeProv.innerHTML = '<option value="">---------</option>';
+                data.forEach(item => {
+                    departementProv.innerHTML += `<option value="${item.id}">${item.Nom}</option>`;
+                });
+            });
+    });
+
+    departementProv?.addEventListener("change", function () {
+        fetch(`/ajax/communes/?departement_id=${departementProv.value}`)
+            .then(response => response.json())
+            .then(data => {
+                communeProv.innerHTML = '<option value="">---------</option>';
+                data.forEach(item => {
+                    communeProv.innerHTML += `<option value="${item.id}">${item.Nom}</option>`;
+                });
+            });
+    });
+
+    // Cascade région → département → commune : DESTINATION
+    const regionDest = document.getElementById("id_region_destination");
+    const departementDest = document.getElementById("id_departement_destination");
+    const communeDest = document.getElementById("id_commune_destination");
+
+    regionDest?.addEventListener("change", function () {
+        fetch(`/ajax/departements/?region_id=${regionDest.value}`)
+            .then(response => response.json())
+            .then(data => {
+                departementDest.innerHTML = '<option value="">---------</option>';
+                communeDest.innerHTML = '<option value="">---------</option>';
+                data.forEach(item => {
+                    departementDest.innerHTML += `<option value="${item.id}">${item.Nom}</option>`;
+                });
+            });
+    });
+
+    departementDest?.addEventListener("change", function () {
+        fetch(`/ajax/communes/?departement_id=${departementDest.value}`)
+            .then(response => response.json())
+            .then(data => {
+                communeDest.innerHTML = '<option value="">---------</option>';
+                data.forEach(item => {
+                    communeDest.innerHTML += `<option value="${item.id}">${item.Nom}</option>`;
+                });
+            });
+    });
+
+    // Affichage conditionnel : maladie suspectée
+    function toggleZoneSurveillance() {
+        const select = document.getElementById("id_maladie_detectee");
+        const zone = document.getElementById("zone-surveillance");
+        if (select && select.value === "OUI") {
+            zone.style.display = "block";
+        } else {
+            zone.style.display = "none";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const select = document.getElementById("id_maladie_detectee");
+        if (select) {
+            toggleZoneSurveillance();
+            select.addEventListener("change", toggleZoneSurveillance);
+        }
+    });
+</script>
+
+{% endblock %}

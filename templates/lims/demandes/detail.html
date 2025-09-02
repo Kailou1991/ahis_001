@@ -1,0 +1,381 @@
+{# templates/lims/demandes/detail.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+
+  {# ---- Messages (succès / erreurs) ---- #}
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert 
+            {% if message.tags == 'error' %}alert-danger
+            {% elif message.tags == 'debug' %}alert-secondary
+            {% else %}alert-{{ message.tags|default:'info' }}{% endif %}
+            alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- En-tête -->
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <h1 class="h4 mb-1">Demande {{ demande.code_demande }}</h1>
+      <div class="small text-muted">
+        {{ demande.soumissionnaire|default:"—" }} • {{ demande.site_labo }} •
+        {{ demande.region }} / {{ demande.departement }} / {{ demande.commune }}
+      </div>
+
+      <div class="mt-2 d-flex flex-wrap gap-2">
+        {% if demande.current_etat %}
+          <span class="badge text-bg-secondary">{{ demande.current_etat.label }}</span>
+        {% endif %}
+        {% if demande.priorite %}
+          <span class="badge text-bg-warning text-dark">Priorité : {{ demande.get_priorite_display }}</span>
+        {% endif %}
+        <span class="badge text-bg-light">Créée le {{ demande.cree_le|date:"Y-m-d H:i" }}</span>
+        {% if demande.recu_le %}
+          <span class="badge text-bg-light">Reçue le {{ demande.recu_le|date:"Y-m-d H:i" }}</span>
+        {% endif %}
+        <span class="badge {% if demande.suspicion_statut == 'confirmee' %}text-bg-success{% elif demande.suspicion_statut == 'infirmee' %}text-bg-danger{% else %}text-bg-secondary{% endif %}">
+          Suspicion : {{ demande.get_suspicion_statut_display }}
+        </span>
+        {% if demande.suspicion_le %}
+          <span class="badge text-bg-light">Conclue le {{ demande.suspicion_le|date:"Y-m-d H:i" }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+
+      {# === Boutons Rapport (uniquement directeur/admin ET après conclusion) === #}
+      {% if can_report %}
+        <a class="btn btn-sm btn-outline-dark"
+           href="{% url 'lims:rapport_generate' demande.pk %}?format=pdf"
+           target="_blank" rel="noopener">
+          <i class="bi bi-filetype-pdf"></i> Rapport PDF
+        </a>
+        <a class="btn btn-sm btn-outline-secondary"
+           href="{% url 'lims:rapport_generate' demande.pk %}?format=pdf&dl=1"
+           target="_blank" rel="noopener">
+          <i class="bi bi-download"></i> Télécharger PDF
+        </a>
+      
+
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'lims:demande_update' demande.pk %}">Éditer</a>
+
+      {# Supprimer #}
+      <form method="post"
+            action="{% url 'lims:demande_delete' demande.pk %}"
+            class="d-inline"
+            onsubmit="return confirm('Confirmer la suppression de la demande {{ demande.code_demande }} ? Cette action est irréversible.');">
+        {% csrf_token %}
+        {% with reason=delete_blocked_reason %}
+          <button type="submit"
+                  class="btn btn-sm btn-outline-danger"
+                  {% if reason %}disabled data-bs-toggle="tooltip" data-bs-title="{{ reason }}"{% endif %}>
+            <i class="bi bi-trash"></i> Supprimer
+          </button>
+        {% endwith %}
+      </form>
+      {% endif %}
+{% with user.groups.all|first as first_group %}
+{% if first_group.name == "Analyste" %}
+
+      
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'lims:demandes_list_affectees' %}">Retour</a>
+  {% else %}
+      
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'lims:vlims_demandes_list' %}">Retour</a>
+    {% endif %}
+    {% endwith %}
+    </div>
+  </div>
+
+  <!-- Stepper / avancement -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      {# force 100% si conclu (confirmee/infirmee) ou si date de conclusion présente #}
+      {% if demande.suspicion_statut == 'confirmee' or demande.suspicion_statut == 'infirmee' or demande.suspicion_le %}
+        {% with display_percent=100 %}
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="fw-semibold">Étape courante : <span class="text-primary">{{ wf_current }}</span></div>
+            <div class="small text-muted">{{ display_percent }}%</div>
+          </div>
+          <div class="progress mb-3" style="height: 8px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ display_percent }}%;"></div>
+          </div>
+        {% endwith %}
+      {% else %}
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-semibold">Étape courante : <span class="text-primary">{{ wf_current }}</span></div>
+          <div class="small text-muted">{{ wf_percent }}%</div>
+        </div>
+        <div class="progress mb-3" style="height: 8px;">
+          <div class="progress-bar" role="progressbar" style="width: {{ wf_percent }}%;"></div>
+        </div>
+      {% endif %}
+
+      <div class="d-flex flex-wrap gap-3">
+        {% for s in wf_steps %}
+          <div class="d-flex align-items-center">
+            <div class="me-2">
+              <i class="bi {{ s.icon }} {% if s.done %}text-success{% else %}text-muted{% endif %}"></i>
+            </div>
+            <div>
+              <div class="{% if s.done %}text-success{% else %}text-muted{% endif %} fw-semibold">{{ s.label }}</div>
+              <div class="small text-muted">{% if s.ts %}{{ s.ts|date:"Y-m-d H:i" }}{% else %}—{% endif %}</div>
+            </div>
+            {% if not forloop.last %}<div class="mx-3 text-muted">›</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+
+    <!-- Infos -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-header fw-semibold">Informations</div>
+        <div class="card-body">
+          <div class="row gy-2">
+            <div class="col-12"><span class="text-muted small">Soumissionnaire :</span> {{ demande.soumissionnaire|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted small">Localisation :</span> {{ demande.region }} / {{ demande.departement }} / {{ demande.commune }}{% if demande.localite %} / {{ demande.localite }}{% else %}  — {% endif %}</div>
+            <div class="col-12"><span class="text-muted small">Maladie suspectée :</span> {{ demande.maladie_suspectee|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted small">Espèce :</span> {{ demande.espece|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted small">Exposés :</span> {{ demande.effectif_troupeau|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted small">Malades :</span> {{ demande.nbre_animaux_malades|default:"—" }}</div>
+            <div class="col-12"><span class="text-muted small">Morts :</span> {{ demande.nbre_animaux_morts|default:"—" }}</div>
+            <div class="col-12">
+              <span class="text-muted small">Nature prélèvement :</span>
+              {% for ech in echantillons %}
+                {{ ech.get_matrice_display }}{% if ech.matrice_autre %} ({{ ech.matrice_autre }}){% endif %}{% if not forloop.last %}, {% endif %}
+              {% empty %} —{% endfor %}
+            </div>
+            <div class="col-12"><span class="text-muted small">Notes :</span><br>{{ demande.notes|linebreaksbr|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pièces jointes -->
+    <div class="col-12 col-lg-6">
+      {% include "lims/demandes/pieces.html" %}
+    </div>
+
+    <!-- Échantillons (détails) — nouveaux champs -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+          <span>Échantillons (détails)</span>
+          <div class="small text-muted">Total : {{ echantillons|length }}</div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Code</th>
+                <th>Matrice</th>
+                <th>Conformité</th>
+                <th>Récep. ext.</th>
+                <th>Envoi ext.</th>
+                <th>Date prélèvement</th>
+                <th>Commentaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in echantillons %}
+                <tr>
+                  <td class="fw-semibold">{{ e.code_echantillon }}</td>
+                  <td>
+                    {{ e.get_matrice_display }}
+                    {% if e.matrice == e.Matrices.AUTRE and e.matrice_autre %}
+                      <span class="text-muted">({{ e.matrice_autre }})</span>
+                    {% elif e.matrice_autre %}
+                      <span class="text-muted">({{ e.matrice_autre }})</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if e.conformite %}
+                      <span class="badge text-bg-success">
+                        {% if e.get_conformite_display %}{{ e.get_conformite_display }}{% else %}{{ e.conformite }}{% endif %}
+                      </span>
+                    {% else %}
+                      <span class="badge text-bg-secondary">
+                        {% if e.get_conformite_display %}{{ e.get_conformite_display }}{% else %}—{% endif %}
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if e.reception_externe %}
+                      <span class="badge text-bg-info">Oui</span>
+                    {% else %}
+                      <span class="text-muted">Non</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if e.envoi_externe %}
+                      <span class="badge text-bg-warning text-dark">Oui</span>
+                    {% else %}
+                      <span class="text-muted">Non</span>
+                    {% endif %}
+                  </td>
+                  <td>{% if e.date_prelevement %}{{ e.date_prelevement|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+                  <td class="small">{% if e.commentaire %}{{ e.commentaire }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">Aucun échantillon.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Échantillons & analyses -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+          <span>Échantillons & analyses</span>
+          <div class="small text-muted">
+            Total : {{ total_ana }} • Terminées : {{ total_terminees }} • En retard : {{ total_retard }}
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Échantillon</th>
+                <th>Test</th>
+                <th>Maladie</th>
+                <th>Méthode</th>
+                <th>Analyste</th>
+                <th>Instrument</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Échéance</th>
+                <th>État</th>
+                <th>SLA</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in analyses_rows %}
+                <tr>
+                  <td>{{ r.ech }}</td>
+                  <td>
+                    <strong>{{ r.code_test }}</strong> — {{ r.test }}
+                    {% if r.result_file_url %}
+                      <i class="bi bi-paperclip ms-1" title="Fiche résultats disponible"></i>
+                    {% endif %}
+                  </td>
+                  <td>{{ r.maladie }}</td>
+                  <td>{{ r.methode }}</td>
+                  <td>{{ r.analyste }}</td>
+                  <td>{{ r.instrument }}</td>
+                  <td>{% if r.debut %}{{ r.debut|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                  <td>{% if r.fin %}{{ r.fin|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                  <td>{% if r.echeance %}{{ r.echeance|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                  <td><span class="badge text-bg-secondary">{{ r.etat }}</span></td>
+                  <td><span class="badge text-bg-{{ r.sla_badge }}">{{ r.sla_label }}</span></td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm" role="group">
+                      {% if r.result_file_url %}
+                        <a href="{{ r.result_file_url }}" target="_blank"
+                           class="btn btn-outline-secondary"
+                           title="Ouvrir la fiche résultats{% if r.result_file_name %} — {{ r.result_file_name }}{% endif %}">
+                          <i class="bi {{ r.result_file_icon }}"></i>
+                        </a>
+                      {% endif %}
+                      {% if r.can_conclude %}
+                        <a href="{% url 'lims:analyse_conclude' r.id %}"
+                           class="btn btn-outline-dark"
+                           title="Conclure la suspicion (joindre la fiche résultats)">
+                          <i class="fa fa-check-circle"></i>
+                        </a>
+                      {% endif %}
+                      {% if r.can_start %}
+                        <form method="post" action="{% url 'lims:analyse_start' r.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-primary" title="Démarrer">
+                            <i class="fa fa-play"></i>
+                          </button>
+                        </form>
+                      {% endif %}
+                      {% if r.can_finish %}
+                        <form method="post" action="{% url 'lims:analyse_finish' r.id %}" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-success" title="Terminer">
+                            <i class="fa fa-flag-checkered"></i>
+                          </button>
+                        </form>
+                      {% endif %}
+                      {% if not r.result_file_url and not r.can_conclude and not r.can_start and not r.can_finish %}
+                        <span class="text-muted small">—</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="12" class="text-center text-muted py-3">Aucune analyse</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historique -->
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">Historique du traitement</div>
+        <div class="list-group list-group-flush">
+          {% for ev in events %}
+            <div class="list-group-item">
+              <div class="d-flex">
+                <div class="me-3 text-muted"><i class="bi {{ ev.icon }}"></i></div>
+                <div class="flex-fill">
+                  <div class="fw-semibold">{{ ev.title }}</div>
+                  {% if ev.subtitle %}<div class="text-muted small">{{ ev.subtitle }}</div>{% endif %}
+                  {% if ev.meta %}<div class="text-muted small">{{ ev.meta }}</div>{% endif %}
+                  {% if ev.href %}
+                    <div class="mt-2">
+                      <a class="btn btn-sm btn-outline-secondary" href="{{ ev.href }}" target="_blank" rel="noopener">
+                        <i class="bi {{ ev.file_icon|default:'bi-box-arrow-up-right' }}"></i>
+                        Ouvrir{% if ev.file_name %} — {{ ev.file_name }}{% endif %}
+                      </a>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="text-nowrap small text-muted">
+                  {% if ev.ts %}{{ ev.ts|date:"Y-m-d H:i" }}{% else %}—{% endif %}
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="list-group-item text-muted">Aucun événement.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Commentaires -->
+    <div class="col-12">
+      {% include "lims/demandes/commentaires.html" %}
+    </div>
+
+  </div>
+</div>
+
+{# Active les tooltips Bootstrap si delete_blocked_reason est présent #}
+<script>
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+    new bootstrap.Tooltip(el);
+  });
+</script>
+{% endblock %}

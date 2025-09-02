@@ -1,0 +1,18 @@
+{% extends '../base.html' %}
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Confirmer la Suppression</h2>
+    <p>Êtes-vous sûr de vouloir supprimer le foyer suivant ?</p>
+    <p><strong>Région:</strong> {{ foyer.region }}</p>
+    <p><strong>Département:</strong> {{ foyer.departement }}</p>
+    <p><strong>Commune:</strong> {{ foyer.commune }}</p>
+    <p><strong>Localité:</strong> {{ foyer.localite }}</p>
+    <p><strong>Date de Rapportage:</strong> {{ foyer.date_rapportage }}</p>
+    <p><strong>Maladie suspectée:</strong> {{ foyer.maladie }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'foyer_list' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

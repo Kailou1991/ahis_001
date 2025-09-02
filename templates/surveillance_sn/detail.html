@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-wrapper">
+  <section class="content-header">
+    <h1>Détail foyer – #{{ foyer.id }}</h1>
+    <p>
+      <a class="btn btn-default btn-sm" href="{% url 'surveillance_sn:stats_surveillance' %}">
+        <i class="fa fa-arrow-left"></i> Retour à la liste
+      </a>
+    </p>
+  </section>
+
+  <section class="content">
+
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">Infos générales</h3></div>
+      <div class="box-body">
+        <div class="row">
+          <div class="col-sm-6">
+            <dl class="dl-horizontal">
+              <dt>Date signalement</dt><dd>{{ foyer.grp1_date_signalement|date:"Y-m-d" }}</dd>
+              <dt>Date rapportage</dt><dd>{{ foyer.grp1_date_rapportage|date:"Y-m-d" }}</dd>
+              <dt>Région</dt><dd>{{ foyer.grp3_region|default:"—" }}</dd>
+              <dt>Commune</dt><dd>{{ foyer.grp3_commune|default:"—" }}</dd>
+              <dt>Village</dt><dd>{{ foyer.grp3_nom_du_village|default:"—" }}</dd>
+              <dt>Lieu suspicion</dt><dd>{{ foyer.grp3_lieususpicion|default:"—" }}</dd>
+              <dt>Maladie (déclarée)</dt><dd>{{ foyer.grp5_qmad1|default:"—" }}</dd>
+            </dl>
+          </div>
+          <div class="col-sm-6">
+            <dl class="dl-horizontal">
+              <dt>Agent</dt><dd>{{ foyer.grp2_nom_agent|default:"—" }}</dd>
+              <dt>Titre</dt><dd>{{ foyer.grp2_titreagent|default:"—" }}</dd>
+              <dt>Statut</dt><dd>{{ foyer.grp2_statutagent|default:"—" }}</dd>
+              <dt>Téléphone</dt><dd>{{ foyer.grp2_telephone_agent|default:"—" }}</dd>
+              <dt>Email</dt><dd>{{ foyer.grp2_adresse_mail|default:"—" }}</dd>
+              <dt>Adresse prof.</dt><dd>{{ foyer.grp2_adresse_professionnelle|default:"—" }}</dd>
+            </dl>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+          <div class="col-sm-4">
+            <h4>Signes cliniques</h4>
+            <p style="white-space:pre-line">{{ foyer.grp5_liste_signes|default:"—" }}</p>
+          </div>
+          <div class="col-sm-4">
+            <h4>Lésions</h4>
+            <p style="white-space:pre-line">{{ foyer.grp5_liste_lesions|default:"—" }}</p>
+          </div>
+          <div class="col-sm-4">
+            <h4>Évolution</h4>
+            <p style="white-space:pre-line">{{ foyer.grp5_evolutionmaladie|default:"—" }}</p>
+          </div>
+        </div>
+
+        <h4>Commentaires</h4>
+        <p style="white-space:pre-line">{{ foyer.commentaire_de_la_suspicion|default:"—" }}</p>
+      </div>
+    </div>
+
+    <!-- Totaux enfants -->
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3>{{ child_totals.troupeau|intcomma }}</h3>
+            <p>Troupeau (somme enfants)</p>
+          </div>
+          <div class="icon"><i class="fa fa-paw"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3>{{ child_totals.malades|intcomma }}</h3>
+            <p>Malades (somme enfants)</p>
+          </div>
+          <div class="icon"><i class="fa fa-stethoscope"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-red">
+          <div class="inner">
+            <h3>{{ child_totals.morts|intcomma }}</h3>
+            <p>Morts (somme enfants)</p>
+          </div>
+          <div class="icon"><i class="fa fa-heartbeat"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Détail des items -->
+    <div class="box">
+      <div class="box-header with-border"><h3 class="box-title">Items déclarés</h3></div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Espèces sensibles (brut)</th>
+              <th class="text-right">Troupeau</th>
+              <th class="text-right">Malades</th>
+              <th class="text-right">Morts</th>
+              <th class="text-right">Femelles (Ad./Jeunes)</th>
+              <th class="text-right">Mâles (Ad./Jeunes)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ch in enfants %}
+              <tr>
+                <td>{{ ch.item_index }}</td>
+                <td>{{ ch.liste_anisensibles|default:"—" }}</td>
+                <td class="text-right">
+                  {{ ch.totaltroupeau|default:ch.effectif_total_troup_st_de_tot|default:0|intcomma }}
+                </td>
+                <td class="text-right">{{ ch.total_malade|default:0|intcomma }}</td>
+                <td class="text-right">
+                  {{ ch.effectif_animaux_morts_calcule|default:ch.calcul_animaux_morts|default:0|intcomma }}
+                </td>
+                <td class="text-right">
+                  {{ ch.fadultes|default:0|intcomma }} / {{ ch.fjeunes|default:0|intcomma }}
+                </td>
+                <td class="text-right">
+                  {{ ch.madultes|default:0|intcomma }} / {{ ch.mjeunes|default:0|intcomma }}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7" class="text-center">Aucun item.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+</div>
+{% endblock %}

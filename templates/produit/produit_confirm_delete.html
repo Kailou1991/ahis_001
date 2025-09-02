@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Confirmer la Suppression du Produit</h2>
+    
+    <p style="color: red;">Êtes-vous sûr de vouloir supprimer ce produit :</p>
+    
+    <table class="table table-bordered">
+        <tr>
+            <th>Nom du Produit</th>
+            <td>{{ produit.nom_du_produit }}</td>
+        </tr>
+        <tr>
+            <th>Classe Thérapeutique</th>
+            <td>{{ produit.classe_therapeutique }}</td>
+        </tr>
+        <tr>
+            <th>Familles Antibiotiques</th>
+            <td>{{ produit.familles_antibiotiques }}</td>
+        </tr>
+        <tr>
+            <th>Forme Pharmaceutique</th>
+            <td>{{ produit.forme_pharmaceutique }}</td>
+        </tr>
+        <tr>
+            <th>Substances Actives</th>
+            <td>{{ produit.substances_actives }}</td>
+        </tr>
+        <tr>
+            <th>Numéro Autorisation AMM</th>
+            <td>{{ produit.numero_autorisation_AMM }}</td>
+        </tr>
+        <tr>
+            <th>Date de Délivrance AMM</th>
+            <td>{{ produit.date_delivrance_AMM|date:"d/m/Y" }}</td>
+        </tr>
+        <tr>
+            <th>Numéro Décision AMM</th>
+            <td>{{ produit.numero_decision_AMM }}</td>
+        </tr>
+        <tr>
+            <th>Status AMM</th>
+            <td>{{ produit.status_AMM }}</td>
+        </tr>
+    </table>
+
+    <form method="POST">
+        {% csrf_token %}
+       
+            <button type="submit" class="btn btn-danger" style="margin-left: 10%; width: 20%; height: 40%;">Supprimer</button>
+            <a href="{% url 'produitVet_list' %}" class="btn btn-success" style="width: 20%;">Annuler</a>
+        
+    </form>
+</div>
+{% endblock %}

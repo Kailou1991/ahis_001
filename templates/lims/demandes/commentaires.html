@@ -1,0 +1,29 @@
+<div class="card shadow-sm">
+  <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+    <span>Commentaires (workflow)</span>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% url 'lims:demande_add_comment' demande.pk %}" class="row g-2 mb-3">
+      {% csrf_token %}
+      <div class="col-md-3">{{ comment_form.etape }}</div>
+      <div class="col-md-7">{{ comment_form.texte }}</div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">Ajouter</button>
+      </div>
+    </form>
+
+    <ul class="list-group">
+      {% for c in comments %}
+        <li class="list-group-item">
+          <div class="fw-semibold mb-1">{{ c.etape|default:"—" }}</div>
+          <div>{{ c.texte|linebreaksbr }}</div>
+          <div class="small text-muted mt-1">
+            par {{ c.auteur|default:"—" }} • {{ c.cree_le|date:"Y-m-d H:i" }}
+          </div>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Aucun commentaire.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

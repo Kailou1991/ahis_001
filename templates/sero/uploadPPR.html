@@ -1,0 +1,85 @@
+{% extends '../base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+ {% with user.groups.all|first as first_group %}
+ {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+    {% if message %}
+      <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <h2 class="mb-3">Uploader un fichier Excel</h2>
+    <div class="col-auto">
+        <a href="{% url 'generer_modele' %}" class="btn btn-success">Télécharger le modèle de résultats</a>
+    </div>
+    <form id="uploadForm" enctype="multipart/form-data" method="post">
+        {% csrf_token %}
+        <div class="col-auto">
+            <input type="file" name="file" class="form-control" required style="width: 300px; margin-left: 30%;margin-top: -3%;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-left: 59%;margin-top: -5%;">Uploader</button>
+    </form>
+{% endif %}
+{% endwith %}
+
+    <div id="message" class="mt-3"></div>
+
+    <hr class="my-5">
+
+    <h2 class="mb-3">Tableau de séroconversion nationale</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>TypeSero</th>
+                    <th>Prob protection National (%)</th>
+                    <th>Taux sérocon vaccinés (%)</th>
+                    <th>Taux sérocon non vaccinés (%)</th>
+                    <th>Indice d'éfficacité(%)</th>
+                    
+
+                    {% with user.groups.all|first as first_group %}
+                    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+                    <th>Action</th>
+                    {% endif %}
+                    {% endwith %}
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in tableau %}
+                <tr>
+                    <td>{{ ligne.type_sero }}</td>
+                    <td>{{ ligne.prevalence_nationale }}</td>
+                    <td>{{ ligne.taux_seroconversion_vaccines }}</td>
+                    <td>{{ ligne.taux_seroconversion_non_vaccines }}</td>
+                    <td>{{ ligne.indice_efficacite }}</td>
+                    {% with user.groups.all|first as first_group %}
+                    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+                 
+                    <td>
+                        <a href="{% url 'supprimer_enquete' %}?type_enquete={{ ligne.type_sero }}" 
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer toutes les données de {{ ligne.type_sero }} ?');">
+                            Supprimer {{ ligne.type_sero }}
+                        </a>
+                    </td>
+                    {% endif %}
+                    {% endwith %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">Aucun résultat disponible.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%; text-align: center;">
+    <h2>Détails</h2>
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">
+                Déplacement de {{ deplacement.nombre_animaux }} {{ deplacement.espece }} 
+                de {{ deplacement.commune_provenance }} à {{ deplacement.commune_destination }} 
+                le {{ deplacement.date_deplacement }}
+            </h4>
+
+            <p><strong>Espèce concernée :</strong> {{ deplacement.espece }}</p>
+            <p><strong>Nombre d'animaux :</strong> {{ deplacement.nombre_animaux }}</p>
+
+            <hr>
+            <h5>📄 Contrôles et Certificats</h5>
+            <p><strong>Certificats vaccination contrôlés :</strong> {{ deplacement.nombre_certificats_vaccination_controles }}</p>
+            <p><strong>Certificats vaccination délivrés :</strong> {{ deplacement.nombre_certificats_vaccination_delivres }}</p>
+            <p><strong>Laisser-passer contrôlés :</strong> {{ deplacement.nombre_laisser_passer_controles }}</p>
+            <p><strong>Laisser-passer délivrés :</strong> {{ deplacement.nombre_laisser_passer_delivres }}</p>
+
+            <hr>
+            <h5>📍 Provenance et Destination</h5>
+            <p><strong>Région :</strong> {{ deplacement.region_provenance }}</p>
+            <p><strong>Département :</strong> {{ deplacement.departement_provenance }}</p>
+            <p><strong>Commune :</strong> {{ deplacement.commune_provenance }}</p>
+            <p><strong>→ Région Destination :</strong> {{ deplacement.region_destination }}</p>
+            <p><strong>→ Département :</strong> {{ deplacement.departement_destination }}</p>
+            <p><strong>→ Commune :</strong> {{ deplacement.commune_destination }}</p>
+            <p><strong>Établissement d'origine :</strong> {{ deplacement.etablissement_origine }}</p>
+            <p><strong>Établissement de destination :</strong> {{ deplacement.etablissement_destination }}</p>
+
+            <hr>
+            <h5>🌐 Coordonnées GPS du poste de contrôle</h5>
+            <p><strong>Latitude :</strong> {{ deplacement.latitude_poste_controle }}</p>
+            <p><strong>Longitude :</strong> {{ deplacement.longitude_poste_controle }}</p>
+
+            <hr>
+            <h5>🚚 Transport</h5>
+            <p><strong>Date de déplacement :</strong> {{ deplacement.date_deplacement }}</p>
+            <p><strong>Durée :</strong> {{ deplacement.duree_deplacement }} jours</p>
+            <p><strong>Mode de transport :</strong> {{ deplacement.get_mode_transport_display }}</p>
+            <p><strong>Motif :</strong> {{ deplacement.raison_deplacement }}</p>
+
+            <hr>
+            <h5>👤 Propriétaire</h5>
+            <p><strong>Nom :</strong> {{ deplacement.nom_proprietaire }}</p>
+            <p><strong>Contact :</strong> {{ deplacement.contact_proprietaire }}</p>
+
+            <h5>🚛 Transporteur</h5>
+            <p><strong>Nom :</strong> {{ deplacement.nom_transporteur }}</p>
+            <p><strong>Contact :</strong> {{ deplacement.contact_transporteur }}</p>
+
+            {% if deplacement.maladie_detectee == "OUI" %}
+            <hr>
+            <h5>🦠 Suspicion de Maladie</h5>
+            <p><strong>Maladie suspectée :</strong> {{ deplacement.maladie_suspectee }}</p>
+            <p><strong>Nombre d’animaux malades :</strong> {{ deplacement.nombre_animaux_malades }}</p>
+            <p><strong>Nombre traités :</strong> {{ deplacement.nombre_animaux_traites }}</p>
+            <p><strong>Nombre vaccinés :</strong> {{ deplacement.nombre_animaux_vaccines }}</p>
+            <p><strong>Nombre en quarantaine :</strong> {{ deplacement.nombre_animaux_quarantaine }}</p>
+            <p><strong>Mesures prises :</strong> {{ deplacement.mesures_prises }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{% url 'deplacementanimaux_list' %}" class="btn btn-secondary mt-3">← Retour à la liste</a>
+</div>
+{% endblock %}

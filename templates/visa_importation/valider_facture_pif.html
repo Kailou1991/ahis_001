@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center text-primary">Visa PIF – Facture n° {{ facture.numero_facture }}</h2>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <p><strong>Structure importatrice :</strong> {{ facture.Structure }}</p>
+      <p><strong>Facture téléchargeable :</strong> <a href="{{ facture.fichier_facture.url }}" target="_blank" class="btn btn-outline-info btn-sm">📄 Télécharger la facture</a></p>
+    </div>
+  </div>
+
+  <form method="post" class="border p-4 rounded bg-light">
+    {% csrf_token %}
+    <div class="form-group mb-3">
+      <label for="commentaire" class="form-label">💬 Commentaire</label>
+      <textarea name="commentaire" class="form-control" rows="4" placeholder="Observations ou remarques éventuelles..."></textarea>
+    </div>
+    <div class="d-flex justify-content-center gap-3">
+     
+      <button type="submit" class="btn btn-success">✅ Valider le visa</button>
+       <a href="{% url 'liste_factures' %}" class="btn btn-secondary">⬅️ Retour à la liste</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

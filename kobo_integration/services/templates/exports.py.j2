@@ -1,0 +1,18 @@
+{% autoescape off %}
+from django.http import HttpResponse
+import csv
+
+def export_csv(qs):
+    response = HttpResponse(content_type="text/csv")
+    filename = f"{qs.model._meta.app_label}_{qs.model._meta.model_name}.csv"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    # colonnes = tous les champs simples du modèle
+    fields = [f.name for f in qs.model._meta.fields]
+    writer = csv.writer(response)
+    writer.writerow(fields)
+
+    for obj in qs.iterator():
+        writer.writerow([getattr(obj, f) for f in fields])
+    return response
+{% endautoescape %}

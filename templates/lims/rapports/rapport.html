@@ -1,0 +1,164 @@
+{# templates/lims/rapports/rapport.html #}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Rapport — {{ demande.code_demande }}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:13px;color:#222;margin:0}
+    .wrap{max-width:840px;margin:24px auto;padding:0 12px}
+    .header{display:grid;grid-template-columns:1fr auto;gap:6px 16px;margin-bottom:10px}
+    .header .muted{color:#555;font-size:12px}
+    h1{font-size:20px;margin:12px 0}
+    h2{font-size:16px;margin:18px 0 8px}
+    .grid{display:grid;grid-template-columns:260px 1fr;gap:6px 12px}
+    .lab{width:260px;color:#444}
+    .val{flex:1}
+    .hr{border-top:1px solid #ddd;margin:16px 0}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border:1px solid #ddd;padding:6px 8px}
+    .table th{background:#f6f6f6;text-align:left}
+    .small{font-size:12px}
+    .notes{margin:8px 0 0 16px;padding:0}
+    .sign{display:grid;grid-template-columns:1fr 1fr;margin-top:18px}
+    .sign div{min-height:60px}
+    .footer{margin-top:18px;border-top:1px solid #ddd;padding-top:8px;font-size:12px;color:#555}
+    .prewrap{white-space:pre-wrap}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- En-tête administratif -->
+  <div class="header">
+    <div>
+      <div><strong>Laboratoire National d’Élevage</strong></div>
+      <div>DIRECTION DU LABORATOIRE NATIONAL D’ÉLEVAGE</div>
+      {# Ici, "Code :" = code demande (selon demande utilisateur) #}
+      <div class="muted">
+        Code : {{ demande.code_demande|default:"—" }}
+        &nbsp;&nbsp; • &nbsp;&nbsp; Version : 01
+        &nbsp;&nbsp; • &nbsp;&nbsp; Date d’application : {{ date_emission|date:"d/m/y" }}
+      </div>
+    </div>
+    <div class="muted">Page 1 sur 1</div>
+  </div>
+
+  <h1>RAPPORT D’ANALYSE</h1>
+
+  <div class="grid" style="margin-bottom:8px">
+    <div class="lab"><strong>Référence/numéro du rapport</strong></div>
+    <div class="val">{{ reference_rapport }}</div>
+
+    <div class="lab"><strong>Nom et contact du client</strong></div>
+    <div class="val">{{ client_contact }}</div>
+
+    <div class="lab"><strong>Région/ Province</strong></div>
+    <div class="val">{{ demande.region|default:"—" }} / {{ demande.departement|default:"—" }}</div>
+
+    <div class="lab"><strong>Commune/ Village ou Secteur</strong></div>
+    <div class="val">{{ demande.commune|default:"—" }}{% if demande.localite %} / {{ demande.localite }}{% endif %}</div>
+
+    <div class="lab"><strong>Service/lieu d’exécution de l’analyse</strong></div>
+    <div class="val">{{ service_lieu|default:"—" }}</div>
+
+    <div class="lab"><strong>Code de(s) échantillon(s)</strong></div>
+    <div class="val">{{ codes_ech }}</div>
+
+    <div class="lab"><strong>Espèce animale</strong></div>
+    <div class="val">{{ demande.espece|default:"—" }}</div>
+
+    <div class="lab"><strong>Date, nature(s) et état de(s) échantillon(s) à la réception</strong></div>
+    <div class="val">
+      <div><strong>Date :</strong> {% if demande.recu_le %}{{ demande.recu_le|date:"d/m/Y" }}{% else %}—{% endif %}</div>
+      <div><strong>Nature(s) :</strong> {{ matrices_uniq }}</div>
+      <div><strong>État :</strong> Acceptable</div>
+    </div>
+
+    <div class="lab"><strong>Nombre d’échantillons analysés</strong></div>
+    <div class="val">{{ nb_ech }}</div>
+
+    <div class="lab"><strong>Analyse(s) réalisée(s) et méthode(s) utilisée(s)</strong></div>
+    <div class="val">
+      {% for a in analyses %}
+        {% with m=a.test.get_methode_display|default:a.test.methode %}
+          {{ a.test.nom_test }} — {{ m }}{% if not forloop.last %}; {% endif %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <div class="lab"><strong>Date de début d’analyse</strong></div>
+    <div class="val">{% if debut_min %}{{ debut_min|date:"d/m/Y" }}{% else %}—{% endif %}</div>
+
+    <div class="lab"><strong>Date de fin d’analyse</strong></div>
+    <div class="val">{% if fin_max %}{{ fin_max|date:"d/m/Y" }}{% else %}—{% endif %}</div>
+
+    <div class="lab"><strong>Date d’émission du rapport</strong></div>
+    <div class="val">{{ date_emission|date:"d/m/Y" }}</div>
+
+    <div class="lab"><strong>Mention(s) particulière(s)</strong></div>
+    <div class="val prewrap">
+      {{ mentions_particulieres|default:"—" }}
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <h2>Résultats d’analyses</h2>
+  <p style="margin:6px 0 12px"><strong>{{ resultats_global }}</strong></p>
+
+  <table class="table small" style="margin-bottom:12px">
+    <thead>
+      <tr>
+        <th>Échantillon</th>
+        <th>Code test</th>
+        <th>Test</th>
+        <th>Méthode</th>
+        <th>Analyste</th>
+        <th>Fin</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+    {% for a in analyses %}
+      <tr>
+        <td>{{ a.echantillon.code_echantillon }}</td>
+        <td>{{ a.test.code_test }}</td>
+        <td>{{ a.test.nom_test }}</td>
+        <td>{% firstof a.test.get_methode_display a.test.methode "—" %}</td>
+        <td>
+          {% if a.analyste %}
+            {% firstof a.analyste.get_full_name a.analyste.get_username %}
+          {% else %}—{% endif %}
+        </td>
+        <td>{% if a.termine_le %}{{ a.termine_le|date:"d/m/Y H:i" }}{% else %}—{% endif %}</td>
+       
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="sign small">
+    <div>Le Chef de service</div>
+    <div style="text-align:right">La Directrice du LNE</div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="small">
+    <ul class="notes">
+      <li>Le présent rapport ne se rapporte qu’aux échantillons soumis à l’analyse. Il ne doit en aucun cas être reproduit partiellement sans l’autorisation préalable du Laboratoire National d’Élevage.</li>
+      <li>Le Laboratoire National d’Élevage reste disponible pour tout complément d’informations.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    Adresse : Avenue du 11 Décembre, Ouagadougou / BURKINA FASO — 09 BP 907 Ouagadougou
+    &nbsp;•&nbsp; Tél : 25 32 45 84 / 25 32 46 35
+    &nbsp;•&nbsp; e-mail : labo.lne@outlook.com
+  </div>
+
+</div>
+</body>
+</html>

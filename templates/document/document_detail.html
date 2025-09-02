@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Détails du Document</h2>
+    <dl class="row">
+        
+        <dt class="col-sm-3">Type</dt>
+        <dd class="col-sm-9">{{ document.get_type_document_display }}</dd>
+
+        <dt class="col-sm-3">Libellé</dt>
+        <dd class="col-sm-9">{{ document.libelle }}</dd>
+
+        <dt class="col-sm-3">Date de Mise en Application</dt>
+        <dd class="col-sm-9">{{ document.date_de_mise_en_application }}</dd>
+
+        <dt class="col-sm-3">Date de Publication</dt>
+        <dd class="col-sm-9">{{ document.date_de_publication|default:"Non spécifiée" }}</dd>
+
+        <dt class="col-sm-3">Autorité d'Émission</dt>
+        <dd class="col-sm-9">{{ document.autorite_emission }}</dd>
+
+        <dt class="col-sm-3">Version</dt>
+        <dd class="col-sm-9">{{ document.version|default:"Non spécifiée" }}</dd>
+
+        <dt class="col-sm-3">Fichier</dt>
+        <dd class="col-sm-9">
+            {% if document.fichier %}
+                <a href="{{ document.fichier.url }}">Télécharger</a>
+            {% else %}
+                Pas de fichier
+            {% endif %}
+        </dd>
+
+        <dt class="col-sm-3">Mots Clés</dt>
+        <dd class="col-sm-9">{{ document.mots_cles|default:"Non spécifiés" }}</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">{{ document.description|default:"Non spécifiée" }}</dd>
+
+        <dt class="col-sm-3">Valide</dt>
+        <dd class="col-sm-9">{{ document.valide|yesno:"Oui,Non" }}</dd>
+    </dl>
+
+    <a href="{% url 'document_list' %}" class="btn btn-secondary mt-3">Retour à la liste</a>
+</div>
+{% endblock %}

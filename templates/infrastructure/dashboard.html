@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="text-primary text-center mb-5">📊 Tableau de bord des infrastructures vétérinaires</h2>
+
+    <!-- Filtres Région / Département / Commune -->
+    <form method="get" class="row g-3 mb-5">
+        <div class="col-md-2">
+            <label for="region" class="form-label">Région</label>
+            <select name="region" id="region" class="form-control">
+                <option value="">-- Toutes les régions --</option>
+                {% for region in regions %}
+                    <option value="{{ region.id }}" {% if region.id == selected_region %}selected{% endif %}>{{ region.Nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="departement" class="form-label">Département</label>
+            <select name="departement" id="departement" class="form-control">
+                <option value="">-- Tous les départements --</option>
+                {% for dep in departements %}
+                    <option value="{{ dep.id }}" {% if dep.id == selected_departement %}selected{% endif %}>{{ dep.Nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="commune" class="form-label">Commune</label>
+            <select name="commune" id="commune" class="form-control">
+                <option value="">-- Toutes les communes --</option>
+                {% for com in communes %}
+                    <option value="{{ com.id }}" {% if com.id == selected_commune %}selected{% endif %}>{{ com.Nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label for="annee" class="form-label">Année</label>
+            <select name="annee" id="annee" class="form-control">
+                <option value="">-- Toutes les années --</option>
+                {% for year in annees %}
+                    <option value="{{ year }}" {% if year == selected_annee %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-success w-100">🔍Filtrer</button>
+        </div>
+
+
+    </form>
+
+    <!-- Section KPI avec style professionnel -->
+    <div class="row g-4 justify-content-center">
+        {% for etat, valeur in infra_etats.items %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">🏷️</div>
+                    <h4 class="text-muted text-uppercase">{{ etat }}</h4>
+                    <h3 class="fw-bold text-dark">{{ valeur }}</h3>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">🧾</div>
+                    <h4 class="text-muted text-uppercase">Inspections totales</h4>
+                    <h3 class="fw-bold text-dark">{{ total_inspections }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">📈</div>
+                    <h4 class="text-muted text-uppercase">Couverture inspection</h4>
+                    <h3 class="fw-bold text-dark">{{ coverage_pct }}%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">📍</div>
+                    <h4 class="text-muted text-uppercase">Sans GPS</h4>
+                    <h3 class="fw-bold text-dark">{{ infra_no_gps }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">🔄</div>
+                    <h6 class="text-muted text-uppercase">Inspections > 12 mois</h6>
+                    <h3 class="fw-bold text-dark">{{ old_inspections }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section graphique simple -->
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <h5>📊 Répartition par type d'infrastructure</h5>
+            <ul class="list-group">
+                {% for item in repartition_type %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ item.name }}
+                    <span class="badge bg-primary rounded-pill">{{ item.total }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h5>💰 Répartition par type de financement</h5>
+            <ul class="list-group">
+                {% for item in repartition_financement %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ item.name|default:"Non renseigné" }}
+                    <span class="badge bg-success rounded-pill">{{ item.total }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Maillage territorial -->
+    <div class="mt-5">
+        <h4 class="text-dark">🗺️ Maillage territorial</h4>
+        <table class="table table-bordered table-striped" id="liste_Vaccination">
+            <thead class="table-light">
+                <tr>
+                    <th>Région</th>
+                    <th>Département</th>
+                    <th>Commune</th>
+                    <th>Type infrastructure</th>
+                    <th class="text-end">Nb</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in maillage_commune %}
+                <tr>
+                    <td>{{ row.Region }}</td>
+                    <td>{{ row.Departement }}</td>
+                    <td>{{ row.Commune }}</td>
+                    <td>{{ row.type }}</td>
+                    <td class="text-end">{{ row.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const regionSelect = document.getElementById("region");
+        const departementSelect = document.getElementById("departement");
+        const communeSelect = document.getElementById("commune");
+
+        regionSelect.addEventListener("change", function () {
+            fetch(`/api/departements/?region_id=${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    departementSelect.innerHTML = '<option value="">-- Tous les départements --</option>';
+                    data.forEach(dep => {
+                        departementSelect.innerHTML += `<option value="${dep.id}">${dep.Nom}</option>`;
+                    });
+                    communeSelect.innerHTML = '<option value="">-- Toutes les communes --</option>';
+                });
+        });
+
+        departementSelect.addEventListener("change", function () {
+            fetch(`/api/communes/?departement_id=${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    communeSelect.innerHTML = '<option value="">-- Toutes les communes --</option>';
+                    data.forEach(com => {
+                        communeSelect.innerHTML += `<option value="${com.id}">${com.Nom}</option>`;
+                    });
+                });
+        });
+    });
+    </script>
+
+{% endblock %}

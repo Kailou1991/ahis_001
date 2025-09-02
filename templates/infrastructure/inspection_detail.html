@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%; max-width: 800px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">🔍 Détails de l'inspection</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Infrastructure :</strong> {{ inspection.infrastructure.nom }}</p>
+            <p><strong>Date d'inspection :</strong> {{ inspection.date_inspection }}</p>
+            <p><strong>Inspecteur :</strong> {{ inspection.inspecteur }}</p>
+            <p><strong>État précédent :</strong>
+                {% if inspection.etat_derniere_inspection %}
+                    {{ inspection.etat_derniere_inspection }}
+                {% else %}
+                    {{ inspection.infrastructure.get_etat_initial_display }}
+                {% endif %}
+            </p>
+            <p><strong>État après inspection :</strong> {{ inspection.etat_inspection }}</p>
+            <p><strong>Commentaire :</strong><br>{{ inspection.commentaire|linebreaks }}</p>
+
+            <div class="mt-4">
+                <a href="{% url 'inspection_update' inspection.pk %}" class="btn btn-warning me-2">✏️ Modifier</a>
+                <a href="{% url 'inspection_list' %}" class="btn btn-secondary">↩ Retour à la liste</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

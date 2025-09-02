@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-3">
+  <h3>Tableau de bord — __VERBOSE_NAME__</h3>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card p-3">
+        <div>Total enregistrements</div>
+        <strong>{{ kpi_total }}</strong>
+      </div>
+    </div>
+  </div>
+  <a class="btn btn-link mt-3" href="{% url '__APP_SLUG__:list' %}">Retour à la liste</a>
+</div>
+{% endblock %}

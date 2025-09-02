@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+<div class="content-wrapper">
+  <section class="content-header">
+    <h1>Effectifs vaccinés</h1>
+  </section>
+
+  <section class="content">
+
+    <!-- Filtres -->
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">Filtres</h3></div>
+      <div class="box-body">
+        <form id="filters-form" method="get" class="form-inline" style="gap:8px; display:flex; flex-wrap:wrap;">
+
+          <div class="form-group">
+            <label for="campagne">Campagne</label>
+            <select id="campagne" name="campagne" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for c in campaigns %}
+                <option value="{{ c }}" {% if filters.campagne == c %}selected{% endif %}>{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="type_campagne">Type de campagne</label>
+            <select id="type_campagne" name="type_campagne" class="form-control">
+              <option value="">— Tous —</option>
+              {% for t in types %}
+                <option value="{{ t }}" {% if filters.type_campagne == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maladie">Maladie</label>
+            <select id="maladie" name="maladie" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for m in maladies %}
+                <option value="{{ m }}" {% if filters.maladie == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="region">Région</label>
+            <select id="region" name="region" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for r in regions %}
+                <option value="{{ r }}" {% if filters.region == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="departement">Département</label>
+            <select id="departement" name="departement" class="form-control">
+              <option value="">— Tous —</option>
+              {% for d in departements %}
+                <option value="{{ d }}" {% if filters.departement == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-filter"></i> Filtrer
+          </button>
+
+          <a href="{% url 'vaccination_sn:stats' %}" class="btn btn-default">Réinitialiser</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3>{{ totals.vacc_public|default:0|intcomma }}</h3>
+            <p>Vaccinés (Public)</p>
+          </div>
+          <div class="icon"><i class="fa fa-hospital-o"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-green">
+          <div class="inner">
+            <h3>{{ totals.vacc_prive|default:0|intcomma }}</h3>
+            <p>Vaccinés (Privé)</p>
+          </div>
+          <div class="icon"><i class="fa fa-user-md"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3>{{ totals.marques|default:0|intcomma }}</h3>
+            <p>Animaux marqués (total)</p>
+          </div>
+          <div class="icon"><i class="fa fa-check-square-o"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="box">
+      <div class="box-header with-border">
+        <h3 class="box-title">Résultats ({{ totals.rows }})</h3>
+      </div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Date soumission</th>
+              <th>Campagne</th>
+              <th>Type</th>
+              <th>Région</th>
+              <th>Département</th>
+              <th>Commune</th>
+              <th>Maladie</th>
+              <th class="text-right">Public</th>
+              <th class="text-right">Privé</th>
+              <th class="text-right">Marqués</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ r.parent.submission_time|date:"Y-m-d H:i" }}</td>
+                <td>{{ r.parent.campagne|default:"—" }}</td>
+                <td>{{ r.parent.type_de_campagne|default:"—" }}</td>
+                <td>{{ r.parent.grp4_region|default:"—" }}</td>
+                <td>{{ r.parent.grp4_departement|default:"—" }}</td>
+                <td>{{ r.commune|default:"—" }}</td>
+                <td>{{ r.maladie_masse|default:"—" }}</td>
+                <td class="text-right">{{ r.vaccine_public|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.vaccine_prive|default:0|intcomma }}</td>
+                <td class="text-right">{{ r.total_marque|default:0|intcomma }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="10" class="text-center">Aucune donnée.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <div class="box-footer clearfix">
+        <ul class="pagination pagination-sm no-margin pull-right">
+          {% if page_obj.has_previous %}
+            <li>
+              <a href="?page=1&campagne={{ filters.campagne|urlencode }}&type_campagne={{ filters.type_campagne|urlencode }}&maladie={{ filters.maladie|urlencode }}&region={{ filters.region|urlencode }}&departement={{ filters.departement|urlencode }}">&laquo;</a>
+            </li>
+            <li>
+              <a href="?page={{ page_obj.previous_page_number }}&campagne={{ filters.campagne|urlencode }}&type_campagne={{ filters.type_campagne|urlencode }}&maladie={{ filters.maladie|urlencode }}&region={{ filters.region|urlencode }}&departement={{ filters.departement|urlencode }}">&lsaquo;</a>
+            </li>
+          {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+            <li class="disabled"><span>&lsaquo;</span></li>
+          {% endif %}
+
+          <li class="active"><span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+          {% if page_obj.has_next %}
+            <li>
+              <a href="?page={{ page_obj.next_page_number }}&campagne={{ filters.campagne|urlencode }}&type_campagne={{ filters.type_campagne|urlencode }}&maladie={{ filters.maladie|urlencode }}&region={{ filters.region|urlencode }}&departement={{ filters.departement|urlencode }}">&rsaquo;</a>
+            </li>
+            <li>
+              <a href="?page={{ page_obj.paginator.num_pages }}&campagne={{ filters.campagne|urlencode }}&type_campagne={{ filters.type_campagne|urlencode }}&maladie={{ filters.maladie|urlencode }}&region={{ filters.region|urlencode }}&departement={{ filters.departement|urlencode }}">&raquo;</a>
+            </li>
+          {% else %}
+            <li class="disabled"><span>&rsaquo;</span></li>
+            <li class="disabled"><span>&raquo;</span></li>
+          {% endif %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+  </section>
+</div>
+
+<!-- Dépendance Région -> Département (AJAX) -->
+<script>
+(function() {
+  const regionSel = document.getElementById('region');
+  const deptSel   = document.getElementById('departement');
+  const campSel   = document.getElementById('campagne');
+  const typeSel   = document.getElementById('type_campagne');
+  const malSel    = document.getElementById('maladie');
+
+  function option(text, value, selected) {
+    const o = document.createElement('option');
+    o.textContent = text;
+    o.value = value;
+    if (selected) o.selected = true;
+    return o;
+  }
+
+  async function refreshDepartements() {
+    const params = new URLSearchParams();
+    if (campSel.value)  params.set('campagne', campSel.value);
+    if (typeSel.value)  params.set('type_campagne', typeSel.value);
+    if (malSel.value)   params.set('maladie',  malSel.value);
+    if (regionSel.value) params.set('region', regionSel.value);
+
+    try {
+      const url = "{% url 'vaccination_sn:api_departements' %}?" + params.toString();
+      const res = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      const current = deptSel.value;
+      deptSel.innerHTML = '';
+      deptSel.appendChild(option('— Tous —', '', !current));
+
+      let found = false;
+      (data.departements || []).forEach(d => {
+        const isSelected = (current && current === d);
+        if (isSelected) found = true;
+        deptSel.appendChild(option(d, d, isSelected));
+      });
+
+      if (current && !found) {
+        // si la valeur courante n’existe plus pour cette région, reset
+        deptSel.value = '';
+      }
+    } catch (e) {
+      console.error('Departements refresh failed:', e);
+    }
+  }
+
+  // Mise à jour quand on change de région / campagne / type / maladie
+  regionSel.addEventListener('change', refreshDepartements);
+  campSel.addEventListener('change', refreshDepartements);
+  typeSel.addEventListener('change', refreshDepartements);
+  malSel.addEventListener('change', refreshDepartements);
+
+  // première passe si une région est déjà sélectionnée
+  if (regionSel.value) {
+    refreshDepartements();
+  }
+})();
+</script>
+{% endblock %}

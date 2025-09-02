@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between mb-3">
+    <h3>📋 Liste des inspections de viande</h3>
+     {% with user.groups.all|first as first_group %}
+     {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+    <a href="{% url 'ajouter_inspection_viande' %}" class="btn btn-primary">+ Nouvelle</a>
+ {% endif %}
+    {% endwith %}
+
+  </div>
+  <table class="table table-striped" id="liste_Vaccination">
+    <thead class="table-light">
+      <tr>
+        <th>Abattoir</th>
+        <th>Espèce</th>
+        <th>Inspecteur</th>
+        <th>Date</th>
+        <th> Etat animal</th>
+        <th>signes anormaux</th>
+        <th>aspect carcasse</th>
+        <th>description anomalies</th>
+       
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in inspections %}
+        <tr>
+          <td>{{ i.abattoir }}</td>
+          <td>{{ i.espece }}</td>
+          <td>{{ i.inspecteur }}</td>
+          <td>{{ i.etat_animal }}</td>
+          <td>{{ i.signes_anormaux }}</td>
+          <td>{{ i.aspect_carcasse }}</td>
+          <td>{{ i.description_anomalies }}</td>
+         
+          <td>{{ i.date_inspection }}</td>
+           
+
+          <td>
+            {% with user.groups.all|first as first_group %}
+           {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+            <a href="{% url 'modifier_inspection_viande' i.id %}" class="btn btn-sm btn-warning">Modifier</a>
+            <a href="{% url 'supprimer_inspection_viande' i.id %}" class="btn btn-sm btn-danger">Supprimer</a>
+          
+{% endif %}
+    {% endwith %}
+
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

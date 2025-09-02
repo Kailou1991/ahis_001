@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  {% include "materiel/_messages.html" %}
+  <h3 class="mb-3">{% if obj %}Modifier le type{% else %}Nouveau type de matériel{% endif %}</h3>
+
+  <form method="post" class="row g-3">
+    {% csrf_token %}
+    <div class="col-md-6">
+      <label class="form-label">Nom du type</label>
+      <input type="text" name="nom" class="form-control" value="{{ obj.nom|default:'' }}" required>
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-success" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

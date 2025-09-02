@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load surv_extras %}
+
+{% block content %}
+<div class="content-wrapper">
+  <section class="content-header">
+    <h1>Surveillance – Foyers déclarés</h1>
+  </section>
+
+  <section class="content">
+
+    <!-- Filtres -->
+    <div class="box box-primary">
+      <div class="box-header with-border"><h3 class="box-title">Filtres</h3></div>
+      <div class="box-body">
+        <form method="get" class="form-inline" style="gap:8px; display:flex; flex-wrap:wrap; align-items:flex-end;">
+          <div class="form-group">
+            <label for="d_from">Du</label>
+            <input type="date" id="d_from" name="d_from" value="{{ filters.d_from }}" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="d_to">Au</label>
+            <input type="date" id="d_to" name="d_to" value="{{ filters.d_to }}" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="region">Région</label>
+            <select id="region" name="region" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for r in regions %}
+                <option value="{{ r }}" {% if filters.region == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="maladie">Maladie</label>
+            <select id="maladie" name="maladie" class="form-control">
+              <option value="">— Toutes —</option>
+              {% for m in maladies %}
+                <option value="{{ m }}" {% if filters.maladie == m %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="q">Recherche</label>
+            <input id="q" name="q" value="{{ filters.q }}" class="form-control" placeholder="mot-clé…">
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-filter"></i> Filtrer
+          </button>
+          <a href="{% url 'surveillance_sn:stats_surveillance' %}" class="btn btn-default">Réinitialiser</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Totaux -->
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3>{{ totals.troupeau|intcomma }}</h3>
+            <p>Effectif total troupeau (sommes)</p>
+          </div>
+          <div class="icon"><i class="fa fa-paw"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3>{{ totals.malades|intcomma }}</h3>
+            <p>Animaux malades (sommes)</p>
+          </div>
+          <div class="icon"><i class="fa fa-stethoscope"></i></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="small-box bg-red">
+          <div class="inner">
+            <h3>{{ totals.morts|intcomma }}</h3>
+            <p>Animaux morts (sommes)</p>
+          </div>
+          <div class="icon"><i class="fa fa-heartbeat"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste -->
+    <div class="box">
+      <div class="box-header with-border">
+        <h3 class="box-title">Résultats ({{ totals.rows }})</h3>
+      </div>
+      <div class="box-body table-responsive no-padding">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Date signalement</th>
+              <th>Région</th>
+              <th>Commune</th>
+              <th>Espèce (1er token)</th>
+              <th>Maladie (déclarée)</th>
+              <th class="text-right">Troupeau</th>
+              <th class="text-right">Malades</th>
+              <th class="text-right">Morts</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td>{{ r.parent.grp1_date_signalement|date:"Y-m-d" }}</td>
+                <td>{{ r.parent.grp3_region|default:"—" }}</td>
+                <td>{{ r.parent.grp3_commune|default:"—" }}</td>
+                <td>{{ r.liste_anisensibles|espece_first|default:"—" }}</td>
+                <td>{{ r.parent.grp5_qmad1|default:"—" }}</td>
+                <td class="text-right">
+                  {{ r.totaltroupeau|default:r.effectif_total_troup_st_de_tot|default:0|intcomma }}
+                </td>
+                <td class="text-right">{{ r.total_malade|default:0|intcomma }}</td>
+                <td class="text-right">
+                  {{ r.effectif_animaux_morts_calcule|default:r.calcul_animaux_morts|default:0|intcomma }}
+                </td>
+                <td>
+                  <a class="btn btn-xs btn-info"
+                     href="{% url 'surveillance_sn:surveillance_detail' r.parent_id %}">
+                    <i class="fa fa-search"></i> Détails
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="10" class="text-center">Aucune donnée.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <div class="box-footer clearfix">
+        <ul class="pagination pagination-sm no-margin pull-right">
+          {% if page_obj.has_previous %}
+            <li><a href="?page=1&d_from={{ filters.d_from|urlencode }}&d_to={{ filters.d_to|urlencode }}&region={{ filters.region|urlencode }}&maladie={{ filters.maladie|urlencode }}&q={{ filters.q|urlencode }}">&laquo;</a></li>
+            <li><a href="?page={{ page_obj.previous_page_number }}&d_from={{ filters.d_from|urlencode }}&d_to={{ filters.d_to|urlencode }}&region={{ filters.region|urlencode }}&maladie={{ filters.maladie|urlencode }}&q={{ filters.q|urlencode }}">&lsaquo;</a></li>
+          {% else %}
+            <li class="disabled"><span>&laquo;</span></li>
+            <li class="disabled"><span>&lsaquo;</span></li>
+          {% endif %}
+
+          <li class="active"><span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+          {% if page_obj.has_next %}
+            <li><a href="?page={{ page_obj.next_page_number }}&d_from={{ filters.d_from|urlencode }}&d_to={{ filters.d_to|urlencode }}&region={{ filters.region|urlencode }}&maladie={{ filters.maladie|urlencode }}&q={{ filters.q|urlencode }}">&rsaquo;</a></li>
+            <li><a href="?page={{ page_obj.paginator.num_pages }}&d_from={{ filters.d_from|urlencode }}&d_to={{ filters.d_to|urlencode }}&region={{ filters.region|urlencode }}&maladie={{ filters.maladie|urlencode }}&q={{ filters.q|urlencode }}">&raquo;</a></li>
+          {% else %}
+            <li class="disabled"><span>&rsaquo;</span></li>
+            <li class="disabled"><span>&raquo;</span></li>
+          {% endif %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+  </section>
+</div>
+{% endblock %}

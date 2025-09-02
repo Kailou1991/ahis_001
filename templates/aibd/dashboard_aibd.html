@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Tableau de bord – AIBD</h2>
+
+  <!-- Filtres -->
+  <form method="get" class="row g-2 mb-4">
+    <div class="col-md-2">
+      <label>Période du :</label>
+      <input type="date" class="form-control" name="date_debut" value="{{ request.GET.date_debut }}">
+    </div>
+    <div class="col-md-2">
+      <label>au :</label>
+      <input type="date" class="form-control" name="date_fin" value="{{ request.GET.date_fin }}">
+    </div>
+    <div class="col-md-2">
+      <label>Continent :</label>
+      <select name="continent" class="form-select">
+        <option value="">Tous</option>
+        {% for cont in continents %}
+          <option value="{{ cont.id }}" {% if request.GET.continent == cont.id|stringformat:"s" %}selected{% endif %}>{{ cont.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label>Pays :</label>
+      <select name="pays" class="form-select">
+        <option value="">Tous</option>
+        {% for pays in pays %}
+          <option value="{{ pays.id }}" {% if request.GET.pays == pays.id|stringformat:"s" %}selected{% endif %}>{{ pays.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label>Type d'opération :</label>
+      <select name="type_operation" class="form-select">
+        <option value="">Tous</option>
+        <option value="importation" {% if request.GET.type_operation == 'importation' %}selected{% endif %}>Importation</option>
+        <option value="exportation" {% if request.GET.type_operation == 'exportation' %}selected{% endif %}>Exportation</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+    </div>
+  </form>
+
+  <!-- KPIs -->
+  <div class="row text-white mb-4">
+    <div class="col-md-2"><div class="bg-primary p-3 rounded text-center"><h3>{{ total_ops|intcomma }}</h3><small>Total opérations</small></div></div>
+    <div class="col-md-2"><div class="bg-success p-3 rounded text-center"><h3>{{ total_imports|intcomma }}</h3><small>Importations</small></div></div>
+    <div class="col-md-2"><div class="bg-danger p-3 rounded text-center"><h3>{{ total_exports|intcomma }}</h3><small>Exportations</small></div></div>
+    <div class="col-md-2"><div class="bg-info p-3 rounded text-center"><h3>{{ total_animaux|intcomma }}</h3><small>Nombre d'animaux</small></div></div>
+    <div class="col-md-2"><div class="bg-warning p-3 rounded text-center"><h3>{{ quantite_pod|intcomma }}</h3><small>Quantité totale POD</small></div></div>
+    <div class="col-md-2"><div class="bg-dark p-3 rounded text-center"><h3>{{ nb_medicaments|intcomma }}</h3><small>Lots de médicaments</small></div></div>
+  </div>
+
+  <!-- Graphiques -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Évolution mensuelle</div>
+        <div class="card-body text-center">
+          {% if evolution_chart %}
+            <img src="data:image/png;base64,{{ evolution_chart }}" class="img-fluid">
+          {% else %}
+            <p class="text-muted">Aucune donnée disponible.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">Répartition des produits</div>
+        <div class="card-body text-center">
+          {% if pie_chart %}
+            <img src="data:image/png;base64,{{ pie_chart }}" class="img-fluid">
+          {% else %}
+            <p class="text-muted">Aucune donnée disponible.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 10 produits -->
+  <div class="card mb-4">
+    <div class="card-header">Top 10 produits les plus fréquents</div>
+    <div class="card-body text-center">
+      {% if top_chart %}
+        <img src="data:image/png;base64,{{ top_chart }}" class="img-fluid">
+      {% else %}
+        <p class="text-muted">Aucune donnée disponible.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Opérations récentes -->
+  <div class="card">
+    <div class="card-header">Détails des opérations récentes</div>
+    <div class="card-body table-responsive">
+      <table class="table table-bordered table-hover table-striped">
+        <thead class="table-secondary">
+          <tr>
+            <th>Date</th>
+            <th>Type d'opération</th>
+            <th>Type de produit</th>
+            <th>Produit</th>
+            <th>Quantité</th>
+            <th>Pays</th>
+            <th>Vol</th>
+            <th>Transit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for op in data_recent %}
+          <tr>
+            <td>{{ op.date }}</td>
+            <td>{{ op.type_operation }}</td>
+            <td>{{ op.type_produit }}</td>
+            <td>{{ op.produit }}</td>
+            <td>{{ op.quantite|intcomma }}</td>
+            <td>{{ op.pays.nom }}</td>
+            <td>{{ op.numero_vol }}</td>
+            <td>{{ op.societe_transit }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center">Aucune donnée disponible.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

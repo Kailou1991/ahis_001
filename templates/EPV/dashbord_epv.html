@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2 class="text-center mb-4">Tableau de Bord des établissements vétérinaires</h2>
+
+    <!-- Formulaire de filtrage -->
+    <form method="post" class="needs-validation mt-4" novalidate>
+        {% csrf_token %}
+        <div class="row align-items-end">
+
+            <!-- Région -->
+            <div class="col-md-2">
+                <label for="id_region">Région</label>
+                <select name="region" class="form-control" id="id_region">
+                    <option value="">Toutes</option>
+                    {% for region in regions %}
+                    <option value="{{ region.id }}" {% if region.id|stringformat:"s" == request.POST.region %}selected{% endif %}>
+                        {{ region.Nom }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Bouton de validation -->
+            <div class="col-md-3" style="margin-top: 2.35%;">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+
+            <!-- Bouton de téléchargement Excel -->
+            <div class="col-md-3" style="margin-top: 2.35%;">
+                <button type="submit" name="download_excel" class="btn btn-danger">Exporter sous format Excel</button>
+            </div>
+        </div>
+    </form>
+    <br><br>
+    <!-- Résultats des EPV par type -->
+    <div class="row mt-4">
+        {% for epv in epv_counts_with_classes %}
+        <div class="col-lg-3 col-6">
+            <div class="small-box {{ epv.css_class }}">
+                <div class="inner btn btn-success" style="width: 100%;">
+                    <h3>{{ epv.count }}</h3>
+                    <p>{{ epv.type_epv }}</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center">Aucun résultat trouvé</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Tableau des données EPV -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <table id="liste_Vaccination" class="table table-striped table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Nom Propriétaire</th>
+                        <th>Grade Propriétaire</th>
+                        <th>Autorisation Ouverture</th>
+                        <th>Date Ouverture</th>
+                        <th>Nombre Employés Création</th>
+                        <th>Nombre Employés Actuels</th>
+                        <th>Région</th>
+                        <th>Département</th>
+                        <th>Commune</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in table_data %}
+                    <tr>
+                        <td>{{ entry.ID }}</td>
+                        <td>{{ entry.Nom }}</td>
+                        <td>{{ entry.Type }}</td>
+                        <td>{{ entry.Nom_Proprietaire }}</td>
+                        <td>{{ entry.Grade_Proprietaire }}</td>
+                        <td>{% if entry.Autorisation_Ouverture %}Oui{% else %}Non{% endif %}</td>
+                        <td>{{ entry.Date_Ouverture }}</td>
+                        <td>{{ entry.Nombre_Employes_Creation }}</td>
+                        <td>{{ entry.Nombre_Employes_Actuels }}</td>
+                        <td>{{ entry.Region }}</td>
+                        <td>{{ entry.Departement }}</td>
+                        <td>{{ entry.Commune }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

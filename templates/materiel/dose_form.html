@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  {% include "materiel/_messages.html" %}
+  <h3 class="mb-3">{% if form.instance.pk %}Modifier{% else %}Nouvelle{% endif %} dotation en doses</h3>
+
+  <form method="post" enctype="multipart/form-data" class="row g-3">
+    {% csrf_token %}
+
+    <div class="col-md-6">
+      <label class="form-label">{{ form.campagne.label }}</label>
+      <div class="input-group">
+        {{ form.campagne }}
+    
+      </div>
+      {% if form.campagne.errors %}<div class="invalid-feedback d-block">{{ form.campagne.errors|striptags }}</div>{% endif %}
+        </div>
+
+    <div class="col-md-6">
+      <label class="form-label">{{ form.maladie.label }}</label>
+      <div class="input-group">
+        {{ form.maladie }}
+            </div>
+      {% if form.maladie.errors %}<div class="invalid-feedback d-block">{{ form.maladie.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">{{ form.quantite_doses.label }}</label>
+      {{ form.quantite_doses }}
+      {% if form.quantite_doses.errors %}<div class="invalid-feedback d-block">{{ form.quantite_doses.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">{{ form.date_dotation.label }}</label>
+      {{ form.date_dotation }}
+      {% if form.date_dotation.errors %}<div class="invalid-feedback d-block">{{ form.date_dotation.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">{{ form.piece_jointe.label }}</label>
+      {{ form.piece_jointe }}
+      {% if form.piece_jointe.errors %}<div class="invalid-feedback d-block">{{ form.piece_jointe.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">{{ form.observations.label }}</label>
+      {{ form.observations }}
+      {% if form.observations.errors %}<div class="invalid-feedback d-block">{{ form.observations.errors|striptags }}</div>{% endif %}
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+      <a href="{% url 'dose_list' %}" class="btn btn-secondary">← Retour</a>
+      <button class="btn btn-success" type="submit">Enregistrer</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

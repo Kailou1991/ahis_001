@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Détails du Produit</h2>
+    <dl class="row">
+        <dt class="col-sm-3">Type du Produit</dt>
+        <dd class="col-sm-9">{{ produit.type_produit }}</dd>
+        <dt class="col-sm-3">Nom du Produit</dt>
+        <dd class="col-sm-9">{{ produit.nom_du_produit }}</dd>
+
+        <dt class="col-sm-3">Classe Thérapeutique</dt>
+        <dd class="col-sm-9">{{ produit.classe_therapeutique }}</dd>
+
+        <dt class="col-sm-3">Familles Antibiotiques</dt>
+        <dd class="col-sm-9">{{ produit.familles_antibiotiques }}</dd>
+
+        <dt class="col-sm-3">Forme Pharmaceutique</dt>
+        <dd class="col-sm-9">{{ produit.forme_pharmaceutique }}</dd>
+
+        <dt class="col-sm-3">Substances Actives</dt>
+        <dd class="col-sm-9">{{ produit.substances_actives }}</dd>
+
+        <dt class="col-sm-3">Numéro Autorisation AMM</dt>
+        <dd class="col-sm-9">{{ produit.numero_autorisation_AMM }}</dd>
+
+        <dt class="col-sm-3">Date de Délivrance AMM</dt>
+        <dd class="col-sm-9">{{ produit.date_delivrance_AMM|date:"d/m/Y" }}</dd>
+
+        <dt class="col-sm-3">Numéro Décision AMM</dt>
+        <dd class="col-sm-9">{{ produit.numero_decision_AMM }}</dd>
+
+        <dt class="col-sm-3">Status AMM</dt>
+        <dd class="col-sm-9">{{ produit.status_AMM }}</dd>
+    </dl>
+    <a href="{% url 'produitVet_list' %}" class="btn btn-secondary">Retour à la liste</a>
+</div>
+{% endblock %}

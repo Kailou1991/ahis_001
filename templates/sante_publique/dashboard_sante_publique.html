@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="text-center text-uppercase text-primary fw-bold mb-4">🧭 Tableau de bord - Santé Publique Vétérinaire</h2>
+  <hr>
+
+  <!-- 🎯 Filtres de recherche -->
+  </br>
+  <div class="card shadow-sm p-4 mb-4">
+    <form method="post" class="row g-3 align-items-end">
+      {% csrf_token %}
+      <div class="col-md-3">{{ form.region.label_tag }}{{ form.region }}</div>
+      <div class="col-md-3">{{ form.periode_type.label_tag }}{{ form.periode_type }}</div>
+      <div class="col-md-2" id="hebdo-group" style="display:none;">{{ form.semaine.label_tag }}{{ form.semaine }}</div>
+      <div class="col-md-2" id="mois-group" style="display:none;">{{ form.mois.label_tag }}{{ form.mois }}</div>
+      <div class="col-md-2" id="trimestre-group" style="display:none;">{{ form.trimestre.label_tag }}{{ form.trimestre }}</div>
+      <div class="col-md-2" id="semestre-group" style="display:none;">{{ form.semestre.label_tag }}{{ form.semestre }}</div>
+      <div class="col-md-2">{{ form.annee.label_tag }}{{ form.annee }}</div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100 shadow-sm fw-bold"><i class="bi bi-funnel-fill"></i> Filtrer</button>
+      </div>
+    </form>
+  </div>
+</br>
+  {% if total_animaux_abattus is not None %}
+  <!-- 📊 Indicateurs clés -->
+  <div class="row g-3 text-center mb-4" style="font-size: 12; font-weight: bold;">
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Animaux abattus</h6><h5 class="fw-bold text-dark">{{ total_animaux_abattus }}</h5></div></div></div>
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Valeur Totale</h6><h5 class="fw-bold text-success">{{ valeur_totale|intcomma }} FCFA</h5></div></div></div>
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Anomalies ante-mortem</h6><h5 class="fw-bold text-warning">{{ total_anomalies }}</h5></div></div></div>
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Saisies totales</h6><h5 class="fw-bold text-danger">{{ total_saisies_totales }}</h5></div></div></div>
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Saisies d'organes</h6><h5 class="fw-bold text-info">{{ total_saisies_organes }}</h5></div></div></div>
+    <div class="col-md-2"><div class="card shadow-sm"><div class="card-body"><h6 class="fw-bold text-muted">Inspections post-mortem</h6><h5 class="fw-bold text-primary">{{ total_inspections }}</h5></div></div></div>
+  </div>
+
+</br> </br>
+  <!-- 📊 Graphiques simplifiés -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header fw-bold bg-light">🐄 Répartition Abattage</div>
+        <div class="card-body">
+          <p class="fw-bold">Par espèce :</p>
+          {% for item in abattage_par_espece %}
+            <div class="d-flex justify-content-between"><span class="fw-bold">{{ item.espece__nom }}</span><span class="fw-bold">{{ item.total }}</span></div>
+          {% endfor %}
+          <hr>
+          <p class="fw-bold">Par âge :</p>
+          {% for age in repartition_age %}<div class="fw-bold">{{ age.ages }} : {{ age.total }}</div>{% endfor %}
+          <hr>
+          <p class="fw-bold">Par sexe :</p>
+          {% for sexe in repartition_sexe %}<div class="fw-bold">{{ sexe.sexes }} : {{ sexe.total }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header fw-bold bg-light">🔎 Observations sanitaires</div>
+        <div class="card-body">
+          <p class="fw-bold">Anomalies fréquentes :</p>
+          {% for a in anomalies_freq %}<div class="fw-bold">{{ a.anomalies }} : {{ a.total }}</div>{% endfor %}
+          <hr>
+          <p class="fw-bold">Symptômes fréquents :</p>
+          {% for s in symptomes_freq %}<div class="fw-bold">{{ s.symptomes }} : {{ s.total }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">❗ Saisies & Organes</div>
+        <div class="card-body">
+          <p class="fw-bold">Motifs de saisies :</p>
+          {% for m in motifs_saisies %}<div class="fw-bold">{{ m.motifs_saisies }} : {{ m.total }}</div>{% endfor %}
+          <hr>
+          <p class="fw-bold">Organes saisis :</p>
+          {% for o in organes_saisies %}<div class="fw-bold">{{ o.organes_saisis }} : {{ o.total }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold">🫀 Carcasses & Organes</div>
+        <div class="card-body">
+          <p class="fw-bold">Aspect des carcasses :</p>
+          {% for aspect in aspect_carcasses %}<div class="fw-bold">{{ aspect.aspect_carcasse }} : {{ aspect.total }}</div>{% endfor %}
+          <hr>
+          <p class="fw-bold">Anomalies par organe :</p>
+          {% for org, nb in organe_repartition.items %}<div class="fw-bold">{{ org }} : {{ nb }}</div>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🧾 Tableaux -->
+  <div class="row mt-5">
+    <div class="col-md-12">
+      <h5 class="text-primary fw-bold">📄 Tableau des abattages</h5>
+      <table class="table table-bordered table-sm table-striped">
+        <thead class="table-light fw-bold"><tr><th>Date</th><th>Espèce</th><th>Âge</th><th>Sexe</th><th>Commune</th><th>Poids</th><th>Valeur</th></tr></thead>
+        <tbody>{% for a in abattage_table %}<tr>
+          <td class="fw-bold">{{ a.date_enregistrement|date:"d/m/Y" }}</td>
+          <td class="fw-bold">{{ a.espece }}</td>
+          <td class="fw-bold">{{ a.ages }}</td>
+          <td class="fw-bold">{{ a.sexes }}</td>
+          <td class="fw-bold">{{ a.commune }}</td>
+          <td class="fw-bold">{{ a.poids }}</td>
+          <td class="fw-bold">{{ a.valeur_financiere }}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <h5 class="text-warning fw-bold">🩺 Tableau ante-mortem</h5>
+      <table class="table table-bordered table-sm">
+        <thead class="table-light fw-bold"><tr><th>Date</th><th>Espèce</th><th>Anomalies</th><th>Symptômes</th><th>Effectif</th></tr></thead>
+        <tbody>{% for i in inspection_table %}<tr>
+          <td class="fw-bold">{{ i.date_enregistrement|date:"d/m/Y" }}</td>
+          <td class="fw-bold">{{ i.espece }}</td>
+          <td class="fw-bold">{{ i.anomalies }}</td>
+          <td class="fw-bold">{{ i.symptomes }}</td>
+          <td class="fw-bold">{{ i.nombres }}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <h5 class="text-danger fw-bold">❗ Tableau des saisies totales</h5>
+      <table class="table table-bordered table-sm">
+        <thead class="table-light fw-bold"><tr><th>Date</th><th>Espèce</th><th>Motifs</th><th>Commune</th><th>Poids</th><th>Valeur</th></tr></thead>
+        <tbody>{% for s in saisies_table %}<tr>
+          <td class="fw-bold">{{ s.date_enregistrement|date:"d/m/Y" }}</td>
+          <td class="fw-bold">{{ s.espece }}</td>
+          <td class="fw-bold">{{ s.motifs_saisies }}</td>
+          <td class="fw-bold">{{ s.commune }}</td>
+          <td class="fw-bold">{{ s.poids }}</td>
+          <td class="fw-bold">{{ s.valeur_financiere }}</td>
+        </tr>{% endfor %}</tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- 🛠️ JS dynamique pour période -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const periodeType = document.querySelector('[name="periode_type"]');
+  const toggleGroups = () => {
+    document.getElementById('hebdo-group').style.display = periodeType.value === 'Hebdomadaire' ? 'block' : 'none';
+    document.getElementById('mois-group').style.display = periodeType.value === 'Mensuel' ? 'block' : 'none';
+    document.getElementById('trimestre-group').style.display = periodeType.value === 'Trimestriel' ? 'block' : 'none';
+    document.getElementById('semestre-group').style.display = periodeType.value === 'Semestriel' ? 'block' : 'none';
+  }
+  periodeType.addEventListener('change', toggleGroups);
+  toggleGroups();
+});
+</script>
+{% endblock %}

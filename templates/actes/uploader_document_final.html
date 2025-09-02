@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Uploader le document signé pour la demande #{{ demande.id }}</h3>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-success mt-3">Téléverser</button>
+    </form>
+    <a href="{% url 'detail_demande' demande.id %}" class="btn btn-secondary mt-3">Retour</a>
+</div>
+{% endblock %}

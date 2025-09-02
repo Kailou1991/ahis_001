@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Header / CTA -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <h1 class="h4 mb-0">Demandes</h1>
+      <div class="text-muted small">Suivi, recherche et actions rapides</div>
+    </div>
+{% with user.groups.all|first as first_group %}
+{% if first_group.name != "Analyste" %}
+
+<a href="{% url 'lims:vlims_demande_create' %}" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm">
+      <i class="bi bi-plus-circle"></i>
+      <span>Nouvelle demande</span>
+    </a>
+    {% endif %}
+    {% endwith %}
+    
+  </div>
+
+  <!-- Filtres -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <form class="row g-2 align-items-end" method="get">
+        <div class="col-12 col-md-3">
+          <label class="form-label">Recherche</label>
+          <input type="text" name="q" class="form-control" value="{{ q }}" placeholder="Code, motif, notes, soumissionnaire…">
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label">État</label>
+          <select name="etat" class="form-select">
+            <option value="">Tous</option>
+            {% for e in ETATS %}
+              <option value="{{ e.code }}" {% if etat == e.code %}selected{% endif %}>{{ e.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label">Priorité</label>
+          <select name="priorite" class="form-select">
+            <option value="">Toutes</option>
+            {% for k, v in PRIORITES %}
+              <option value="{{ k }}" {% if priorite == k %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label">De</label>
+          <input type="date" name="de" class="form-control" value="{{ de }}">
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label">À</label>
+          <input type="date" name="a" class="form-control" value="{{ a }}">
+        </div>
+
+        <div class="col-12 col-md-3 d-flex gap-2">
+          <button class="btn btn-outline-primary flex-fill">
+            <i class="bi bi-search"></i> Filtrer
+          </button>
+          <a class="btn btn-outline-secondary flex-fill" href="?">
+            <i class="bi bi-x-circle"></i> Réinitialiser
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-1">
+        <thead class="table-light">
+          <tr>
+            <th style="min-width:130px;">Code</th>
+            
+            <th>Soumissionnaire</th>
+            <th style="min-width:220px;">Localité</th>
+            <th>État</th>
+            <th class="text-center">Éch.</th>
+            <th class="text-center">Analyses</th>
+            <th style="min-width:140px;">Créée le</th>
+            <th class="text-end" style="min-width:170px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in page_obj.object_list %}
+            <tr>
+              <td class="fw-semibold">
+                <a href="{% url 'lims:vlims_demande_detail' d.pk %}" class="link-primary text-decoration-none">
+                  {{ d.code_demande }}
+                </a>
+              </td>
+              <td>{{ d.soumissionnaire|default:"—" }}</td>
+              <td>
+                <div> {{ d.commune }}</div>
+                {% if d.localite %}
+                  <div class="small text-muted">{{ d.localite }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if d.current_etat %}
+                  <span class="badge rounded-pill text-bg-secondary">{{ d.current_etat.label }}</span>
+                {% else %}
+                  <span class="badge rounded-pill text-bg-light text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <span class="badge rounded-pill bg-light text-dark">{{ d.nb_ech }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge rounded-pill bg-light text-dark">{{ d.nb_ana }}</span>
+              </td>
+              <td class="text-muted">
+                {{ d.cree_le|date:"Y-m-d" }}<br>
+                <span class="small">{{ d.cree_le|date:"H:i" }}</span>
+              </td>
+             <td class="text-end">
+  <a href="{% url 'lims:vlims_demande_detail' d.pk %}" class="btn btn-success">
+    <i class="bi bi-eye"></i> Voir
+  </a>
+
+  {% if can_affect %}
+    <a href="{% url 'lims:demande_affecter' d.pk %}" class="btn btn-primary">
+      Affecter
+    </a>
+  {% endif %}
+</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">
+                Aucune demande. Créez votre première demande ci-dessus.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="card-footer">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="small text-muted">
+          Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+          — {{ page_obj.paginator.count }} élément(s)
+        </div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.previous_page_number }}&q={{ q }}&etat={{ etat }}&priorite={{ priorite }}&de={{ de }}&a={{ a }}">«</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">«</span></li>
+            {% endif %}
+
+            <li class="page-item disabled"><span class="page-link">{{ page_obj.number }}</span></li>
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link"
+                   href="?page={{ page_obj.next_page_number }}&q={{ q }}&etat={{ etat }}&priorite={{ priorite }}&de={{ de }}&a={{ a }}">»</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">»</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

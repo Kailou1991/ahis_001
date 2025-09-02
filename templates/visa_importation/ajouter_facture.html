@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center text-primary">📥 Enregistrer une facture visée (DSV)</h2>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data" class="px-3">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-flex justify-content-center gap-3 mt-3">
+          <a href="{% url 'liste_factures' %}" class="btn btn-secondary">⬅️ Retour à la liste</a>
+          <button type="submit" class="btn btn-success">💾 Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

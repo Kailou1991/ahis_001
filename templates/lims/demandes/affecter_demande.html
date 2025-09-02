@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4" style="max-width: 980px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 mb-0">
+      Affecter des tests — Demande {{ demande.code_demande }}
+    </h1>
+    <a href="{% url 'lims:vlims_demandes_list' %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Retour
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <form method="post" class="card-body">
+      {% csrf_token %}
+
+      <div class="mb-3">
+        <div class="small text-muted">
+          Soumissionnaire : <strong>{{ demande.soumissionnaire|default:"—" }}</strong> •
+          Site : <strong>{{ demande.site_labo }}</strong>
+        </div>
+        <div class="small text-muted">
+          Maladie suspectée : <strong>{{ demande.maladie_suspectee|default:"—" }}</strong>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Analyste</label>
+          <select name="analyste" class="form-select" required>
+            <option value="">— Sélectionner —</option>
+            {% for u in eligible_analystes %}
+              <option value="{{ u.pk }}">{{ u.get_full_name|default:u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Instrument (optionnel)</label>
+          <select name="instrument" class="form-select">
+            <option value="">— Aucun —</option>
+            {% for eq in instruments %}
+              <option value="{{ eq.pk }}">{{ eq.nom }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Priorité</label>
+          <select name="priorite" class="form-select">
+            <option value="normale">Normale</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label">Échéance</label>
+          <input type="datetime-local" name="date_echeance" class="form-control" step="1">
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+        <div class="me-auto">
+          <h6 class="mb-0">
+            Tests {% if demande.maladie_suspectee %}suggérés pour <em>{{ demande.maladie_suspectee }}</em>{% else %}du catalogue{% endif %}
+          </h6>
+          <div class="small text-muted" id="countInfo"></div>
+        </div>
+
+        <!-- Filtres -->
+        <div>
+          <label class="form-label mb-1 small" for="filterSection">Section</label>
+          <select id="filterSection" class="form-select form-select-sm" data-initial="{{ request.GET.section|default:'' }}">
+            <option value="">Toutes</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label mb-1 small" for="filterMethod">Méthode</label>
+          <select id="filterMethod" class="form-select form-select-sm" data-initial="{{ request.GET.methode|default:'' }}">
+            <option value="">Toutes</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label mb-1 small" for="filterQuery">Recherche</label>
+          <input id="filterQuery" class="form-control form-control-sm" placeholder="Code, nom… (accents ignorés)">
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" id="btnResetFilters" class="btn btn-sm btn-outline-secondary">
+            Réinitialiser
+          </button>
+          <button type="button" id="btnCheckVisible" class="btn btn-sm btn-outline-primary">
+            Tout cocher (visible)
+          </button>
+          <button type="button" id="btnUncheckAll" class="btn btn-sm btn-outline-danger">
+            Tout décocher
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive border rounded">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light" style="position: sticky; top: 0; z-index: 1;">
+            <tr>
+              <th style="width:42px">
+                <input type="checkbox" class="form-check-input" id="checkAll">
+              </th>
+              <th>Code test</th>
+              <th>Nom du test</th>
+              <th>Section</th>
+              <th>Méthode</th>
+            </tr>
+          </thead>
+          <tbody id="testsTbody">
+            {% for t in suggested_tests %}
+              <tr
+                data-section="{{ t.get_section_display }}"
+                data-method="{{ t.get_methode_display }}"
+                data-hay="{{ t.code_test }} {{ t.nom_test }} {{ t.get_section_display }} {{ t.get_methode_display }}"
+              >
+                <td>
+                  <input type="checkbox" class="form-check-input test-check" name="tests" value="{{ t.pk }}" id="test-{{ t.pk }}">
+                </td>
+                <td><label class="mb-0" for="test-{{ t.pk }}"><code>{{ t.code_test }}</code></label></td>
+                <td><label class="mb-0" for="test-{{ t.pk }}">{{ t.nom_test }}</label></td>
+                <td>{{ t.get_section_display }}</td>
+                <td>{{ t.get_methode_display }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  Aucun test trouvé — vérifiez le catalogue.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <div class="small text-muted">
+          Sélectionnés : <span id="selectedCount">0</span>
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{% url 'lims:vlims_demande_detail' demande.pk %}" class="btn btn-outline-secondary">Annuler</a>
+          <button class="btn btn-primary">
+            <i class="bi bi-check2-circle"></i> Créer & affecter les analyses
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ===== Helpers texte (accents, casse) =====
+const norm = (s) => (s || '').toString()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase().trim();
+
+// ===== DOM =====
+const $tbody = document.getElementById('testsTbody');
+const $rows  = () => Array.from($tbody?.querySelectorAll('tr[data-section]') || []);
+const $filterSection = document.getElementById('filterSection');
+const $filterMethod  = document.getElementById('filterMethod');
+const $filterQuery   = document.getElementById('filterQuery');
+const $checkAll      = document.getElementById('checkAll');
+const $btnCheckVis   = document.getElementById('btnCheckVisible');
+const $btnUncheckAll = document.getElementById('btnUncheckAll');
+const $btnReset      = document.getElementById('btnResetFilters');
+const $countInfo     = document.getElementById('countInfo');
+const $selectedCount = document.getElementById('selectedCount');
+
+// ===== Remplir dynamiquement les filtres Section/Méthode =====
+function initFiltersFromTable() {
+  const sections = new Set(), methods = new Set();
+  $rows().forEach(tr => {
+    const s = tr.dataset.section || '';
+    const m = tr.dataset.method || '';
+    if (s) sections.add(s);
+    if (m) methods.add(m);
+  });
+
+  // Remplir Section
+  const secInit = ($filterSection?.dataset.initial || '').toString();
+  sections.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    if (secInit && secInit === s) opt.selected = true;
+    $filterSection?.appendChild(opt);
+  });
+
+  // Remplir Méthode
+  const metInit = ($filterMethod?.dataset.initial || '').toString();
+  methods.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    if (metInit && metInit === m) opt.selected = true;
+    $filterMethod?.appendChild(opt);
+  });
+}
+
+// ===== Appliquer les filtres =====
+function applyFilters() {
+  const sec = $filterSection?.value || '';
+  const met = $filterMethod?.value || '';
+  const q   = norm($filterQuery?.value);
+
+  let visible = 0;
+  $rows().forEach(tr => {
+    const matchSec = !sec || tr.dataset.section === sec;
+    const matchMet = !met || tr.dataset.method === met;
+    const matchQ   = !q || norm(tr.dataset.hay).includes(q);
+
+    const show = matchSec && matchMet && matchQ;
+    tr.classList.toggle('d-none', !show);
+    if (show) visible++;
+  });
+
+  updateCounts();
+  updateCountInfo(visible);
+}
+
+// ===== Mise à jour des compteurs =====
+function updateCounts() {
+  const checked = document.querySelectorAll('input.test-check:checked').length;
+  $selectedCount && ($selectedCount.textContent = String(checked));
+
+  // "Tout cocher" reflète l'état des visibles
+  const visibles = $rows().filter(tr => !tr.classList.contains('d-none'));
+  const visiblesChecked = visibles.filter(tr => tr.querySelector('input.test-check')?.checked).length;
+  const allVisibleChecked = visibles.length > 0 && visiblesChecked === visibles.length;
+  if ($checkAll) {
+    $checkAll.indeterminate = !allVisibleChecked && visiblesChecked > 0;
+    $checkAll.checked = allVisibleChecked;
+  }
+}
+
+function updateCountInfo(visible) {
+  const total = $rows().length;
+  if ($countInfo) {
+    $countInfo.textContent = `${visible} / ${total} test(s) affiché(s)`;
+  }
+}
+
+// ===== Listeners =====
+document.addEventListener('DOMContentLoaded', () => {
+  initFiltersFromTable();
+  applyFilters(); // applique les valeurs initiales si fournies (via data-initial)
+
+  // Recherche au fil de l'eau (debounce léger)
+  let t;
+  $filterQuery?.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(applyFilters, 120);
+  });
+  $filterSection?.addEventListener('change', applyFilters);
+  $filterMethod?.addEventListener('change', applyFilters);
+
+  // Réinitialiser filtres
+  $btnReset?.addEventListener('click', () => {
+    if ($filterSection) $filterSection.value = '';
+    if ($filterMethod)  $filterMethod.value = '';
+    if ($filterQuery)   $filterQuery.value = '';
+    applyFilters();
+  });
+
+  // Tout cocher/visible
+  $btnCheckVis?.addEventListener('click', () => {
+    $rows().forEach(tr => {
+      if (!tr.classList.contains('d-none')) {
+        const cb = tr.querySelector('input.test-check');
+        if (cb) cb.checked = true;
+      }
+    });
+    updateCounts();
+  });
+
+  // Tout décocher
+  $btnUncheckAll?.addEventListener('click', () => {
+    document.querySelectorAll('input.test-check').forEach(cb => (cb.checked = false));
+    updateCounts();
+  });
+
+  // Checkbox globale (sur visibles uniquement)
+  $checkAll?.addEventListener('change', (e) => {
+    $rows().forEach(tr => {
+      if (!tr.classList.contains('d-none')) {
+        const cb = tr.querySelector('input.test-check');
+        if (cb) cb.checked = e.target.checked;
+      }
+    });
+    updateCounts();
+  });
+
+  // Clic case → mise à jour compteur/état "indeterminate"
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('test-check')) {
+      updateCounts();
+    }
+  });
+});
+</script>
+{% endblock %}

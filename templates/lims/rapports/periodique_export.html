@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>{{ bounds.titre }} {{ bounds.numero }} — {{ bounds.label }}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:12px;color:#222;margin:0}
+    .wrap{max-width:980px;margin:18px auto;padding:0 12px}
+    h1{font-size:18px;margin:8px 0 4px}
+    .muted{color:#666}
+    .header{display:grid;grid-template-columns:1fr auto;gap:6px 16px;margin-bottom:8px}
+    .table{width:100%;border-collapse:collapse;margin-bottom:10px}
+    .table th,.table td{border:1px solid #ccc;padding:6px 8px;vertical-align:top}
+    .table th{background:#f6f6f6;text-align:left}
+    .right{text-align:right}
+    .tot{font-weight:600;background:#f2f2f2}
+    .section-title{font-weight:600;margin:12px 0 6px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- En-têtes administratifs -->
+  <div class="header">
+    <div>
+      <div><strong>{{ header.org1|safe }}</strong></div>
+      <div>{{ header.org2 }}</div>
+      <div class="muted">
+        Code : {{ header.code }} • Version : {{ header.version }} •
+        Date d’application : {{ header.date_app|date:"d/m/y" }}
+      </div>
+    </div>
+    <div class="muted">{{ header.page_note }}</div>
+  </div>
+
+  <h1>{{ bounds.titre }} <span class="muted">{{ bounds.numero }}</span></h1>
+  <div class="muted" style="margin-bottom:10px">{{ bounds.label }}</div>
+
+  <div class="section-title">Données générales</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Laboratoire</th>
+        <th class="right">Reçus</th>
+        <th class="right">Analysés</th>
+        <th class="right">% analysés</th>
+        <th class="right">Non conf.</th>
+        <th class="right">Réceptions ext.</th>
+        <th class="right">Envois ext.</th>
+        <th class="right">Montant (F CFA)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in general.rows %}
+      <tr>
+        <td>{{ r.site }}</td>
+        <td class="right">{{ r.recu }}</td>
+        <td class="right">{{ r.analyse }}</td>
+        <td class="right">{{ r.pct|floatformat:2 }}%</td>
+        <td class="right">{{ r.nc }}</td>
+        <td class="right">{{ r.rec_ext }}</td>
+        <td class="right">{{ r.env_ext }}</td>
+        <td class="right">{{ r.montant }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="tot">
+        <td>{{ general.totals.site }}</td>
+        <td class="right">{{ general.totals.recu }}</td>
+        <td class="right">{{ general.totals.analyse }}</td>
+        <td class="right">{{ general.totals.pct|floatformat:2 }}%</td>
+        <td class="right">{{ general.totals.nc }}</td>
+        <td class="right">{{ general.totals.rec_ext }}</td>
+        <td class="right">{{ general.totals.env_ext }}</td>
+        <td class="right">{{ general.totals.montant }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Maladies diagnostiquées — Selon les laboratoires (positif)</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Maladies</th>
+        {% for s in par_labo.sites %}<th class="right">{{ s }}</th>{% endfor %}
+        <th class="right">TOTAUX</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in par_labo.rows %}
+      <tr>
+        <td>{{ r.maladie }}</td>
+        {% for c in r.sites %}
+          <td class="right">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+        {% endfor %}
+        <td class="right">{{ r.total }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="tot">
+        <td>{{ par_labo.totals.maladie }}</td>
+        {% for c in par_labo.totals.sites %}
+          <td class="right">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+        {% endfor %}
+        <td class="right">{{ par_labo.totals.total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Maladies diagnostiquées — Selon les régions (positifs)</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Région</th>
+        {% for m in par_region.maladies %}<th class="right">{{ m }}</th>{% endfor %}
+        <th class="right">TOTAUX</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in par_region.rows %}
+      <tr>
+        <td>{{ r.region }}</td>
+        {% for c in r.maladies %}
+          <td class="right">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+        {% endfor %}
+        <td class="right">{{ r.total }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="tot">
+        <td>{{ par_region.totals.region }}</td>
+        {% for c in par_region.totals.maladies %}
+          <td class="right">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+        {% endfor %}
+        <td class="right">{{ par_region.totals.total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">Indicateurs par services du LNE</div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th class="right">Reçus</th>
+        <th class="right">Traités</th>
+        <th class="right">Non conf.</th>
+        <th class="right">Tests</th>
+        <th class="right">SLA</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in ind_lne.rows %}
+      <tr>
+        <td>{{ r.service }}</td>
+        <td class="right">{{ r.recu }}</td>
+        <td class="right">{{ r.traite }}</td>
+        <td class="right">{{ r.nc }}</td>
+        <td class="right">{{ r.tests }}</td>
+        <td class="right">{{ r.sla }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="tot">
+        <td>TOTAUX</td>
+        <td class="right">{{ ind_lne.totals.recu }}</td>
+        <td class="right">{{ ind_lne.totals.traite }}</td>
+        <td class="right">{{ ind_lne.totals.nc }}</td>
+        <td class="right">{{ ind_lne.totals.tests }}</td>
+        <td class="right">{{ ind_lne.totals.sla }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>

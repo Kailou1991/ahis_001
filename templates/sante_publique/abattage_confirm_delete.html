@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center" style="margin-left: 20%;">
+  <div class="card shadow-sm" style="width: 600px;">
+    <div class="card-header bg-danger text-white text-center">
+      <h5 class="mb-0">❗ Confirmation de suppression</h5>
+    </div>
+    <div class="card-body">
+      <p class="text-center">
+        Êtes-vous sûr de vouloir supprimer cet enregistrement ?
+      </p>
+
+      <table class="table table-bordered table-sm">
+        <tbody>
+          <tr>
+            <th>Espèce</th>
+            <td>{{ objet.espece }}</td>
+          </tr>
+          <tr>
+            <th>Commune</th>
+            <td>{{ objet.commune }}</td>
+          </tr>
+          <tr>
+            <th>Âge</th>
+            <td>{{ objet.ages }}</td>
+          </tr>
+          <tr>
+            <th>Sexe</th>
+            <td>{{ objet.sexes }}</td>
+          </tr>
+          <tr>
+            <th>Nombre</th>
+            <td>{{ objet.nombres }}</td>
+          </tr>
+          <tr>
+            <th>Poids</th>
+            <td>{{ objet.poids }} kg</td>
+          </tr>
+          <tr>
+            <th>Valeur financière</th>
+            <td>{{ objet.valeur_financiere }} FCFA</td>
+          </tr>
+          <tr>
+            <th>Observations</th>
+            <td>{{ objet.observations|default:"Aucune" }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form method="post" class="text-center mt-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">🗑️ Oui, supprimer</button>
+        <a href="{% url 'liste_abattage' %}" class="btn btn-secondary ms-2">↩️ Annuler</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

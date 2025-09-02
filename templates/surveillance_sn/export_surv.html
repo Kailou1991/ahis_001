@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+{% block content %}
+
+  <h3>Export & Carte – Surveillance</h3>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-12 col-md-2">{{ form.periode_type.label_tag }} {{ form.periode_type }}</div>
+    <div class="col-6 col-md-2">{{ form.annee.label_tag }} {{ form.annee }}</div>
+    <div class="col-6 col-md-2">{{ form.semaine.label_tag }} {{ form.semaine }}</div>
+    <div class="col-6 col-md-2">{{ form.mois.label_tag }} {{ form.mois }}</div>
+    <div class="col-6 col-md-2">{{ form.trimestre.label_tag }} {{ form.trimestre }}</div>
+    <div class="col-6 col-md-2">{{ form.semestre.label_tag }} {{ form.semestre }}</div>
+    <div class="col-12 col-md-4">{{ form.region.label_tag }} {{ form.region }}</div>
+    <div class="col-12 col-md-4">{{ form.maladie.label_tag }} {{ form.maladie }}</div>
+    <div class="col-12">
+      <button class="btn btn-primary">Appliquer</button>
+      <a class="btn btn-success"
+         href="?{% if form.data %}{{ form.data.urlencode }}&{% endif %}export=1">Exporter Excel</a>
+      {% if start_date and end_date %}
+        <span class="ms-3 text-muted">
+          Période: <b>{{ start_date|date:"d/m/Y" }}</b> → <b>{{ end_date|date:"d/m/Y" }}</b>
+          {% if region_choice %}| Région: <b>{{ region_choice }}</b>{% endif %}
+          {% if maladie_choice %}| Maladie: <b>{{ maladie_choice }}</b>{% endif %}
+        </span>
+      {% endif %}
+    </div>
+  </form>
+
+  <div id="map">{{ map_html|safe }}</div>
+ {% endblock %}

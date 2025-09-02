@@ -1,0 +1,11 @@
+# generated_apps/{{ app_slug }}/parser.py
+from kobo_integration.services.dynamic_parser import parse_with_fieldmaps
+
+APP_SLUG = "{{ app_slug }}"
+# OPTIONNEL : si tu veux forcer un nom de modèle précis, dé-commente la ligne suivante
+# MODEL_NAME = "{{ model_name }}"
+
+def parse_payload(payload: dict):
+    # Appel sans importer le modèle : résolution dynamique sur l'app "{{ app_slug }}"
+    # return parse_with_fieldmaps(APP_SLUG, model=None, payload=payload, app_label=APP_SLUG, model_name=MODEL_NAME)
+    return parse_with_fieldmaps(APP_SLUG, model=None, payload=payload, app_label=APP_SLUG)

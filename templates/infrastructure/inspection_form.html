@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%; max-width: 800px;">
+    <h2 class="mb-4 text-primary">{% if update %}Modifier{% else %}Nouvelle{% endif %} Inspection</h2>
+
+    <form method="post" class="shadow p-4 rounded bg-light">
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Erreurs dans le formulaire :</strong>
+                <ul class="mb-0">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }} :</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                {{ form.infrastructure.label_tag }} {{ form.infrastructure }}
+            </div>
+            <div class="col-md-6 mb-3">
+                {{ form.date_inspection.label_tag }} {{ form.date_inspection }}
+            </div>
+
+            <!-- Champ affiché en lecture seule -->
+            <div class="col-md-6 mb-3">
+                <label for="etat_precedent_display" class="form-label">État précédent</label>
+                <input type="text" id="etat_precedent_display" class="form-control" readonly>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                {{ form.etat_inspection.label_tag }} {{ form.etat_inspection }}
+            </div>
+            <div class="col-md-12 mb-3">
+                {{ form.inspecteur.label_tag }} {{ form.inspecteur }}
+            </div>
+            <div class="col-md-12 mb-3">
+                {{ form.commentaire.label_tag }} {{ form.commentaire }}
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-success">💾 Enregistrer</button>
+            <a href="{% url 'inspection_list' %}" class="btn btn-secondary ms-2">↩ Retour</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const infraSelect = document.getElementById("id_infrastructure");
+        const etatInput = document.getElementById("etat_precedent_display");
+        const etatHidden = document.getElementById("id_etat_derniere_inspection");
+
+        function updateEtatPrecedent(id) {
+            if (!id) {
+                etatInput.value = '';
+                etatHidden.value = '';
+                return;
+            }
+
+            fetch(`/api/get_etat_precedent/?infrastructure_id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    etatInput.value = data.etat || 'Non disponible';
+                    if (data.etat_id) {
+                        etatHidden.value = data.etat_id;
+                    } else {
+                        etatHidden.selectedIndex = 0;
+                    }
+                });
+        }
+
+        if (infraSelect) {
+            if (infraSelect.value) {
+                updateEtatPrecedent(infraSelect.value);
+            }
+
+            infraSelect.addEventListener('change', function () {
+                updateEtatPrecedent(this.value);
+            });
+        }
+    });
+</script>
+{% endblock %}

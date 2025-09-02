@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%; max-width: 1000px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary">🔍 Détails de l'Infrastructure</h2>
+        <div>
+            <a href="{% url 'infrastructure_update' infrastructure.pk %}" class="btn btn-warning me-2">✏️ Modifier</a>
+            <a href="{% url 'infrastructure_list' %}" class="btn btn-secondary">↩ Retour</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title mb-3">{{ infrastructure.nom }}</h4>
+
+            <h6 class="text-muted">📍 Localisation</h6>
+            <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item">Région : {{ infrastructure.region }}</li>
+                <li class="list-group-item">Département : {{ infrastructure.departement }}</li>
+                <li class="list-group-item">Commune : {{ infrastructure.commune }}</li>
+                <li class="list-group-item">Localité : {{ infrastructure.localite }}</li>
+                <li class="list-group-item">Latitude : {{ infrastructure.latitude }}</li>
+                <li class="list-group-item">Longitude : {{ infrastructure.longitude }}</li>
+            </ul>
+
+            <h6 class="text-muted">🏢 Informations générales</h6>
+            <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item">Type : {{ infrastructure.type_infrastructure }}</li>
+                <li class="list-group-item">Financement : {{ infrastructure.type_financement }}</li>
+                <li class="list-group-item">État initial : {{ infrastructure.etat_initial }}</li>
+                <li class="list-group-item">Date construction : {{ infrastructure.date_construction }}</li>
+                <li class="list-group-item">Commentaire : {{ infrastructure.commentaire }}</li>
+            </ul>
+
+            {% if infrastructure.type_proprietaire == "PRIVEE" %}
+            <h6 class="text-muted">👤 Propriétaire</h6>
+            <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item">Type : Privée</li>
+                <li class="list-group-item">Nom : {{ infrastructure.nom_proprietaire }}</li>
+                <li class="list-group-item">Grade : {{ infrastructure.grade_proprietaire }}</li>
+                <li class="list-group-item">Sexe : {{ infrastructure.sexe_proprietaire }}</li>
+                <li class="list-group-item">Date naissance : {{ infrastructure.date_naissance_proprietaire }}</li>
+                <li class="list-group-item">Téléphone : {{ infrastructure.telephone_proprietaire }}</li>
+                <li class="list-group-item">Email : {{ infrastructure.email_proprietaire }}</li>
+                <li class="list-group-item">Adresse : {{ infrastructure.adresse_proprietaire }}</li>
+                <li class="list-group-item">Identité : {{ infrastructure.piece_identite_proprietaire }} - {{ infrastructure.numero_piece_identite }}</li>
+                <li class="list-group-item">Autorisation : {{ infrastructure.autorisation_ouverture|yesno:"Oui,Non" }}</li>
+                {% if infrastructure.document_autorisation %}
+                <li class="list-group-item">
+                    Document d'autorisation :
+                    <a href="{{ infrastructure.document_autorisation.url }}" target="_blank">📄 Voir</a>
+                </li>
+                {% endif %}
+                {% if infrastructure.document_justificatif %}
+                <li class="list-group-item">
+                    Document justificatif :
+                    <a href="{{ infrastructure.document_justificatif.url }}" target="_blank">📄 Voir</a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endif %}
+
+            {% if infrastructure.photo %}
+            <div class="mt-4">
+                <h6 class="text-muted">📸 Photo de l'infrastructure</h6>
+                <img src="{{ infrastructure.photo.url }}" alt="Photo" class="img-fluid rounded shadow-sm border">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

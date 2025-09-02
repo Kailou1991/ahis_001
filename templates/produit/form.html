@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="width: 60%; margin-left: 17%;">
+    <h2>{% if form.instance.pk %}Modification enregistrement produit{% else %}Créer un nouvel enregistrement{% endif %}</h2>
+
+    <!-- Affichage des détails du produit -->
+    <div id="produit-details" class="card mb-4">
+        <div class="card-header">
+            <h4>Détails du Produit</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Type du Produit:</strong> <span id="type_produit"></span></p>
+            <p><strong>Nom du Produit:</strong> <span id="nom_du_produit"></span></p>
+            <p><strong>Classe Thérapeutique:</strong> <span id="classe_therapeutique"></span></p>
+            <p><strong>Familles:</strong> <span id="familles_antibiotiques"></span></p>
+            <p><strong>Forme Pharmaceutique:</strong> <span id="forme_pharmaceutique"></span></p>
+            <p><strong>Substances Actives:</strong> <span id="substances_actives"></span></p>
+            <p><strong>Numéro Autorisation AMM:</strong> <span id="numero_autorisation_AMM"></span></p>
+            <p><strong>Date Délivrance AMM:</strong> <span id="date_delivrance_AMM"></span></p>
+            <p><strong>Numéro Décision AMM:</strong> <span id="numero_decision_AMM"></span></p>
+            <p><strong>Status AMM:</strong> <span id="status_AMM"></span></p>
+        </div>
+    </div>
+
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.non_field_errors }}
+        </div>
+
+        <!-- Exclure le champ produit de la boucle -->
+        {% for field in form %}
+        {% if field.name != 'user' %}
+            <div class="form-group" id="{{ field.name }}-field">
+                
+                    {{ field.label_tag }}
+                    {{ field }}
+                   
+                
+                {{ field.errors }}
+            </div>
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="btn btn-success" style="margin-left: 20%; width: 20%;height: 40%;">
+            {% if form.instance.pk %}Mettre à jour{% else %}Enregistrer{% endif %}
+        </button>
+        <a href="{% url 'produit_list' %}" class="btn btn-default" style="width: 20%;">Retour</a>
+    </form>
+</div>
+
+
+
+
+<!-- Modal pour ajouter un nouveau produit -->
+<div class="modal fade" id="addProduitModal" tabindex="-1" role="dialog" aria-labelledby="addProduitModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProduitModalLabel">Ajouter un nouveau produit</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addProduitForm" method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in formModalProd %}
+                    {% if field.name != 'user' %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter un nouveau partenaire -->
+<div class="modal fade" id="addPartenaireModal" tabindex="-1" role="dialog" aria-labelledby="addPartenaireModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPartenaireModalLabel">Ajouter un nouveau partenaire</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPartenaireForm" method="post">
+                    {% csrf_token %}
+                     
+                    {% for field in partenaireForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle firme de fabrication -->
+<div class="modal fade" id="addFirmeModal" tabindex="-1" role="dialog" aria-labelledby="addFirmeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFirmeModalLabel">Ajouter une nouvelle firme de fabrication</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addFirmeForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle structure importatrice -->
+<div class="modal fade" id="addStructureImportModal" tabindex="-1" role="dialog" aria-labelledby="addStructureImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStructureImportModalLabel">Ajouter une nouvelle structure importatrice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addStructureImportForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle structure exportatrice -->
+<div class="modal fade" id="addStructureExportModal" tabindex="-1" role="dialog" aria-labelledby="addStructureExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStructureExportModalLabel">Ajouter une nouvelle structure exportatrice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addStructureExportForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const produitSelect = document.querySelector('#produit-select');
+        const produitNom = document.querySelector('#produit-nom');
+        const produitDetails = {
+            type_produit: document.querySelector('#type_produit'),
+            nom_du_produit: document.querySelector('#nom_du_produit'),
+            classe_therapeutique: document.querySelector('#classe_therapeutique'),
+            familles_antibiotiques: document.querySelector('#familles_antibiotiques'),
+            forme_pharmaceutique: document.querySelector('#forme_pharmaceutique'),
+            substances_actives: document.querySelector('#substances_actives'),
+            numero_autorisation_AMM: document.querySelector('#numero_autorisation_AMM'),
+            date_delivrance_AMM: document.querySelector('#date_delivrance_AMM'),
+            numero_decision_AMM: document.querySelector('#numero_decision_AMM'),
+            status_AMM: document.querySelector('#status_AMM'),
+        };
+
+        function updateProduitDetails(produitId) {
+            fetch(`/api/produit/${produitId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    produitDetails.type_produit.textContent = data.type_produit;
+                    produitDetails.nom_du_produit.textContent = data.nom_du_produit;
+                    produitDetails.classe_therapeutique.textContent = data.classe_therapeutique;
+                    produitDetails.familles_antibiotiques.textContent = data.familles_antibiotiques;
+                    produitDetails.forme_pharmaceutique.textContent = data.forme_pharmaceutique;
+                    produitDetails.substances_actives.textContent = data.substances_actives;
+                    produitDetails.numero_autorisation_AMM.textContent = data.numero_autorisation_AMM;
+                    produitDetails.date_delivrance_AMM.textContent = data.date_delivrance_AMM;
+                    produitDetails.numero_decision_AMM.textContent = data.numero_decision_AMM;
+                    produitDetails.status_AMM.textContent = data.status_AMM;
+                    produitNom.value = data.nom_du_produit; // Mettre à jour le champ caché
+                });
+        }
+
+        produitSelect.addEventListener('change', function () {
+            const selectedProduitId = this.value;
+            updateProduitDetails(selectedProduitId);
+        });
+
+        // Initial call to set correct fields on page load
+        if (produitSelect.value) {
+            updateProduitDetails(produitSelect.value);
+        }
+
+        // Gestion de la visibilité des champs en fonction du type d'enregistrement
+        const typeEnregistrementField = document.querySelector('#id_type_enregistrement');
+        const dotationFields = document.querySelectorAll('#quantité_de_la_dotation-field, #partenaire_de_dotation-field, #date_dotation-field, #adresse_partenaire_dotation-field');
+        const fabricationFields = document.querySelectorAll('#quantité_fabriquée-field, #date_de_fabrication-field');
+        const importationFields = document.querySelectorAll('#quantité_importée-field, #structure_importatrice-field, #addresse_importateur-field, #date_importation-field, #pays_importation-field');
+        const exportationFields = document.querySelectorAll('#quantité_exportée-field, #structure_exportatrice-field, #addresse_exportateur-field, #date_exportation-field, #pays_exportation-field');
+        const firmeDeFabricationField = document.querySelector('#firme_de_fabrication-field');
+
+        function handleFieldVisibility() {
+            const selectedType = typeEnregistrementField.value;
+            dotationFields.forEach(field => field.style.display = (selectedType === 'DOTATION') ? '' : 'none');
+            fabricationFields.forEach(field => field.style.display = (selectedType === 'FABRICATION') ? '' : 'none');
+            importationFields.forEach(field => field.style.display = (selectedType === 'IMPORTATION') ? '' : 'none');
+            exportationFields.forEach(field => field.style.display = (selectedType === 'EXPORTATION') ? '' : 'none');
+            firmeDeFabricationField.style.display = ''; // Toujours afficher
+        }
+
+        typeEnregistrementField.addEventListener('change', handleFieldVisibility);
+        handleFieldVisibility(); // Initial call to set correct fields on page load
+
+        // Gestion de la soumission du formulaire du modal pour ajouter un produit
+        const addProduitForm = document.querySelector('#addProduitForm');
+
+        addProduitForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addProduitForm);
+
+            fetch('/api/produit/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ajouter le nouveau produit à la liste des produits
+                const produitSelect = document.querySelector('#produit-select');
+                const newOption = new Option(data.nom_du_produit, data.id, false, false);
+                produitSelect.add(newOption);
+
+                // Fermer le modal
+                $('#addProduitModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter un partenaire
+        const addPartenaireForm = document.querySelector('#addPartenaireForm');
+
+        addPartenaireForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addPartenaireForm);
+
+            fetch('/api/partenaire/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ajouter le nouveau partenaire à la liste des partenaires
+                const partenaireSelect = document.querySelector('#partenaire_de_dotation');
+                const newOption = new Option(data.nom, data.id, false, false);
+                partenaireSelect.add(newOption);
+
+                // Fermer le modal
+                $('#addPartenaireModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter une firme de fabrication
+        const addFirmeForm = document.querySelector('#addFirmeForm');
+
+        addFirmeForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addFirmeForm);
+
+            fetch('/api/firme/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ajouter la nouvelle firme à la liste des firmes
+                const firmeSelect = document.querySelector('#firme_de_fabrication');
+                const newOption = new Option(data.structure, data.id, false, false);
+                firmeSelect.add(newOption);
+
+                // Fermer le modal
+                $('#addFirmeModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter une structure importatrice
+        const addStructureImportForm = document.querySelector('#addStructureImportForm');
+
+        addStructureImportForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addStructureImportForm);
+
+            fetch('/api/structure_import/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ajouter la nouvelle structure importatrice à la liste des structures
+                const structureImportSelect = document.querySelector('#structure_importatrice');
+                const newOption = new Option(data.structure, data.id, false, false);
+                structureImportSelect.add(newOption);
+
+                // Fermer le modal
+                $('#addStructureImportModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter une structure exportatrice
+        const addStructureExportForm = document.querySelector('#addStructureExportForm');
+
+        addStructureExportForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(addStructureExportForm);
+
+            fetch('/api/structure_export/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ajouter la nouvelle structure exportatrice à la liste des structures
+                const structureExportSelect = document.querySelector('#structure_exportatrice');
+                const newOption = new Option(data.structure, data.id, false, false);
+                structureExportSelect.add(newOption);
+
+                // Fermer le modal
+                $('#addStructureExportModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+    });
+</script>
+{% endblock %}

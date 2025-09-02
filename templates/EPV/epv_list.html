@@ -1,0 +1,31 @@
+{% extends '../base.html' %}
+{% block content %}
+<div class="container" style="margin-left: 20%;">
+    <h2 style="text-align: center;">Formulaire de gestion des Etablissement Privés Vétérinaires</h2>
+    <a href="{% url 'epv_create' %}" class="btn btn-primary"><i class="fa fa-circle"></i>Nouvel</a>
+    <table id="liste_Vaccination" class="display fa-table" style="width:150%">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Type</th>
+                <th>Région</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for epv in epvs %}
+                <tr>
+                    <td>{{ epv.nom }}</td>
+                    <td>{{ epv.get_type_epv_display }}</td>
+                    <td>{{ epv.region }}</td>
+                    <td>
+                        <a href="{% url 'epv_detail' epv.pk %}" class="btn btn-info"><i class="fa fa-table"></i>Détails</a>
+                        <a href="{% url 'epv_update' epv.pk %}" class="btn btn-warning"><i class="fa fa-edit"></i>Modifier</a>
+                        <a href="{% url 'epv_delete' epv.pk %}" class="btn btn-danger"><i class="fa fa-warning"></i>Supprimer</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

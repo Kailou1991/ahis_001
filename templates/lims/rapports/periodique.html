@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid py-3">
+
+  {# --- En-têtes administratifs --- #}
+  <div class="d-flex align-items-start justify-content-between mb-2">
+    <div>
+      <div class="fw-semibold">{{ header.org1|safe }}</div>
+      <div>{{ header.org2 }}</div>
+      <div class="text-muted small">
+        Code : {{ header.code }} • Version : {{ header.version }} • Date d’application : {{ header.date_app|date:"d/m/y" }}
+      </div>
+    </div>
+    <div class="text-muted small">{{ header.page_note }}</div>
+  </div>
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h5 mb-0">{{ bounds.titre }} <span class="text-muted">{{ bounds.numero }}</span></h1>
+      <div class="text-muted small">{{ bounds.label }}</div>
+    </div>
+
+    <div class="text-end">
+      {# Télécharger = PDF (téléchargement forcé côté vue) #}
+      <a class="btn btn-outline-dark"
+         href="{% url 'lims:rapport_periodique' %}?{{ qs_no_fmt }}{% if qs_no_fmt %}&{% endif %}format=pdf">
+        <i class="bi bi-download"></i> Télécharger (PDF)
+      </a>
+    </div>
+  </div>
+
+  <!-- Filtres Bootstrap -->
+  <form method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Période</label>
+          <select name="period" class="form-select">
+            <option value="hebdo" {% if period == 'hebdo' %}selected{% endif %}>Hebdomadaire</option>
+            <option value="mensuel" {% if period == 'mensuel' %}selected{% endif %}>Mensuel</option>
+            <option value="trimestriel" {% if period == 'trimestriel' %}selected{% endif %}>Trimestriel</option>
+            <option value="semestriel" {% if period == 'semestriel' %}selected{% endif %}>Semestriel</option>
+            <option value="annuel" {% if period == 'annuel' %}selected{% endif %}>Annuel</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Date de référence</label>
+          <input type="date" class="form-control" name="ref" value="{{ bounds.start|date:'Y-m-d' }}">
+          <div class="form-text">La période est calculée à partir de cette date (ex. semaine/mois/trimestre…)</div>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <button class="btn btn-primary">
+            <i class="bi bi-search"></i> Afficher
+          </button>
+          <a class="btn btn-outline-secondary" href="{% url 'lims:rapport_periodique' %}">
+            Réinitialiser
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Données générales -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header fw-semibold">Données générales</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Laboratoire</th>
+            <th class="text-end">Échantillons reçus</th>
+            <th class="text-end">Échantillons analysés</th>
+            <th class="text-end">% analysés</th>
+            <th class="text-end">Non conformités</th>
+            <th class="text-end">Réceptions externes</th>
+            <th class="text-end">Envois externes</th>
+            <th class="text-end">Montant (F CFA)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in general.rows %}
+          <tr>
+            <td>{{ r.site }}</td>
+            <td class="text-end">{{ r.recu }}</td>
+            <td class="text-end">{{ r.analyse }}</td>
+            <td class="text-end">{{ r.pct|floatformat:2 }}%</td>
+            <td class="text-end">{{ r.nc }}</td>
+            <td class="text-end">{{ r.rec_ext }}</td>
+            <td class="text-end">{{ r.env_ext }}</td>
+            <td class="text-end">{{ r.montant }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-semibold">
+            <td>{{ general.totals.site }}</td>
+            <td class="text-end">{{ general.totals.recu }}</td>
+            <td class="text-end">{{ general.totals.analyse }}</td>
+            <td class="text-end">{{ general.totals.pct|floatformat:2 }}%</td>
+            <td class="text-end">{{ general.totals.nc }}</td>
+            <td class="text-end">{{ general.totals.rec_ext }}</td>
+            <td class="text-end">{{ general.totals.env_ext }}</td>
+            <td class="text-end">{{ general.totals.montant }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Maladies par laboratoires -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header fw-semibold">Maladies diagnostiquées — Selon les laboratoires (positif)</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Maladies</th>
+            {% for s in par_labo.sites %}
+            <th class="text-end">{{ s }}</th>
+            {% endfor %}
+            <th class="text-end">TOTAUX</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in par_labo.rows %}
+          <tr>
+            <td>{{ r.maladie }}</td>
+            {% for c in r.sites %}
+              <td class="text-end">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <td class="text-end">{{ r.total }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-semibold">
+            <td>{{ par_labo.totals.maladie }}</td>
+            {% for c in par_labo.totals.sites %}
+              <td class="text-end">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <td class="text-end">{{ par_labo.totals.total }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Maladies par régions -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-header fw-semibold">Maladies diagnostiquées — Selon les régions (positifs)</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Région</th>
+            {% for m in par_region.maladies %}
+            <th class="text-end">{{ m }}</th>
+            {% endfor %}
+            <th class="text-end">TOTAUX</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in par_region.rows %}
+          <tr>
+            <td>{{ r.region }}</td>
+            {% for c in r.maladies %}
+              <td class="text-end">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <td class="text-end">{{ r.total }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-semibold">
+            <td>{{ par_region.totals.region }}</td>
+            {% for c in par_region.totals.maladies %}
+              <td class="text-end">{% if c.c %}{{ c.c }}{% else %}-{% endif %}</td>
+            {% endfor %}
+            <td class="text-end">{{ par_region.totals.total }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Indicateurs LNE -->
+  <div class="card shadow-sm">
+    <div class="card-header fw-semibold">Indicateurs par services du LNE</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Service</th>
+            <th class="text-end">Échantillons reçus</th>
+            <th class="text-end">Échantillons traités</th>
+            <th class="text-end">Non conformes</th>
+            <th class="text-end">Tests</th>
+            <th class="text-end">SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in ind_lne.rows %}
+          <tr>
+            <td>{{ r.service }}</td>
+            <td class="text-end">{{ r.recu }}</td>
+            <td class="text-end">{{ r.traite }}</td>
+            <td class="text-end">{{ r.nc }}</td>
+            <td class="text-end">{{ r.tests }}</td>
+            <td class="text-end">{{ r.sla }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="table-secondary fw-semibold">
+            <td>TOTAUX</td>
+            <td class="text-end">{{ ind_lne.totals.recu }}</td>
+            <td class="text-end">{{ ind_lne.totals.traite }}</td>
+            <td class="text-end">{{ ind_lne.totals.nc }}</td>
+            <td class="text-end">{{ ind_lne.totals.tests }}</td>
+            <td class="text-end">{{ ind_lne.totals.sla }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

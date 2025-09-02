@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Tableau de Bord</h1>
+
+    <form method="POST" action="" class="mb-4">
+        {% csrf_token %}
+        <div class="form-row align-items-end">
+            <div class="form-group col-md-4">
+                <label for="date_debut">Date de Début:</label>
+                <input type="date" id="date_debut" name="date_debut" class="form-control" value="{{ date_debut }}">
+            </div>
+            <div class="form-group col-md-4">
+                <label for="date_fin">Date de Fin:</label>
+                <input type="date" id="date_fin" name="date_fin" class="form-control" value="{{ date_fin }}">
+            </div>
+        </br>
+            <div class="form-group col-md-4">
+                <button type="submit" class="btn btn-primary">Filtrer</button>
+            </div>
+        </div>
+    </form>
+</br></br></br>
+    <div class="row mb-4">
+        <div class="col-lg-2 col-3" style="margin-left:0%;">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-primary">
+                    <h3>{{ postes_vacants }}</h3>
+                    <p>Nombre de Postes Vacants</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-3" style="margin-left:5%;">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-danger">
+                    <h3>{{ employes_decedes }}</h3>
+                    <p>Nombre de Personnes Décédées</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-3" style="margin-left:5%;">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-warning">
+                    <h3>{{ employes_retraites }}</h3>
+                    <p>Nombre de Personnes Retraitées</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Liste des Employés par Position</h2>
+            <table class="table table-striped data-table">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Nombre d'Employés</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employe in employes_par_position %}
+                        <tr>
+                            <td>{{ employe.position }}</td>
+                            <td>{{ employe.total }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Répartition des Employés par Grade</h2>
+            <table class="table table-striped data-table">
+                <thead>
+                    <tr>
+                        <th>Grade</th>
+                        <th>Nombre d'Employés</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employe in employes_par_grade %}
+                        <tr>
+                            <td>{{ employe.grade__nom }}</td>
+                            <td>{{ employe.total }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Répartition des Employés par Échelon</h2>
+            <table class="table table-striped data-table">
+                <thead>
+                    <tr>
+                        <th>Échelon</th>
+                        <th>Nombre d'Employés</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employe in employes_par_echelon %}
+                        <tr>
+                            <td>{{ employe.echelon__nom }}</td>
+                            <td>{{ employe.total }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Historique des Changements de Poste</h2>
+            <table class="table table-striped data-table">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Poste</th>
+                        <th>Date de Début</th>
+                        <th>Date de Fin</th>
+                        <th>Type de Changement</th>
+                        <th>Remarque</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for historique in historique_carriere %}
+                        <tr>
+                            <td>{{ historique.employe }}</td>
+                            <td>{{ historique.poste }}</td>
+                            <td>{{ historique.date_debut }}</td>
+                            <td>{{ historique.date_fin }}</td>
+                            <td>{{ historique.type_changement }}</td>
+                            <td>{{ historique.remarque }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Formations Suivies par les Employés</h2>
+            <table class="table table-striped data-table">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Intitulé</th>
+                        <th>Institution</th>
+                        <th>Date de Début</th>
+                        <th>Date de Fin</th>
+                        <th>Diplôme Obtenu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for formation in formations %}
+                        <tr>
+                            <td>{{ formation.employe }}</td>
+                            <td>{{ formation.intitule }}</td>
+                            <td>{{ formation.institution }}</td>
+                            <td>{{ formation.date_debut }}</td>
+                            <td>{{ formation.date_fin }}</td>
+                            <td>{{ formation.diplome_obtenu }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends '../base.html' %}
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Détails de l'EPV</h2>
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">{{ epv.nom }}</h4>
+            <p class="card-text"><strong>Type:</strong> {{ epv.get_type_epv_display }}</p>
+            <p class="card-text"><strong>Propriétaire:</strong> {{ epv.nom_proprietaire }}</p>
+            <p class="card-text"><strong>Grade du propriétaire:</strong> {{ epv.grade_proprietaire }}</p>
+            <p class="card-text"><strong>Autorisation d'ouverture:</strong> {% if epv.autorisation_ouverture %}Oui{% else %}Non{% endif %}</p>
+            <p class="card-text">
+                <strong>Document d'autorisation:</strong>
+                {% if epv.Document_autorisation_ouverture %}
+                    <a href="{{ epv.Document_autorisation_ouverture.url }}" target="_blank">Télécharger le document</a>
+                {% else %}
+                    Non disponible
+                {% endif %}
+            </p>
+            <p class="card-text"><strong>Date d'ouverture:</strong> {{ epv.date_ouverture }}</p>
+            <p class="card-text"><strong>Nombre d'employés lors de la création:</strong> {{ epv.nbre_employer_creation }}</p>
+            <p class="card-text"><strong>Nombre d'employés actuels:</strong> {{ epv.nbre_employer_actuelle }}</p>
+            <p class="card-text"><strong>Région:</strong> {{ epv.region }}</p>
+            <p class="card-text"><strong>Département:</strong> {{ epv.departement }}</p>
+            <p class="card-text"><strong>Commune:</strong> {{ epv.commune }}</p>
+        </div>
+    </div>
+     <a href="{% url 'epv_list' %}" class="btn btn-secondary mt-3">Retour à la liste</a>
+</div>
+{% endblock %}

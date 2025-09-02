@@ -1,0 +1,47 @@
+<!-- accounts/templates/registration/login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connexion</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <h2 class="text-center mb-4">Connexion</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="username">Nom d'utilisateur</label>
+                                <input type="text" name="username" id="username" class="form-control" placeholder="Nom d'utilisateur" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Mot de passe</label>
+                                <input type="password" name="password" id="password" class="form-control" placeholder="Mot de passe" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+                            {% if error %}
+                                <div class="alert alert-danger mt-3">
+                                    {{ error }}
+                                </div>
+                            {% endif %}
+                        </form>
+        
+                        <div class="mt-2 text-center">
+                            <a href="{% url 'soumettre_demande_public' %}" class="btn btn-success">Soumettre une demande</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

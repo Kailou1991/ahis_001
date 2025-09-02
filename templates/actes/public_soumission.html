@@ -1,0 +1,293 @@
+
+<!DOCTYPE html>
+{% load static %}
+{% load crispy_forms_tags %}
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>AHIS |</title>
+        <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+        <!-- PWA icons -->
+        <link rel="manifest" href="{% static 'manifest.json' %}">
+        <link rel="apple-touch-icon" sizes="192x192" href="{% static 'img/icon-192.png' %}">
+        <link rel="apple-touch-icon" sizes="512x512" href="{% static 'img/icon-512.png' %}">
+        <meta name="theme-color" content="#00695c">
+    
+        <!-- CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        onerror="this.onerror=null;this.href='{% static 'css/bootstrap.min.css' %}';">
+  
+        <link href="{% static 'css/dataTables.css' %}" rel="stylesheet" type="text/css" />
+         <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/ionicons.min.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/morris/morris.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/jvectormap/jquery-jvectormap-1.2.2.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/fullcalendar/fullcalendar.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/daterangepicker/daterangepicker-bs3.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'css/AdminLTE.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'select2/select2.min.css' %}" rel="stylesheet" />
+    </head>
+    
+    
+    <body class="skin-aqua">
+        <header class="header bg-white shadow-sm py-2 px-4 d-flex justify-content-between align-items-center">
+            <!-- Logo AHIS à gauche -->
+            <div class="d-flex align-items-center">
+                <a href="#" class="me-3">
+                    <img src="{% static 'img/logo_ahis.png' %}" alt="AHIS Logo" style="max-height: 50px;">
+                </a>
+            </div>
+        
+            <!-- Drapeau du Niger au centre -->
+            <div class="text-center flex-grow-1">
+                <img src="{% static 'img/drapeau.jpg' %}" alt="Drapeau du Sénégal" style="height: 30px;">
+                <div class="fw-bold text-uppercase text-dark small mt-1">République du Sénégal</div>
+            </div>
+        
+            
+        </header>
+    <body>
+<div class="container mt-5">
+    
+    {% if confirmation %}
+      <div class="text-success fs-5 mb-4 text-center">
+        ✅ {{ confirmation }}
+      </div>
+    {% endif %}
+    {% if erreur %}
+      <div class="text-danger fs-5 mb-4 text-center">
+        ❌ {{ erreur }}
+      </div>
+    {% endif %}
+
+    <div class="card shadow border-0">
+        <div class="card-header background-color text-black text-center py-3">
+            <h3 class="mb-0">Soumettre une demande d'acte administratif</h3>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Bloc Identité -->
+                <h5 class="text-primary border-bottom pb-1 mb-3"><i class="bi bi-person-circle me-1"></i> Identité du demandeur</h5>
+                <div class="row">
+                    <div class="col-md-6">{{ form.nom|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.prenom|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.grade|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.nationalite|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.contact|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.email|as_crispy_field }}</div>
+                </div>
+
+                <!-- Bloc Localisation -->
+                <h5 class="text-primary border-bottom pb-1 mt-4 mb-3"><i class="bi bi-geo-alt-fill me-1"></i> Localisation</h5>
+                <div class="row">
+                    <div class="col-md-4">{{ form.region|as_crispy_field }}</div>
+                    <div class="col-md-4">{{  form.departement|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.commune|as_crispy_field }}</div>
+                </div>
+
+                <!-- Bloc Acte -->
+                <h5 class="text-primary border-bottom pb-1 mt-4 mb-3"><i class="bi bi-journal-text me-1"></i> Détails de l'acte</h5>
+                <div class="row">
+                    <div class="col-md-6">{{ form.categorie|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.acte|as_crispy_field }}</div>
+                </div>
+
+                <!-- Champs conditionnels -->
+                <div class="row mt-3">
+                    <div class="col-md-6 d-none" id="champ_nom_etablissement">
+                        {{ form.nom_etablissement|as_crispy_field }}
+                        <small class="form-text text-muted">📌 Remplir si vous déclarez un établissement vétérinaire.</small>
+                    </div>
+                    <div class="col-md-6 d-none" id="champ_type_import">
+                        {{ form.nom_produit_importe_ou_exporte|as_crispy_field }}
+                        <small class="form-text text-muted">📌 Remplir pour les autorisations d'import/export.</small>
+                    </div>
+                    <div class="col-md-6 d-none" id="champ_type_transformation">
+                        {{ form.nom_unité_transformation|as_crispy_field }}
+                        <small class="form-text text-muted">📌 Remplir pour les unités de transformation.</small>
+                    </div>
+                </div>
+
+                <!-- Pièces justificatives -->
+                <h5 class="text-primary border-bottom pb-1 mt-4 mb-3"><i class="bi bi-paperclip me-1"></i> Pièces justificatives</h5>
+                <div class="form-group">
+                    <input type="file" name="justificatifs" id="id_justificatifs" multiple class="form-control">
+                    <small class="form-text text-muted">
+                        📌 Veuillez scanner et regrouper tous les documents en un <strong>seul fichier PDF</strong>.
+                    </small>
+                </div>
+            </br> </br>
+
+
+                <!-- Bouton -->
+                <div class="mt-4 text-center">
+                    <button type="submit" name="valider" value="soumettre" class="btn btn-success btn-lg px-5">
+                        📤 Soumettre la demande
+                    </button>
+                </div>
+                <!-- Bouton retour -->
+            <div class="mt-4">
+                <a href="{% url 'centre_aide_documents' %}" class="btn btn-dangers">❓Centre d’aide</a>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<!-- jQuery UI 1.10.3 -->
+<script src="{% static 'js/jquery-ui-1.10.3.min.js' %}" type="text/javascript"></script>
+<!-- Bootstrap -->
+<script src="{% static 'js/bootstrap.min.js' %} " type="text/javascript"></script>
+<!-- Morris.js charts -->
+<script src="{% static 'js/raphael-min.js' %}"></script>
+<script src="js/plugins/morris/morris.min.js" type="text/javascript"></script>
+<!-- Inclure le JavaScript de Select2 -->
+<script src="{% static 'select2/select2.min.js' %}"></script>
+<!-- Sparkline -->
+<script src="{% static 'js/plugins/sparkline/jquery.sparkline.min.js' %}" type="text/javascript"></script>
+
+<!-- jvectormap -->
+<script src="{% static 'js/plugins/jvectormap/jquery-jvectormap-1.2.2.min.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/plugins/jvectormap/jquery-jvectormap-world-mill-en.js' %}" type="text/javascript"></script>
+
+    <!-- fullCalendar -->
+    <script src="{% static 'js/plugins/fullcalendar/fullcalendar.min.js' %}" type="text/javascript"></script>
+
+    <!-- jQuery Knob Chart -->
+    <script src="{% static 'js/plugins/jqueryKnob/jquery.knob.js' %}" type="text/javascript"></script>
+
+    <!-- daterangepicker -->
+    <script src="{% static 'js/plugins/daterangepicker/daterangepicker.js' %}" type="text/javascript"></script>
+
+    <!-- Bootstrap WYSIHTML5 -->
+    <script src="{% static 'js/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.all.min.js' %}" type="text/javascript"></script>
+
+    <!-- iCheck -->
+    <script src="{% static 'js/plugins/iCheck/icheck.min.js' %}" type="text/javascript"></script>
+     <script src="{% static 'js/bootstrap.bundle.min.js' %}" type="text/javascript"></script>
+
+    <!-- AdminLTE App -->
+    <script src="{% static 'js/AdminLTE/app.js' %}" type="text/javascript"></script>
+<script src="{% static 'js/dataTables.js' %}"></script>
+<!-- AdminLTE dashboard demo (This is only for demo purposes) -->
+<script src="{% static 'js/AdminLTE/dashboard.js' %}" type="text/javascript"></script>  
+<script src="{% static 'js/dataTables.js' %}" type="text/javascript"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const regionSelect = document.querySelector('select[name="region"]');
+        const departementSelect = document.querySelector('select[name="departement"]');
+        const communeSelect = document.querySelector('select[name="commune"]');
+        const categorieSelect = document.querySelector('select[name="categorie"]');
+        const acteSelect = document.querySelector('select[name="acte"]');
+    
+        const blocEtablissement = document.getElementById("champ_nom_etablissement");
+        const blocImport = document.getElementById("champ_type_import");
+        const blocTransformation = document.getElementById("champ_type_transformation");
+    
+        // Affichage dynamique des champs selon la catégorie
+        function toggleChampsSpecifiques() {
+            const selectedOption = categorieSelect.options[categorieSelect.selectedIndex]?.text?.toLowerCase() || '';
+    
+            blocEtablissement.classList.add("d-none");
+            blocImport.classList.add("d-none");
+            blocTransformation.classList.add("d-none");
+    
+            if (selectedOption.includes("établissement")) {
+                blocEtablissement.classList.remove("d-none");
+            }
+            if (selectedOption.includes("import")) {
+                blocImport.classList.remove("d-none");
+            }
+            if (selectedOption.includes("transformation")) {
+                blocTransformation.classList.remove("d-none");
+            }
+        }
+    
+        // Mise à jour des départements selon la région
+        function updateDepartements() {
+            const regionId = regionSelect.value;
+            if (regionId) {
+                fetch(`/api/departements/?region_id=${regionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        departementSelect.innerHTML = '<option value="">Sélectionner un département</option>';
+                        data.forEach(dept => {
+                            departementSelect.innerHTML += `<option value="${dept.id}">${dept.Nom}</option>`;
+                        });
+                        communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+                    });
+            } else {
+                departementSelect.innerHTML = '<option value="">Sélectionner un département</option>';
+                communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+            }
+        }
+    
+        // Mise à jour des communes selon le département
+        function updateCommunes() {
+            const departementId = departementSelect.value;
+            if (departementId) {
+                fetch(`/api/communes/?departement_id=${departementId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+                        data.forEach(com => {
+                            communeSelect.innerHTML += `<option value="${com.id}">${com.Nom}</option>`;
+                        });
+                    });
+            } else {
+                communeSelect.innerHTML = '<option value="">Sélectionner une commune</option>';
+            }
+        }
+    
+        // Mise à jour des types d’actes selon la catégorie
+        function updateActes() {
+            const categorieId = categorieSelect.value;
+            if (categorieId) {
+                fetch(`/ajax/load-actes/?categorie=${categorieId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        acteSelect.innerHTML = '<option value="">Sélectionner un acte</option>';
+                        data.forEach(acte => {
+                            acteSelect.innerHTML += `<option value="${acte.id}">${acte.nom}</option>`;
+                        });
+                    });
+            } else {
+                acteSelect.innerHTML = '<option value="">Sélectionner un acte</option>';
+            }
+        }
+    
+        // Événements listeners
+        if (regionSelect) regionSelect.addEventListener("change", updateDepartements);
+        if (departementSelect) departementSelect.addEventListener("change", updateCommunes);
+        if (categorieSelect) {
+            categorieSelect.addEventListener("change", updateActes);
+            categorieSelect.addEventListener("change", toggleChampsSpecifiques);
+        }
+    
+        // Initialisation si les valeurs sont préremplies
+        if (regionSelect?.value) updateDepartements();
+        if (departementSelect?.value) updateCommunes();
+        if (categorieSelect?.value) {
+            updateActes();
+            toggleChampsSpecifiques();
+        }
+    });
+    </script>
+     </body>
+</html>
+    
+

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5" style="margin-left: 17%; max-width: 800px;">
+    <h2 style="text-align: center;">Mise à jour des formations</h2>
+    <h4>Employé: {{ employe.nom }} {{ employe.prenom }}</h4>
+
+    <h3 style="text-align: center;" class="mt-4">Formations</h3>
+    <div class="card">
+        <div class="card-body">
+            {% if formations %}
+                <table class="table table-striped data-table">
+                    <thead>
+                        <tr>
+                            <th>Intitulé</th>
+                            <th>Institution</th>
+                            <th>Date de début</th>
+                            <th>Date de fin</th>
+                            <th>Diplôme obtenu</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for formation in formations %}
+                        <tr>
+                            <td>{{ formation.intitule }}</td>
+                            <td>{{ formation.institution }}</td>
+                            <td>{{ formation.date_debut|date:"d-m-Y" }}</td>
+                            <td>{{ formation.date_fin|date:"d-m-Y" }}</td>
+                            <td>{{ formation.diplome_obtenu }}</td>
+                            <td>
+                                <a href="{% url 'supprimer_formation' formation.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette formation ?');">
+                                    <i class="fa fa-trash"></i> Supprimer
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucune formation enregistrée.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if message %}
+    <div class="alert alert-danger">{{ message }}</div>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <fieldset class="border p-3 mb-3">
+            <legend class="w-auto">Ajouter une Formation</legend>
+            <div class="row">
+                {% for field in formation_form %}
+                <div class="col-md-4">
+                    <div class="form-group mb-2">
+                        <label class="col-form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <ul class="errorlist">
+                            {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-success">Mettre à jour</button>
+            <a href="{% url 'liste_employes' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

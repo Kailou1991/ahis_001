@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 d-flex justify-content-center" style="margin-left: 20%">
+  <div class="card shadow-lg w-100" style="max-width: 600px;">
+    <div class="card-header bg-primary text-white text-center py-3">
+      <h3 class="mb-0" >
+        {% if update %}📝 Modification d'une saisie totale{% else %}🆕 Nouvelle saisie totale{% endif %}
+      </h3>
+    </div>
+    <div class="card-body p-4">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+          {% for error in field.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+    </br>
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-success px-4 me-2">💾 Enregistrer</button>
+          <a href="{% url 'liste_saisies_totales' %}" class="btn btn-secondary px-4">↩️ Retour</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const regionSelect = document.querySelector('select[name="region"]');
+      const departementSelect = document.querySelector('select[name="departement"]');
+      const communeSelect = document.querySelector('select[name="commune"]');
+    
+      function loadDepartements(regionId, selectedDepartementId = null, selectedCommuneId = null) {
+        fetch(`/api/departements/?region_id=${regionId}`)
+          .then(res => res.json())
+          .then(data => {
+            departementSelect.innerHTML = '<option value="">---------</option>';
+            data.forEach(item => {
+              const selected = selectedDepartementId && item.id == selectedDepartementId ? 'selected' : '';
+              departementSelect.innerHTML += `<option value="${item.id}" ${selected}>${item.Nom}</option>`;
+            });
+    
+            // Charger les communes seulement après avoir injecté les départements
+            if (selectedDepartementId) {
+              departementSelect.value = selectedDepartementId;
+              loadCommunes(selectedDepartementId, selectedCommuneId);
+            }
+          });
+      }
+    
+      function loadCommunes(departementId, selectedId = null) {
+        fetch(`/api/communes/?departement_id=${departementId}`)
+          .then(res => res.json())
+          .then(data => {
+            communeSelect.innerHTML = '<option value="">---------</option>';
+            data.forEach(item => {
+              const selected = selectedId && item.id == selectedId ? 'selected' : '';
+              communeSelect.innerHTML += `<option value="${item.id}" ${selected}>${item.Nom}</option>`;
+            });
+    
+            if (selectedId) {
+              communeSelect.value = selectedId;
+            }
+          });
+      }
+    
+      // Cascade dynamique lors du changement manuel
+      regionSelect.addEventListener('change', () => {
+        const regionId = regionSelect.value;
+        if (regionId) {
+          loadDepartements(regionId);
+        } else {
+          departementSelect.innerHTML = '<option value="">---------</option>';
+          communeSelect.innerHTML = '<option value="">---------</option>';
+        }
+      });
+    
+      departementSelect.addEventListener('change', () => {
+        const departementId = departementSelect.value;
+        if (departementId) {
+          loadCommunes(departementId);
+        } else {
+          communeSelect.innerHTML = '<option value="">---------</option>';
+        }
+      });
+    
+      // Préchargement si en mode modification
+      {% if form.instance.pk %}
+        const selectedRegion = "{{ form.instance.region.id }}";
+        const selectedDepartement = "{{ form.instance.departement.id }}";
+        const selectedCommune = "{{ form.instance.commune.id }}";
+    
+        if (selectedRegion && selectedDepartement && selectedCommune) {
+          loadDepartements(selectedRegion, selectedDepartement, selectedCommune);
+        }
+      {% endif %}
+    });
+    </script>
+{% endblock %}

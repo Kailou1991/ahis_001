@@ -1,0 +1,57 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 style="text-align: center;">📝 Liste de la mobilité animale</h2>
+    
+    {% with user.groups.all|first as first_group %}
+    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+                        
+    <a href="{% url 'deplacementanimaux_create' %}" class="btn btn-primary mb-3">
+        <i class="fa fa-plus-circle"></i> Nouvel enregistrement
+    </a>
+
+    {% endif %}
+    {% endwith %}
+    <table id="liste_Vaccination" class="table table-bordered table-striped" style="width: 100%;">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>Espèce</th>
+                <th>Nombre</th>
+                <th>Provenance</th>
+                <th>Destination</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deplacement in deplacements %}
+            <tr>
+                <td>{{ deplacement.id }}</td>
+                <td>{{ deplacement.espece }}</td>
+                <td>{{ deplacement.nombre_animaux }}</td>
+                <td>{{ deplacement.commune_provenance }}</td>
+                <td>{{ deplacement.commune_destination }}</td>
+                <td>{{ deplacement.date_deplacement|date:"d/m/Y" }}</td>
+                <td>
+                    <a href="{% url 'deplacementanimaux_detail' deplacement.pk %}" class="btn btn-sm btn-info">
+                        <i class="fa fa-eye"></i> Détails
+                    </a>
+                     {% with user.groups.all|first as first_group %}
+                    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+                    <a href="{% url 'deplacementanimaux_update' deplacement.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fa fa-edit"></i> Modifier
+                    </a>
+                    <a href="{% url 'deplacementanimaux_delete' deplacement.pk %}" class="btn btn-sm btn-danger">
+                        <i class="fa fa-trash"></i> Supprimer
+                    </a>
+                </td>
+                {% endif %}
+                {% endwith %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

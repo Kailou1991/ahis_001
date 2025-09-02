@@ -1,0 +1,102 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%;">
+    <h2 style="text-align: center;" class="mb-4">Détails du Produit</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="card-title">Type produit: {{ produit.produit.type_produit }}</h4>
+            <h4 class="card-title">Nom: {{ produit.produit.nom_du_produit }}</h4>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>Classe Thérapeutique</th>
+                        <td>{{ produit.produit.get_classe_therapeutique_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Famille Antibiotique</th>
+                        <td>{{ produit.produit.get_familles_antibiotiques_display|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Forme Pharmaceutique</th>
+                        <td>{{ produit.produit.forme_pharmaceutique }}</td>
+                    </tr>
+                    <tr>
+                        <th>Substances Actives</th>
+                        <td>{{ produit.produit.substances_actives }}</td>
+                    </tr>
+                    <tr>
+                        <th>Numéro Autorisation AMM</th>
+                        <td>{{ produit.produit.numero_autorisation_AMM|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Numéro Décision AMM</th>
+                        <td>{{ produit.produit.numero_decision_AMM|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Date de Délivrance AMM</th>
+                        <td>{{ produit.produit.date_delivrance_AMM|date:"d/m/Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status AMM</th>
+                        <td>{{ produit.produit.get_status_AMM_display }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <hr>
+            <h2 style="text-align: center;">Informations sur l'Enregistrement</h2>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>Type d'Enregistrement</th>
+                        <td>{{ produit.get_type_enregistrement_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Dernière Mise à Jour</th>
+                        <td>{{ produit.updated_at|date:"d/m/Y" }}</td>
+                    </tr>
+
+                    {% if produit.type_enregistrement == 'DOTATION' %}
+                        <tr><th>Quantité Dotée</th><td>{{ produit.quantité_de_la_dotation }}</td></tr>
+                        <tr><th>Partenaire de Dotation</th><td>{{ produit.partenaire_de_dotation }}</td></tr>
+                        <tr><th>Date de Dotation</th><td>{{ produit.date_dotation|date:"d/m/Y" }}</td></tr>
+                        <tr><th>Adresse Partenaire Dotation</th><td>{{ produit.adresse_partenaire_dotation }}</td></tr>
+
+                    {% elif produit.type_enregistrement == 'FABRICATION' %}
+                        <tr><th>Quantité Fabriquée</th><td>{{ produit.quantité_fabriquée }}</td></tr>
+                        <tr><th>Firme de Fabrication</th><td>{{ produit.firme_de_fabrication }}</td></tr>
+                        <tr><th>Date de Fabrication</th><td>{{ produit.date_de_fabrication|date:"d/m/Y" }}</td></tr>
+
+                    {% elif produit.type_enregistrement == 'IMPORTATION' %}
+                        <tr><th>Quantité Importée</th><td>{{ produit.quantité_importée }}</td></tr>
+                        <tr><th>Structure Importatrice</th><td>{{ produit.structure_importatrice }}</td></tr>
+                        <tr><th>Adresse Importateur</th><td>{{ produit.addresse_importateur }}</td></tr>
+                        <tr><th>Date d'Importation</th><td>{{ produit.date_importation|date:"d/m/Y" }}</td></tr>
+                        <tr><th>Pays d'Importation</th><td>{{ produit.pays_importation }}</td></tr>
+
+                    {% elif produit.type_enregistrement == 'EXPORTATION' %}
+                        <tr><th>Quantité Exportée</th><td>{{ produit.quantité_exportée }}</td></tr>
+                        <tr><th>Structure Exportatrice</th><td>{{ produit.structure_exportatrice }}</td></tr>
+                        <tr><th>Adresse Exportateur</th><td>{{ produit.addresse_exportateur }}</td></tr>
+                        <tr><th>Date d'Exportation</th><td>{{ produit.date_exportation|date:"d/m/Y" }}</td></tr>
+                        <tr><th>Pays d'Exportation</th><td>{{ produit.pays_exportation }}</td></tr>
+                    {% endif %}
+                    
+                    <tr>
+                        <th>Valeur Financière</th>
+                        <td>{{ produit.valeur_financiere|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Unité de la Quantité</th>
+                        <td>{{ produit.unité_de_la_quantité|default:"N/A" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="{% url 'produit_list' %}" class="btn btn-secondary mt-3">Retour à la liste</a>
+</div>
+{% endblock %}

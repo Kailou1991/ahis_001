@@ -1,0 +1,81 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Liste des Campagnes</h2>
+
+    <!-- ✅ Bouton Nouvelle Campagne -->
+     
+    {% with user.groups.all|first as first_group %}
+    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+     
+    <div class="d-flex  mb-4">
+        <a href="{% url 'ajouter_campagne' %}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Nouvelle Campagne
+        </a>
+    </div>
+{% endif %}
+ {% endwith %}
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <table id="liste_Vaccination" class="table table-bordered table-striped text-center shadow-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Campagne</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                            {% with user.groups.all|first as first_group %}
+                            {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+     
+                        <th></th>
+                        <th></th>
+                        {% endif %}
+                        {% endwith %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campagne in campagnes %}
+                    <tr>
+                        <td>{{ campagne.Campagne }}</td>
+                        <td>{{ campagne.get_type_campagne_display }}</td>
+                        <td>
+                            {% if campagne.statut %}
+                                <span class="badge bg-success">Ouverte</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Fermée</span>
+                            {% endif %}
+                        </td>
+                        {% with user.groups.all|first as first_group %}
+                        {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+     
+                        <td class="text-center">
+                            <!-- 🔒 Fermer -->
+                            {% if campagne.statut %}
+                            <form action="{% url 'fermer_campagne' campagne.id %}" method="get" class="d-inline" onsubmit="return confirm('Êtes-vous sûr de vouloir fermer la campagne {{ campagne.Campagne }} ?');">
+                                <button type="submit" class="btn btn-warning btn-sm">
+                                    <i class="fa fa-lock"></i> Fermer
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- 🗑 Supprimer -->
+                            <form action="{% url 'supprimer_campagne' campagne.id %}" method="post" class="d-inline ms-1" onsubmit="return confirm('⚠️ Confirmez-vous la suppression de la campagne {{ campagne.Campagne }} ? Cette action supprimera toutes les données associées.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fa fa-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        </td>
+                        {% endif %}
+                        {% endwith %}
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

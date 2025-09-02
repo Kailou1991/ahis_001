@@ -1,0 +1,363 @@
+{% extends '../base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+<style>
+  /* Accent AHIS */
+  .ahis-accent { background: linear-gradient(135deg,#0ea5e9 0%, #2563eb 100%); }
+  .kpi-card    { border:1px solid rgba(0,0,0,.06); box-shadow:0 6px 18px rgba(0,0,0,.06); }
+  .kpi-icon    { width:44px;height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:#fff; }
+  .muted       { color:#6b7280; }
+  .table th { font-weight:600; }
+  .empty { color:#6b7280; padding:1rem; background:#f8fafc; border:1px dashed #e5e7eb; border-radius:.5rem; }
+  .badge-soft { background:#eef2ff; color:#3730a3; }
+  .chip { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:.25rem .6rem; }
+  .card-title { font-weight:600; }
+</style>
+
+<div class="container py-4">
+
+  <!-- En-tête -->
+  <div class="d-flex align-items-center mb-3">
+    <div class="flex-grow-1">
+      <h4 class="mb-1">Tableau de bord AHIS</h4>
+      <div class="muted">Synthèse Vaccination · Surveillance · Résultats confirmés par le laboratoire</div>
+    </div>
+    <span class="badge rounded-pill text-bg-light border">
+      Du <strong>{{ start|date:"d/m/Y" }}</strong> au <strong>{{ end|date:"d/m/Y" }}</strong>
+    </span>
+  </div>
+
+  <!-- Filtres -->
+  <form method="get" class="row g-2 align-items-center mb-3">
+    <div class="col-auto">
+      <label class="muted me-1">Période</label>
+      <select name="days" class="form-select form-select-sm">
+        <option value="7"  {% if kpi.jours == 7 %}selected{% endif %}>7 jours</option>
+        <option value="30" {% if kpi.jours == 30 %}selected{% endif %}>30 jours</option>
+        <option value="90" {% if kpi.jours == 90 %}selected{% endif %}>3 mois</option>
+        <option value="365" {% if kpi.jours == 365 %}selected{% endif %}>12 mois</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i>Appliquer</button>
+    </div>
+
+    <div class="col ms-auto d-flex gap-2 justify-content-end">
+      {% if current_region %}
+        <span class="chip"><i class="bi bi-geo-alt"></i> Région : <strong class="ms-1">{{ current_region }}</strong></span>
+      {% endif %}
+      {% if current_departement %}
+        <span class="chip"><i class="bi bi-signpost-split"></i> Dépt. : <strong class="ms-1">{{ current_departement }}</strong></span>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-3">
+
+    <!-- Surveillance -->
+    <div class="col-12 col-md-4">
+      <div class="card kpi-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <span class="kpi-icon ahis-accent me-2"><i class="bi bi-activity"></i></span>
+            <div>
+              <div class="muted small">Surveillance ({{ kpi.jours }} j)</div>
+              <div class="fw-semibold">Événements & Santé animale</div>
+            </div>
+          </div>
+          <div class="row row-cols-2 g-3">
+            <div class="col">
+              <div class="muted small">Événements</div>
+              <div class="fs-4 fw-semibold">{{ kpi.surv_total|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Alertes actives</div>
+              <div class="fs-4 fw-semibold">{{ kpi.surv_alertes|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Animaux malades</div>
+              <div class="fs-4 fw-semibold">{{ kpi.surv_malades|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Animaux morts</div>
+              <div class="fs-4 fw-semibold">{{ kpi.surv_morts|intcomma }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vaccination -->
+    <div class="col-12 col-md-4">
+      <div class="card kpi-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <span class="kpi-icon ahis-accent me-2"><i class="bi bi-shield-plus"></i></span>
+            <div>
+              <div class="muted small">Vaccination ({{ kpi.jours }} j)</div>
+              <div class="fw-semibold">Objectifs & Réalisations</div>
+            </div>
+          </div>
+          <div class="row row-cols-2 g-3">
+            <div class="col">
+              <div class="muted small">Objectif</div>
+              <div class="fs-4 fw-semibold">{{ kpi.vacc_objectif|default:0|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Éligibles</div>
+              <div class="fs-4 fw-semibold">{{ kpi.vacc_eligible|default:0|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Réalisé</div>
+              <div class="fs-4 fw-semibold">{{ kpi.vacc_realise|default:0|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Couverture</div>
+              <div class="fs-4 fw-semibold">{{ kpi.vacc_couverture|floatformat:1 }}%</div>
+            </div>
+          </div>
+
+          <!-- Barre de progression couverture -->
+          <div class="mt-3">
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+                 aria-valuenow="{{ kpi.vacc_couverture|default:0 }}">
+              <div class="progress-bar {% if kpi.vacc_couverture >= 80 %}bg-success{% elif kpi.vacc_couverture >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                   style="width: {{ kpi.vacc_couverture|default:0 }}%;">
+                {{ kpi.vacc_couverture|floatformat:1 }}%
+              </div>
+            </div>
+            <div class="small mt-2 text-muted">
+              <i class="bi bi-info-circle"></i>
+              Réalisé = public + privé {% comment %}fallback "total_marque/calculation" calculé côté vue{% endcomment %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- LIMS -->
+    <div class="col-12 col-md-4">
+      <div class="card kpi-card h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <span class="kpi-icon ahis-accent me-2"><i class="bi bi-flask2"></i></span>
+            <div>
+              <div class="muted small">Laboratoire ({{ kpi.jours }} j)</div>
+              <div class="fw-semibold">Demandes & Échantillons</div>
+            </div>
+          </div>
+          <div class="row row-cols-2 g-3">
+            <div class="col">
+              <div class="muted small">Demandes</div>
+              <div class="fs-4 fw-semibold">{{ kpi.lims_demandes|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Échantillons</div>
+              <div class="fs-4 fw-semibold">{{ kpi.lims_echantillons|intcomma }}</div>
+            </div>
+            <div class="col">
+              <div class="muted small">Non conformes</div>
+              <div class="fs-4 fw-semibold">{{ kpi.lims_non_conformes|intcomma }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /KPIs -->
+
+  <!-- Lignes de contenu -->
+  <div class="row g-3">
+
+    <!-- A. Surveillance — Signes les plus fréquents -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">Surveillance — Signes cliniques les plus fréquents</h6>
+            <span class="badge badge-soft">Top 10</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Signes (texte)</th>
+                  <th scope="col" class="text-end">#</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in top_signes %}
+                  <tr>
+                    <td>{{ row.grp5_liste_signes|default:"—" }}</td>
+                    <td class="text-end">{{ row.n|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="empty"><i class="bi bi-inbox me-1"></i>Aucune donnée sur la période.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B. Vaccination — Top maladies vaccinées -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">Vaccination — Top maladies (réalisé)</h6>
+            {% if kpi.vacc_realise and kpi.vacc_objectif %}
+              <span class="badge {% if kpi.vacc_couverture >= 80 %}text-bg-success{% elif kpi.vacc_couverture >= 50 %}text-bg-warning{% else %}text-bg-danger{% endif %}">
+                Couverture {{ kpi.vacc_couverture|floatformat:1 }}%
+              </span>
+            {% endif %}
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Maladie</th>
+                  <th scope="col" class="text-end">Têtes vaccinées</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in vacc_top_maladies %}
+                  <tr>
+                    <td>{{ row.maladie_masse|default:"—" }}</td>
+                    <td class="text-end">{{ row.total|default:0|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="empty"><i class="bi bi-inbox me-1"></i>Aucune vaccination sur la période.</td></tr>
+                {% endfor %}
+              </tbody>
+              {% if vacc_top_maladies %}
+              <tfoot class="table-light">
+                <tr>
+                  <th>Total réalisé</th>
+                  <th class="text-end">{{ kpi.vacc_realise|default:0|intcomma }}</th>
+                </tr>
+              </tfoot>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C. LIMS — Demandes par état -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Laboratoire — Demandes par état</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for row in demandes_par_etat %}
+              <div class="border rounded px-3 py-2 bg-light">
+                <div class="small muted">{{ row.current_etat__label|default:"Sans état" }}</div>
+                <div class="fw-semibold">{{ row.n|intcomma }}</div>
+              </div>
+            {% empty %}
+              <div class="empty"><i class="bi bi-inbox me-1"></i>Aucune demande sur la période.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D. LIMS — Matrices les plus reçues -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Laboratoire — Matrices les plus reçues</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Matrice</th>
+                  <th scope="col" class="text-end"># Échantillons</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in top_matrices %}
+                  <tr>
+                    <td>{{ row.matrice }}</td>
+                    <td class="text-end">{{ row.n|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="empty"><i class="bi bi-inbox me-1"></i>Aucun échantillon sur la période.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- E. LIMS — Confirmées par maladie -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Laboratoire — Demandes confirmées par maladie ({{ kpi.jours }} j)</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Maladie</th>
+                  <th scope="col" class="text-end"># Confirmées</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in lims_confirme_par_maladie %}
+                  <tr>
+                    <td>{{ row.maladie_suspectee__Maladie|default:"—" }}</td>
+                    <td class="text-end">{{ row.n|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="empty"><i class="bi bi-inbox me-1"></i>Aucune demande confirmée sur la période.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- F. LIMS — Confirmées par région -->
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Laboratoire — Demandes confirmées par région ({{ kpi.jours }} j)</h6>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Région</th>
+                  <th scope="col" class="text-end"># Confirmées</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in lims_confirme_par_region %}
+                  <tr>
+                    <td>{{ row.region__Nom|default:"—" }}</td>
+                    <td class="text-end">{{ row.n|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="empty"><i class="bi bi-inbox me-1"></i>Aucune demande confirmée sur la période.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- /row -->
+
+</div>
+
+{% endblock %}

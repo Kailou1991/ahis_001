@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 style="text-align: center;">Formulaire de gestion  des Documents</h2>
+    <a href="{% url 'document_create' %}" class="btn btn-primary mb-3"><i class="fa fa-circle"></i>Nouveau</a>
+    <table id="liste_Vaccination" class="display fa-table" style="width:150%">
+        <thead>
+            <tr>
+               
+                <th>Type</th>
+                <th>Libellé</th>
+                <th>Date de Mise en Application</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in documents %}
+            <tr>
+                <td>{{ document.get_type_document_display }}</td>
+                <td id="text-cell">{{ document.libelle }}</td>
+                <td>{{ document.date_de_mise_en_application }}</td>
+                <td>
+                    <a href="{% url 'document_detail' document.pk %}" class="btn btn-info btn-sm"><i class="fa fa-table"></i>Détails</a>
+                    <a href="{% url 'document_update' document.pk %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i>Modifier</a>
+                    <a href="{% url 'document_delete' document.pk %}" class="btn btn-danger btn-sm"><i class="fa fa-warning"></i>Supprimer</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+// script.js
+
+document.addEventListener('DOMContentLoaded', function () {
+    const textCell = document.getElementById('text-cell');
+    
+    // Fonction pour ajouter des retours à la ligne après chaque 5 mots
+    function addLineBreaks(text, wordsPerLine) {
+        const words = text.split(' ');
+        let result = '';
+        
+        for (let i = 0; i < words.length; i++) {
+            result += words[i] + ' ';
+            if ((i + 1) % wordsPerLine === 0) {
+                result += '<br>'; // Ajoute un retour à la ligne
+            }
+        }
+        
+        return result;
+    }
+    
+    // Récupérer le texte actuel de la cellule
+    const currentText = textCell.innerHTML.trim();
+    
+    // Ajouter le texte formaté à la cellule
+    textCell.innerHTML = addLineBreaks(currentText, 5);
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" >
+    <div class="d-flex justify-content-between ">
+        <h2 class="text-primary">
+            📋 Inspections de l'infrastructure : <strong>{{ infrastructure.nom }}</strong>
+        </h2>
+         {% with user.groups.all|first as first_group %}
+       {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+        <a href="{% url 'inspection_create' %}" class="btn btn-primary">+ Nouvelle inspection</a>
+    {% endif %}
+    {% endwith %}
+
+    </div>
+
+    {% if inspections %}
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle shadow-sm" id="liste_Vaccination">
+            <thead class="table-light text-center">
+                <tr>
+                    <th>Date</th>
+                    <th>Inspecteur</th>
+                    <th>État avant</th>
+                    <th>État après</th>
+                    <th>Commentaire</th>
+                    <th>👁️</th>
+                     {% with user.groups.all|first as first_group %}
+                     {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+                    <th>✏️</th>
+                    <th>🗑️</th>
+                    {% endif %}
+                    {% endwith %}
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for inspection in inspections %}
+                <tr>
+                    <td>{{ inspection.date_inspection }}</td>
+                    <td>{{ inspection.inspecteur }}</td>
+
+                    <!-- État précédent -->
+                    <td class="text-center">
+                        {% if inspection.etat_derniere_inspection %}
+                            <span class="badge bg-secondary">
+                                {{ inspection.etat_derniere_inspection }}
+                            </span>
+                        {% else %}
+                            <span class="badge bg-light text-muted border">
+                                {{ inspection.infrastructure.get_etat_initial_display }}
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <!-- État après inspection -->
+                    <td class="text-center">
+                        <span class="badge bg-{{ inspection.etat_inspection.libelle|lower|cut:' ' }}">
+                            {{ inspection.etat_inspection }}
+                        </span>
+                    </td>
+
+                    <!-- Commentaire -->
+                    <td>{{ inspection.commentaire|default:"—" }}</td>
+
+                    <!-- Actions -->
+                    <td class="text-center">
+                        <a href="{% url 'inspection_detail' inspection.pk %}" class="btn btn-sm btn-info me-1">👁️Détails</a>
+                    </td>
+                     {% with user.groups.all|first as first_group %}
+                    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+                        <td class="text-center"> 
+                        <a href="{% url 'inspection_update' inspection.pk %}" class="btn btn-sm btn-warning me-1">✏️Editer</a>
+                    </td> 
+                        <td class="text-center"> <a href="{% url 'inspection_delete' inspection.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirmer la suppression ?');">🗑️Supprimer</a>
+                    </td>
+                    {% endif %}
+                    {% endwith %}
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-warning">Aucune inspection enregistrée pour cette infrastructure.</div>
+    {% endif %}
+</div>
+{% endblock %}

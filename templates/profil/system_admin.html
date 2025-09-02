@@ -1,0 +1,222 @@
+{% extends '../base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+
+  <style>
+    .card   { background:#fff; border-radius:12px; box-shadow: 0 2px 10px rgba(0,0,0,.06); padding:1rem; }
+    .kpi    { font-weight:600; font-size:1.5rem; }
+    .muted  { color:#6b7280; font-size:.9rem; }
+    .title  { font-weight:600; margin-bottom:.5rem; }
+    .grid-auto { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+    .chip { display:inline-flex; align-items:center; gap:.4rem; background:#eef2ff; color:#3730a3; padding:.2rem .6rem; border-radius:999px; font-size:.85rem; }
+  </style>
+
+  <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Filtres -->
+    <form method="get" class="flex flex-wrap items-center gap-3">
+      <span class="muted">Période :</span>
+      <select name="days" class="border rounded px-2 py-1">
+        <option value="7"  {% if kpi.jours == 7 %}selected{% endif %}>7 jours</option>
+        <option value="30" {% if kpi.jours == 30 %}selected{% endif %}>30 jours</option>
+        <option value="90" {% if kpi.jours == 90 %}selected{% endif %}>3 mois</option>
+        <option value="365" {% if kpi.jours == 365 %}selected{% endif %}>12 mois</option>
+      </select>
+      <button class="bg-blue-600 text-white px-3 py-1 rounded">Appliquer</button>
+
+      <span class="muted ml-auto">
+        Du <strong>{{ start|date:"d/m/Y" }}</strong> au <strong>{{ end|date:"d/m/Y" }}</strong>
+      </span>
+    </form>
+
+    <!-- Bandeau périmètre courant (région/département) -->
+    {% if current_region or current_departement %}
+      <div class="flex flex-wrap gap-2">
+        {% if current_region %}
+          <span class="chip">Région : {{ current_region }}</span>
+        {% endif %}
+        {% if current_departement %}
+          <span class="chip">Département : {{ current_departement }}</span>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Surveillance -->
+      <div class="card">
+        <div class="title">Surveillance ({{ kpi.jours }} j)</div>
+        <div class="grid-auto">
+          <div><div class="muted">Événements</div><div class="kpi">{{ kpi.surv_total }}</div></div>
+          <div><div class="muted">Alertes actives</div><div class="kpi">{{ kpi.surv_alertes }}</div></div>
+          <div><div class="muted">Animaux malades</div><div class="kpi">{{ kpi.surv_malades }}</div></div>
+          <div><div class="muted">Animaux morts</div><div class="kpi">{{ kpi.surv_morts }}</div></div>
+        </div>
+      </div>
+
+      <!-- Vaccination -->
+      <div class="card">
+        <div class="title">Vaccination ({{ kpi.jours }} j)</div>
+        <div class="grid-auto">
+          <div><div class="muted">Objectif</div><div class="kpi">{{ kpi.vacc_objectif|default:0 }}</div></div>
+          <div><div class="muted">Éligibles</div><div class="kpi">{{ kpi.vacc_eligible|default:0 }}</div></div>
+          <div><div class="muted">Réalisé</div><div class="kpi">{{ kpi.vacc_realise|default:0 }}</div></div>
+          <div><div class="muted">Couverture</div><div class="kpi">{{ kpi.vacc_couverture|floatformat:1 }}%</div></div>
+        </div>
+      </div>
+
+      <!-- LIMS -->
+      <div class="card">
+        <div class="title">LIMS ({{ kpi.jours }} j)</div>
+        <div class="grid-auto">
+          <div><div class="muted">Demandes</div><div class="kpi">{{ kpi.lims_demandes }}</div></div>
+          <div><div class="muted">Échantillons</div><div class="kpi">{{ kpi.lims_echantillons }}</div></div>
+          <div><div class="muted">Non conformes</div><div class="kpi">{{ kpi.lims_non_conformes }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lignes de contenu -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- A. Surveillance — Signes les plus fréquents -->
+      <div class="card">
+        <div class="title">Surveillance — Signes cliniques les plus fréquents</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead><tr class="text-left text-gray-600">
+              <th class="py-2 pr-3">Signes (texte)</th>
+              <th class="py-2">#</th>
+            </tr></thead>
+            <tbody>
+              {% for row in top_signes %}
+                <tr class="border-t">
+                  <td class="py-2 pr-3">{{ row.grp5_liste_signes|default:"—" }}</td>
+                  <td class="py-2">{{ row.n }}</td>
+                </tr>
+              {% empty %}
+                <tr><td class="py-3 text-gray-500" colspan="2">Aucune donnée sur la période.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- B. Vaccination — Top maladies vaccinées -->
+      <div class="card">
+        <div class="title">Vaccination — Top maladies (réalisé)</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead><tr class="text-left text-gray-600">
+              <th class="py-2 pr-3">Maladie</th>
+              <th class="py-2">Têtes vaccinées</th>
+            </tr></thead>
+            <tbody>
+              {% for row in vacc_top_maladies %}
+                <tr class="border-t">
+                  <td class="py-2 pr-3">{{ row.maladie_masse|default:"—" }}</td>
+                  <td class="py-2">{{ row.total|default:0 }}</td>
+                </tr>
+              {% empty %}
+                <tr><td class="py-3 text-gray-500" colspan="2">Aucune vaccination sur la période.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- C. LIMS — Demandes par état -->
+      <div class="card">
+        <div class="title">LIMS — Demandes par état</div>
+        <div class="flex flex-wrap gap-2">
+          {% for row in demandes_par_etat %}
+            <div class="bg-gray-100 rounded px-3 py-2">
+              <div class="text-sm text-gray-600">{{ row.current_etat__label|default:"Sans état" }}</div>
+              <div class="font-semibold">{{ row.n }}</div>
+            </div>
+          {% empty %}
+            <div class="text-gray-500">Aucune demande sur la période.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- D. LIMS — Matrices les plus reçues -->
+      <div class="card">
+        <div class="title">LIMS — Matrices les plus reçues</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead><tr class="text-left text-gray-600">
+              <th class="py-2 pr-3">Matrice</th>
+              <th class="py-2"># Échantillons</th>
+            </tr></thead>
+            <tbody>
+              {% for row in top_matrices %}
+                <tr class="border-t">
+                  <td class="py-2 pr-3">{{ row.matrice }}</td>
+                  <td class="py-2">{{ row.n }}</td>
+                </tr>
+              {% empty %}
+                <tr><td class="py-3 text-gray-500" colspan="2">Aucun échantillon sur la période.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- E. LIMS — Confirmées par maladie -->
+      <div class="card">
+        <div class="title">LIMS — Demandes confirmées par maladie ({{ kpi.jours }} j)</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-600">
+                <th class="py-2 pr-3">Maladie</th>
+                <th class="py-2"># Confirmées</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in lims_confirme_par_maladie %}
+                <tr class="border-t">
+                  <td class="py-2 pr-3">{{ row.maladie_suspectee__Maladie|default:"—" }}</td>
+                  <td class="py-2">{{ row.n }}</td>
+                </tr>
+              {% empty %}
+                <tr><td class="py-3 text-gray-500" colspan="2">Aucune demande confirmée sur la période.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- F. LIMS — Confirmées par région -->
+      <div class="card">
+        <div class="title">LIMS — Demandes confirmées par région ({{ kpi.jours }} j)</div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-600">
+                <th class="py-2 pr-3">Région</th>
+                <th class="py-2"># Confirmées</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in lims_confirme_par_region %}
+                <tr class="border-t">
+                  <td class="py-2 pr-3">{{ row.region__nom|default:"—" }}</td>
+                  <td class="py-2">{{ row.n }}</td>
+                </tr>
+              {% empty %}
+                <tr><td class="py-3 text-gray-500" colspan="2">Aucune demande confirmée sur la période.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div> <!-- /grid -->
+
+  </div>
+
+
+{% endblock %}

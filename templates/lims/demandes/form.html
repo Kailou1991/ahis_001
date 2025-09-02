@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4" style="max-width: 1080px;">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 mb-0">
+      {% if mode == "create" %}Créer une demande{% else %}Éditer une demande{% endif %}
+    </h1>
+    <div class="d-flex gap-2">
+      <a href="{{ return_url }}" class="btn btn-sm btn-outline-secondary">Retour</a>
+    </div>
+  </div>
+
+  <form id="demandeForm" method="post" class="card shadow-sm">
+    {% csrf_token %}
+    <div class="card-body">
+
+      {# ===== RÉCAPITULATIF D'ERREURS (sans parenthèses dans les conditions) ===== #}
+      {% if form.is_bound %}
+        {% if form.errors or form.non_field_errors or formset.non_form_errors or formset.errors %}
+          <div id="error-summary" class="alert alert-danger" role="alert" aria-live="polite">
+            <div class="fw-semibold mb-1">Le formulaire contient des erreurs :</div>
+            <ul class="mb-0">
+              {# Erreurs de champs (form principal) #}
+              {% for field in form %}
+                {% for error in field.errors %}
+                  <li><strong>{{ field.label }} :</strong> {{ error }}</li>
+                {% endfor %}
+              {% endfor %}
+
+              {# Erreurs non liées (form principal) #}
+              {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+
+              {# Erreurs globales du formset #}
+              {% for error in formset.non_form_errors %}
+                <li><strong>Échantillons :</strong> {{ error }}</li>
+              {% endfor %}
+
+              {# Erreurs par formulaire du formset #}
+              {% for f in formset.forms %}
+                {% if f.errors or f.non_field_errors %}
+                  <li>
+                    <strong>Échantillon {{ forloop.counter }} :</strong>
+                    <ul class="mb-0">
+                      {% for field in f %}
+                        {% for error in field.errors %}
+                          <li>{{ field.label }} : {{ error }}</li>
+                        {% endfor %}
+                      {% endfor %}
+                      {% for error in f.non_field_errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    </ul>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <!-- Bloc Demande -->
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="id_code_demande">Code demande</label>
+          {{ form.code_demande }}
+          {% if form.code_demande.errors %}<div class="text-danger small">{{ form.code_demande.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="id_site_labo">Site laboratoire</label>
+          {{ form.site_labo }}
+          {% if form.site_labo.errors %}<div class="text-danger small">{{ form.site_labo.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label d-flex justify-content-between" for="id_soumissionnaire">
+            <span>Soumissionnaire</span>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#clientModal">+ Nouveau client</button>
+          </label>
+          {{ form.soumissionnaire }}
+          {% if form.soumissionnaire.errors %}<div class="text-danger small">{{ form.soumissionnaire.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="id_region">Région</label>
+          {{ form.region }}
+          {% if form.region.errors %}<div class="text-danger small">{{ form.region.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="id_departement">Département</label>
+          {{ form.departement }}
+          {% if form.departement.errors %}<div class="text-danger small">{{ form.departement.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label" for="id_commune">Commune</label>
+          {{ form.commune }}
+          {% if form.commune.errors %}<div class="text-danger small">{{ form.commune.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="id_localite">Localité</label>
+          {{ form.localite }}
+          {% if form.localite.errors %}<div class="text-danger small">{{ form.localite.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="id_maladie_suspectee">Maladie suspectée</label>
+          {{ form.maladie_suspectee }}
+          <div class="form-text">
+            Si votre demande concerne d’autres types d’analyses (qualité des aliments, contrôle de vaccins/médicaments, eau, etc.),
+            laissez ce champ vide.
+          </div>
+          {% if form.maladie_suspectee.errors %}<div class="text-danger small">{{ form.maladie_suspectee.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Champs épidémiologiques (affichés seulement si une maladie est choisie) -->
+        <div class="col-md-6 js-epi">
+          <label class="form-label" for="id_espece">Espèce</label>
+          {{ form.espece }}
+          {% if form.espece.errors %}<div class="text-danger small">{{ form.espece.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6 js-epi">
+          <label class="form-label" for="id_effectif_troupeau">Nombre d'animaux exposés</label>
+          {{ form.effectif_troupeau }}
+          {% if form.effectif_troupeau.errors %}<div class="text-danger small">{{ form.effectif_troupeau.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6 js-epi">
+          <label class="form-label" for="id_nbre_animaux_malades">Nombre d'animaux malades</label>
+          {{ form.nbre_animaux_malades }}
+          {% if form.nbre_animaux_malades.errors %}<div class="text-danger small">{{ form.nbre_animaux_malades.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6 js-epi">
+          <label class="form-label" for="id_nbre_animaux_morts">Nombre d'animaux morts</label>
+          {{ form.nbre_animaux_morts }}
+          {% if form.nbre_animaux_morts.errors %}<div class="text-danger small">{{ form.nbre_animaux_morts.errors }}</div>{% endif %}
+        </div>
+
+        <!-- Conteneur erreurs client-side contraintes epi -->
+        <div id="epiErrors" class="col-12 d-none">
+          <div class="alert alert-danger mb-0" role="alert" aria-live="polite"></div>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label" for="id_motif">Motif</label>
+          {{ form.motif }}
+          {% if form.motif.errors %}<div class="text-danger small">{{ form.motif.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label" for="id_priorite">Priorité</label>
+          {{ form.priorite }}
+          {% if form.priorite.errors %}<div class="text-danger small">{{ form.priorite.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label" for="id_date_echeance">Échéance</label>
+          {{ form.date_echeance }}
+          {% if form.date_echeance.errors %}<div class="text-danger small">{{ form.date_echeance.errors }}</div>{% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label" for="id_notes">Notes</label>
+          {{ form.notes }}
+          {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Formset Échantillons -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="fw-semibold">Échantillons</div>
+        <button class="btn btn-sm btn-outline-primary" type="button" id="addRow">
+          <i class="bi bi-plus-circle"></i> Ajouter un échantillon
+        </button>
+      </div>
+
+      {{ formset.management_form }}
+      <div id="echantillons-rows">
+        {% for f in formset.forms %}
+          <div class="card mb-2 p-3 border">
+            {{ f.id }}
+            <div class="row g-2 align-items-end">
+              <div class="col-md-3">
+                <label class="form-label">Code échantillon</label>
+                {% if f.instance.pk %}
+                  {{ f.code_echantillon }}
+                  <input type="hidden" name="{{ f.code_echantillon.html_name }}" value="{{ f.initial.code_echantillon }}">
+                {% else %}
+                  {{ f.code_echantillon }}
+                {% endif %}
+                {% if f.code_echantillon.errors %}
+                  <div class="text-danger small">{{ f.code_echantillon.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Matrice</label>
+                {{ f.matrice }}
+                {% if f.matrice.errors %}<div class="text-danger small">{{ f.matrice.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Précision matrice</label>
+                {{ f.matrice_autre }}
+                {% if f.matrice_autre.errors %}<div class="text-danger small">{{ f.matrice_autre.errors }}</div>{% endif %}
+              </div>
+
+              <!-- ID animal suit les mêmes règles d’affichage que les champs épidémio -->
+              <div class="col-md-3 js-epi-animal">
+                <label class="form-label">ID animal</label>
+                {{ f.id_animal }}
+                {% if f.id_animal.errors %}<div class="text-danger small">{{ f.id_animal.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Date prélèvement</label>
+                {{ f.date_prelevement }}
+                {% if f.date_prelevement.errors %}<div class="text-danger small">{{ f.date_prelevement.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label">Conformité</label>
+                {{ f.conformite }}
+                {% if f.conformite.errors %}<div class="text-danger small">{{ f.conformite.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-2">
+                <div class="form-check mt-4">
+                  {{ f.reception_externe }}
+                  <label class="form-check-label ms-1">Réception externe</label>
+                </div>
+                {% if f.reception_externe.errors %}<div class="text-danger small">{{ f.reception_externe.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-2">
+                <div class="form-check mt-4">
+                  {{ f.envoi_externe }}
+                  <label class="form-check-label ms-1">Envoi externe</label>
+                </div>
+                {% if f.envoi_externe.errors %}<div class="text-danger small">{{ f.envoi_externe.errors }}</div>{% endif %}
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">Commentaire</label>
+                {{ f.commentaire }}
+                {% if f.commentaire.errors %}<div class="text-danger small">{{ f.commentaire.errors }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="text-muted small">Aucun échantillon pour l’instant.</div>
+        {% endfor %}
+      </div>
+
+      <!-- empty_form pour clonage JS -->
+      <template id="ech-empty">
+        <div class="card mb-2 p-3 border">
+          <div class="row g-2 align-items-end">
+            {{ formset.empty_form.id.as_widget }}
+
+            <div class="col-md-3">
+              <label class="form-label">Code échantillon</label>
+              {{ formset.empty_form.code_echantillon.as_widget }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Matrice</label>
+              {{ formset.empty_form.matrice.as_widget }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Précision matrice</label>
+              {{ formset.empty_form.matrice_autre.as_widget }}
+            </div>
+
+            <!-- ID animal suit les mêmes règles d’affichage que les champs épidémio -->
+            <div class="col-md-3 js-epi-animal">
+              <label class="form-label">ID animal</label>
+              {{ formset.empty_form.id_animal.as_widget }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Date prélèvement</label>
+              {{ formset.empty_form.date_prelevement.as_widget }}
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label">Conformité</label>
+              {{ formset.empty_form.conformite.as_widget }}
+            </div>
+
+            <div class="col-md-2">
+              <div class="form-check mt-4">
+                {{ formset.empty_form.reception_externe.as_widget }}
+                <label class="form-check-label ms-1">Réception externe</label>
+              </div>
+            </div>
+
+            <div class="col-md-2">
+              <div class="form-check mt-4">
+                {{ formset.empty_form.envoi_externe.as_widget }}
+                <label class="form-check-label ms-1">Envoi externe</label>
+              </div>
+            </div>
+
+            <div class="col-md-12">
+              <label class="form-label">Commentaire</label>
+              {{ formset.empty_form.commentaire.as_widget }}
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </div>
+
+    <div class="card-footer d-flex justify-content-end gap-2">
+      <a href="{{ return_url }}" class="btn btn-outline-secondary">Annuler</a>
+      <button class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal “Nouveau client” (inchangé) -->
+<div class="modal fade" id="clientModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="clientForm">
+      <div class="modal-header">
+        <h5 class="modal-title">Nouveau client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body row g-2">
+        <div class="col-12">
+          <label class="form-label">Nom complet*</label>
+          <input class="form-control" name="nom_complet" required>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Téléphone</label>
+          <input class="form-control" name="telephone">
+        </div>
+        <div class="col-6">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" name="email">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Organisation</label>
+          <input class="form-control" name="organisation">
+        </div>
+        <div class="col-12 small text-muted">* champ requis</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal" type="button">Fermer</button>
+        <button class="btn btn-primary" type="submit">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ====== URLs injectées par la vue ======
+  const API_NEXT   = "{{ api_next_code_url|default:'' }}";
+  const API_DEPS   = "{{ api_deps_url|default:'' }}";
+  const API_COMS   = "{{ api_com_url|default:'' }}";
+  const API_CLIENT = "{{ api_client_url|default:'' }}";
+
+  // ====== Selects / inputs ======
+  const $region = document.getElementById("id_region");
+  const $dep    = document.getElementById("id_departement");
+  const $com    = document.getElementById("id_commune");
+  const $site   = document.getElementById("id_site_labo");
+  const $code   = document.getElementById("id_code_demande");
+  const $client = document.getElementById("id_soumissionnaire");
+
+  // ====== Bloc épidémiologique (affichage conditionnel & validation) ======
+  const $maladie = document.getElementById("id_maladie_suspectee");
+  const $epiFields = document.querySelectorAll(".js-epi");
+  const $expo  = document.getElementById("id_effectif_troupeau");
+  const $mal   = document.getElementById("id_nbre_animaux_malades");
+  const $mort  = document.getElementById("id_nbre_animaux_morts");
+  const $epiBox = document.getElementById("epiErrors");
+  const $epiAlert = $epiBox ? $epiBox.querySelector(".alert") : null;
+
+  const toggleEpi = () => {
+    const hasDisease = !!($maladie && $maladie.value);
+    // champs du bloc Demande
+    $epiFields.forEach(el => el.classList.toggle("d-none", !hasDisease));
+    // champs "ID animal" dans tous les items du formset
+    document.querySelectorAll(".js-epi-animal").forEach(el => el.classList.toggle("d-none", !hasDisease));
+
+    if (!hasDisease) {
+      // Nettoyage visuel des erreurs
+      [$expo, $mal, $mort].forEach(i => i && i.classList.remove("is-invalid"));
+      if ($epiBox) $epiBox.classList.add("d-none");
+      if ($epiAlert) $epiAlert.innerHTML = "";
+    }
+  };
+
+  const parseIntSafe = (v) => {
+    const n = parseInt((v || "").toString().trim(), 10);
+    return isNaN(n) ? 0 : n;
+  };
+
+  // Validation client-side des contraintes épidémiologiques
+  const form = document.getElementById("demandeForm");
+  form && form.addEventListener("submit", (ev) => {
+    if (!$maladie || !$maladie.value) return; // aucune maladie ⇒ pas de contraintes
+
+    const ex = parseIntSafe($expo && $expo.value);
+    const ma = parseIntSafe($mal && $mal.value);
+    const mo = parseIntSafe($mort && $mort.value);
+
+    let errs = [];
+    [$expo, $mal, $mort].forEach(i => i && i.classList.remove("is-invalid"));
+
+    if (ma > ex) {
+      errs.push("Le nombre d’animaux malades ne peut pas dépasser l’effectif exposé.");
+      $mal && $mal.classList.add("is-invalid");
+    }
+    if (ma + mo > ex) {
+      errs.push("La somme des malades et des morts ne peut pas dépasser l’effectif exposé.");
+      $mort && $mort.classList.add("is-invalid");
+    }
+    if (ex < 0 || ma < 0 || mo < 0) {
+      errs.push("Les effectifs ne peuvent pas être négatifs.");
+      [$expo, $mal, $mort].forEach(i => i && i.classList.add("is-invalid"));
+    }
+
+    if (errs.length) {
+      ev.preventDefault();
+      if ($epiBox && $epiAlert) {
+        $epiAlert.innerHTML = "<ul class='mb-0'><li>" + errs.join("</li><li>") + "</li></ul>";
+        $epiBox.classList.remove("d-none");
+      } else {
+        alert(errs.join("\n"));
+      }
+      ($mal && $mal.classList.contains("is-invalid") ? $mal : $expo)?.focus();
+    }
+  });
+
+  $maladie && $maladie.addEventListener("change", toggleEpi);
+  document.addEventListener("DOMContentLoaded", toggleEpi);
+
+  // ====== Helpers génériques ======
+  const emptyOption = (label="— Sélectionner —") => {
+    const o = document.createElement("option"); o.value = ""; o.textContent = label; return o;
+  };
+  const setLoading = (select, on, label="— Chargement… —") => {
+    select.disabled = !!on;
+    if (on) { select.dataset._prev = select.innerHTML; select.innerHTML = ""; select.appendChild(emptyOption(label)); }
+  };
+  const toOptions = (data) => {
+    const arr = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+    return arr.map(it => {
+      const id = it.id ?? it.pk ?? it.value ?? it.ID ?? it.pk_id;
+      const label = it.label ?? it.name ?? it.Nom ?? it.nom ?? it.text ?? it.libelle ?? String(id);
+      return { id, label };
+    }).filter(x => x.id !== undefined && x.id !== null);
+  };
+  const fillSelect = (select, options, selectedValue) => {
+    const current = selectedValue ?? select.value ?? "";
+    select.innerHTML = ""; select.appendChild(emptyOption());
+    for (const o of options) {
+      const opt = document.createElement("option");
+      opt.value = String(o.id); opt.textContent = o.label;
+      if (String(o.id) === String(current)) opt.selected = true;
+      select.appendChild(opt);
+    }
+    select.disabled = false;
+  };
+  const fetchJSON = async (url, conf={}) => {
+    const res = await fetch(url, { headers: { "Accept": "application/json" }, ...conf });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  };
+
+  // ====== Cascade Région → Département → Commune ======
+  const loadDeps = async (regionId, keepSelected=false) => {
+    if (!API_DEPS || !regionId) {
+      $dep.innerHTML = ""; $dep.appendChild(emptyOption()); $dep.disabled = !regionId;
+      $com.innerHTML = ""; $com.appendChild(emptyOption()); $com.disabled = true;
+      return;
+    }
+    setLoading($dep, true);
+    const selectedDep = keepSelected ? $dep.value : "";
+    try { fillSelect($dep, toOptions(await fetchJSON(`${API_DEPS}?region_id=${encodeURIComponent(regionId)}`)), selectedDep); }
+    catch (e) { console.error(e); $dep.innerHTML = ""; $dep.appendChild(emptyOption("— Erreur de chargement —")); $dep.disabled = false; }
+    $com.innerHTML = ""; $com.appendChild(emptyOption()); $com.disabled = true;
+  };
+
+  const loadComs = async (depId, keepSelected=false) => {
+    if (!API_COMS || !depId) { $com.innerHTML = ""; $com.appendChild(emptyOption()); $com.disabled = !depId; return; }
+    setLoading($com, true);
+    const selectedCom = keepSelected ? $com.value : "";
+    try { fillSelect($com, toOptions(await fetchJSON(`${API_COMS}?departement_id=${encodeURIComponent(depId)}`)), selectedCom); }
+    catch (e) { console.error(e); $com.innerHTML = ""; $com.appendChild(emptyOption("— Erreur de chargement —")); $com.disabled = false; }
+  };
+
+  $region && $region.addEventListener("change", () => loadDeps($region.value || "", false));
+  $dep && $dep.addEventListener("change", () => loadComs($dep.value || "", false));
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const rid = $region ? $region.value : "";
+    const did = $dep ? $dep.value : "";
+    const depNeedsLoad = $dep && $dep.options.length <= 1 && !!rid;
+    const comNeedsLoad = $com && $com.options.length <= 1 && !!did;
+    if (depNeedsLoad) {
+      loadDeps(rid, true).then(() => { if (comNeedsLoad) loadComs($dep.value || did, true); });
+    } else if (comNeedsLoad) {
+      loadComs(did, true);
+    }
+  });
+
+  // ====== Code demande auto si vide ======
+  const updateNextCode = async () => {
+    if (!API_NEXT || !$code) return;
+    const current = ($code.value || "").trim();
+    if (current) return;
+    try {
+      const data = await fetchJSON(API_NEXT);
+      const next = data?.code || data?.next || data?.value;
+      if (next) $code.value = next;
+    } catch (e) { console.warn("next_code échoué:", e); }
+  };
+  document.addEventListener("DOMContentLoaded", updateNextCode);
+  $site && $site.addEventListener("change", updateNextCode);
+
+  // ====== Modale « Nouveau client » ======
+  function getCookie(name) {
+    const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'); return m ? m.pop() : "";
+  }
+  const $clientForm = document.getElementById("clientForm");
+  $clientForm && $clientForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault(); if (!API_CLIENT) return;
+    const fd = new FormData($clientForm);
+    try {
+      const res = await fetch(API_CLIENT, { method: "POST", headers: { "X-CSRFToken": getCookie("csrftoken") }, body: fd });
+      const data = await res.json();
+      if (!res.ok || data.ok === false) { alert(data?.errors ? JSON.stringify(data.errors) : (data?.detail || "Création impossible.")); return; }
+      const id = data.id, label = data.label;
+      if ($client && id) {
+        const opt = document.createElement("option"); opt.value = String(id); opt.textContent = label || ("Soumissionnaire #" + id);
+        $client.appendChild(opt); $client.value = String(id);
+        const modalEl = document.getElementById("clientModal");
+        (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide();
+        $clientForm.reset();
+      }
+    } catch (e) { console.error(e); alert("Erreur réseau lors de la création du client."); }
+  });
+
+  // ====== Formset (ajout de ligne) ======
+  const addBtn    = document.getElementById("addRow");
+  const container = document.getElementById("echantillons-rows");
+  const emptyTpl  = document.getElementById("ech-empty");
+  const totalEl   = document.getElementById("id_ech-TOTAL_FORMS");
+
+  addBtn && addBtn.addEventListener("click", () => {
+    const idx = parseInt(totalEl.value, 10);
+    const html = emptyTpl.innerHTML.replace(/__prefix__/g, idx);
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const card = wrapper.firstElementChild;
+    container.appendChild(card);
+    totalEl.value = String(idx + 1);
+
+    // Appliquer l'état d'affichage "Maladie" aux champs ID animal nouvellement ajoutés
+    toggleEpi();
+  });
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,195 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Tableau de bord des Opérations sur les Produits Vétérinaires</h2>
+
+    <!-- Filtres dynamiques -->
+    <form method="post" class="row mb-4">
+        {% csrf_token %}
+        <div class="col-md-2">
+            <label>Année</label>
+            <select name="annee" class="form-control">
+                <option value="">Toutes</option>
+                {% for y in annees %}
+                    <option value="{{ y }}" {% if request.POST.annee == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label>Type d'opération</label>
+            <select name="type_op" class="form-control">
+                <option value="">Tous</option>
+                <option value="IMPORTATION">Importation</option>
+                <option value="EXPORTATION">Exportation</option>
+                <option value="FABRICATION">Fabrication</option>
+                <option value="DOTATION">Dotation</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label>Structure</label>
+            <select name="structure" class="form-control">
+                <option value="">Toutes</option>
+                {% for y in structure %}
+                    <option value="{{ y.id }}" {% if request.POST.structure == y.id|stringformat:"s" %}selected{% endif %}>{{ y.structure }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label>Type de produit</label>
+            <select name="type_produit" class="form-control">
+                <option value="">Tous</option>
+                <option value="MEDICAMENT">Médicament</option>
+                <option value="SEMENCE_ANIMALE">Semence animale</option>
+                <option value="MATERIEL_VETERINAIRE">Matériel vétérinaire</option>
+            </select>
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-success w-100" style="margin-top: 10%;">Filtrer</button>
+        </div>
+    </form>
+<hr>
+</br></br>
+    <!-- Tuiles indicateurs -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total des produits</h5>
+                    <p class="card-text display-6">{{ total_produits }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total des opérations</h5>
+                    <p class="card-text display-6">{{ total_operations }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Taux produits avec AMM</h5>
+                    <p class="card-text display-6">{{ taux_amm }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Valeur totale des opérations</h5>
+                    <p class="card-text display-6">{{ valeur_totale_operations|floatformat:0 }} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</br></br>
+    <!-- Graphiques côte à côte -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+              
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ chart_base64 }}" class="img-fluid" alt="Graphique volume opérations">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+               
+                <div class="card-body text-center">
+                    {% if chart_mensuel_base64 %}
+                        <img src="data:image/png;base64,{{ chart_mensuel_base64 }}" class="img-fluid" alt="Tendance mensuelle">
+                    {% else %}
+                        <p class="text-muted">Aucune donnée disponible (sélectionnez un type d'opération)</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</br></br>
+    <hr>
+</br></br>
+    <!-- Analyse par produit -->
+    <h4 class="mt-4">Analyse par produit</h4>
+    <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+            <tr>
+                <th>Produit</th>
+                <th>Type</th>
+                <th>Nombre d'opérations</th>
+                <th>Quantité totale</th>
+                <th>Valeur totale (€)</th>
+               
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in analyse_par_produit %}
+            <tr>
+                <td>{{ p.nom }}</td>
+                <td>{{ p.type }}</td>
+                <td>{{ p.nb }}</td>
+                <td>{{ p.quantite|floatformat:0 }}</td>
+                <td>{{ p.valeur|floatformat:0 }}</td>
+                    </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Origine / destination géographique -->
+    <h4 class="mt-4">Origine et destination des produits</h4>
+    <table class="table table-bordered table-sm">
+        <thead class="thead-light">
+            <tr>
+                <th>Produit</th>
+                <th>Pays de fabrication</th>
+                <th>Pays importateur</th>
+                <th>Pays d'exportation</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in origine_destination %}
+            <tr>
+                <td>{{ row.nom }}</td>
+                <td>{{ row.fab }}</td>
+                <td>{{ row.imp }}</td>
+                <td>{{ row.exp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Tableau des importations par structure -->
+    <h4 class="mt-4">🧾 Importations par structure importatrice</h4>
+    <table class="table table-bordered table-striped table-sm">
+        <thead class="thead-dark">
+            <tr>
+                <th>Structure importatrice</th>
+                <th>Produit</th>
+                <th> Type Produit</th>
+                <th>Pays d’importation</th>
+                <th>Quantité importée</th>
+                <th>Valeur financière</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in importations_details %}
+            <tr>
+                <td>{{ row.structure_importatrice__structure }}</td>
+                <td>{{ row.produit__nom_du_produit }}</td>
+                <td>{{ row.produit__type_produit }}</td>
+                <td>{{ row.pays_importation__nom }}</td>
+                <td>{{ row.total_quantite|floatformat:0 }}</td>
+                <td>{{ row.total_valeur|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

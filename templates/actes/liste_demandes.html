@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-uppercase">Suivi des demandes administratives</h2>
+
+    <div class="mb-3">
+        <a href="{% url 'soumettre_demande' %}" class="btn btn-primary">
+            <i class="fa fa-plus-circle"></i> Nouvelle demande
+        </a>
+    </div>
+    {% with user.groups.all|first as first_group %}
+    <table id="liste_Vaccination" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Nom du demandeur</th>
+                <th>Type d'acte demandé</th>
+                <th>Date de dépôt</th>
+                <th>Statut actuel</th>
+                <th>Agent de suivi (niveau central)</th>
+                <th>Détails</th>
+                {% if first_group.name == 'Administrateur Système' or first_group.name == 'Directeur de la Santé Animale' or first_group.name == 'Directeur Générale des services vétérinaires' %}
+                    <th>Affecter un agent</th>
+                {% endif %}
+                {% if first_group.name in 'Administrateur Départemental Administrateur Régional Agent de suivi de demande' %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for demande in demandes %}
+                {% with demande.suivis.last as suivi %}
+                <tr>
+                    <td>{{ demande.nom }} {{ demande.prenom }}</td>
+                    <td>{{ demande.acte.nom }}</td>
+                    <td>{{ demande.date_soumission|date:'d/m/Y' }}</td>
+                    <td>
+                        {% if suivi %}
+                            <span class="badge 
+                                {% if suivi.statut == 'en_cours' %}bg-warning text-dark
+                                {% elif suivi.statut == 'valide' %}bg-success
+                                {% elif suivi.statut == 'rejete' %}bg-danger
+                                {% elif suivi.statut == 'delivre' %}bg-primary
+                                {% else %}bg-secondary{% endif %} text-uppercase fw-bold">
+                                {{ suivi.niveau|capfirst }} — {{ suivi.get_statut_display }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted fst-italic">Non disponible</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if demande.affectations.last %}
+                            {{ demande.affectations.last.agent.first_name }} {{ demande.affectations.last.agent.last_name }}
+                        {% else %}
+                            <span class="text-muted fst-italic">Non affecté</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'details_acte' demande.pk %}" class="btn btn-success">Voir les détails</a>
+                    </td>
+
+                    {% if first_group.name == 'Administrateur Système' or first_group.name == 'Directeur de la Santé Animale' %}
+                        <td>
+                            {% if suivi and suivi.statut == 'en_cours' and suivi.niveau in niveaux_affectables %}
+                                <a href="{% url 'affecter_demande' demande.pk %}" class="btn btn-sm btn-outline-primary">Affecter</a>
+                            {% endif %}
+                        </td>
+                    {% endif %}
+
+                    {% if first_group.name == 'Administrateur Départemental' and suivi.niveau == 'departemental' and suivi.statut == 'en_cours' %}
+                        <td><a href="{% url 'suivi_et_traitement_demande' demande.pk %}" class="btn btn-sm btn-outline-warning">🛠️ Traiter</a></td>
+                    {% elif first_group.name == 'Administrateur Régional' and suivi.niveau == 'regional' and suivi.statut == 'en_cours' %}
+                        <td><a href="{% url 'suivi_et_traitement_demande' demande.pk %}" class="btn btn-sm btn-outline-warning">🛠️ Traiter</a></td>
+                    {% elif first_group.name == 'Agent de suivi de demande' and suivi.niveau == 'central' and suivi.statut == 'en_cours' %}
+                        <td><a href="{% url 'suivi_et_traitement_demande' demande.pk %}" class="btn btn-sm btn-outline-warning">🛠️ Traiter</a></td>
+                    {% elif first_group.name in 'Administrateur Départemental Administrateur Régional Agent de suivi de demande' %}
+                        <td><span class="text-muted fst-italic">Non applicable</span></td>
+                    {% endif %}
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr><td colspan="9" class="text-center text-muted fst-italic">Aucune demande enregistrée pour le moment.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endwith %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:680px;">
+  <div class="alert alert-warning">
+    <h4 class="alert-heading">Suppression</h4>
+    <p>Confirmez-vous la suppression de la dotation du <strong>{{ obj.date_dotation|date:"d/m/Y" }}</strong>
+       – <strong>{{ obj.campagne.Campagne }}</strong> – <strong>{{ obj.maladie.Maladie }}</strong> ?</p>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <a href="{% url 'dose_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      <button class="btn btn-danger" type="submit">Supprimer</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

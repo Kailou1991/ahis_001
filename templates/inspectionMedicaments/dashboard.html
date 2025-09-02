@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-4">
+    <h3 style="text-align: center;">Tableau de bord des inspections des établissements de vente des médicaments vétérinaires
+    <a href="{% url 'export_inspections_excel' %}" class="btn btn-success mb-2">
+        <i class="bi bi-download"></i> Exporter(Excel)
+    </a>
+</h3>
+</br>
+    <form method="get" class="row g-3 mb-4">
+        {% for field in form.visible_fields %}
+        <div class="col-md-2">{{ field.label_tag }} {{ field }}</div>
+        {% endfor %}
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-primary w-100" style="margin-top: 15%;">Filtrer</button>
+        </div>
+       
+        
+    </form>
+</br></br></br>
+
+<div class="row text-center mb-4">
+
+    <!-- Total inspections -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-secondary-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-dark"><i class="bi bi-clipboard-data"></i></div>
+          <div class="kpi-title">Total inspections</div>
+          <div class="kpi-value">{{ total }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Grossistes -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-primary-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-primary"><i class="bi bi-box-seam"></i></div>
+          <div class="kpi-title">Grossistes inspectés</div>
+          <div class="kpi-value">{{ grossistes }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Détaillants -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-primary-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-primary"><i class="bi bi-shop"></i></div>
+          <div class="kpi-title">Détaillants inspectés</div>
+          <div class="kpi-value">{{ detaillants }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Sans registre -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-danger-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-danger"><i class="bi bi-journal-x"></i></div>
+          <div class="kpi-title">Sans registre de vente</div>
+          <div class="kpi-value">{{ sans_registre }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- AMM non valides -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-danger-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-danger"><i class="bi bi-shield-exclamation"></i></div>
+          <div class="kpi-title">AMM non valides</div>
+          <div class="kpi-value">{{ amm_non }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Vente sans ordonnance -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-danger-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-danger"><i class="bi bi-capsule-pill"></i></div>
+          <div class="kpi-title">Vente sans ordonnance</div>
+          <div class="kpi-value">{{ vente_sans_ordonnance }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Enregistrement automatique -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-primary-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-primary"><i class="bi bi-cpu"></i></div>
+          <div class="kpi-title">Enregistrement automatique</div>
+          <div class="kpi-value">{{ enregistrement_ok }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Transport non conforme -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-danger-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-danger"><i class="bi bi-truck"></i></div>
+          <div class="kpi-title">Transport non conforme</div>
+          <div class="kpi-value">{{ non_conforme_transport }}</div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Personnel moyen -->
+    <div class="col-xl-3 col-md-6 col-sm-12 mb-4">
+      <div class="card kpi-card bg-secondary-subtle border-0">
+        <div class="card-body">
+          <div class="kpi-icon text-dark"><i class="bi bi-person-vcard"></i></div>
+          <div class="kpi-title">Personnel moyen</div>
+          <div class="kpi-value">{{ moyenne_personnel }}</div>
+        </div>
+      </div>
+    </div>
+  
+  </div>
+  
+</br> </br> 
+    <!-- Graphiques (images encodées) -->
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Inspections par année</h5>
+            {% if url_graph_data %}<img src="{{ url_graph_data }}" class="img-fluid border rounded">{% else %}<p>Aucune donnée.</p>{% endif %}
+        </div>
+        <div class="col-md-6">
+            <h5>Répartition des types de structures</h5>
+            {% if url_repartition_structures %}<img src="{{ url_repartition_structures }}" class="img-fluid border rounded">{% else %}<p>Aucune donnée.</p>{% endif %}
+        </div>
+        <div class="col-md-6 mt-4">
+            <h5>Gestion des déchets</h5>
+            {% if url_repartition_dechets %}<img src="{{ url_repartition_dechets }}" class="img-fluid border rounded">{% else %}<p>Aucune donnée.</p>{% endif %}
+        </div>
+    </div>
+
+    <!-- Classement -->
+    <div class="mt-5">
+        <h5>Classement des départements les plus inspectés</h5>
+        <ul class="list-group">
+            {% for dep in classement_deps %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ dep.structure__departement__Nom }}</span>
+                <span class="badge bg-primary">{{ dep.nb }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+  
+    <!-- Tableau complet -->
+    <div class="mt-5">
+        <h5>Liste des inspections</h5>
+        <table class="table table-striped">
+            <thead><tr><th>Date d'inspection</th><th>Structure</th><th>Type</th><th>Commune</th><th>Département</th><th>Région</th></tr></thead>
+            <tbody>
+                {% for i in tableau %}
+                <tr>
+                    <td>{{ i.date }}</td>
+                    <td>{{ i.structure.nom }}</td>
+                    <td>{{ i.structure.type_structure }}</td>
+                    <td>{{ i.structure.commune.Nom }}</td>
+                    <td>{{ i.structure.departement.Nom }}</td>
+                    <td>{{ i.structure.region.Nom }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+{% endblock %}

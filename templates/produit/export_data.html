@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="container">
+    <h2 class="text-center mb-4">Exportation des données de produits Vétérinaires</h2>
+
+    <!-- Formulaire de filtrage et d'exportation -->
+    <form method="post"  class="needs-validation mt-4">
+        {% csrf_token %}
+        <div class="row align-items-end">
+            <div class="col-md-3">
+                <label for="id_annee">Année</label>
+                <select name="annee" class="form-control" id="id_annee">
+                    <option value="">Sélectionner</option>
+                    {% for periode in annees %}
+                    <option value="{{ periode }}" {% if periode|stringformat:"s" == selected_year %}selected{% endif %}>
+                        {{ periode }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="id_operation">Type d'opération</label>
+                <select name="operation" class="form-control" id="id_operation">
+                    <option value="">Sélectionner</option>
+                    <option value="DOTATION" {% if selected_operation == "DOTATION" %}selected{% endif %}>Dotation</option>
+                    <option value="EXPORTATION" {% if selected_operation == "EXPORTATION" %}selected{% endif %}>Exportation</option>
+                    <option value="IMPORTATION" {% if selected_operation == "IMPORTATION" %}selected{% endif %}>Importation</option>
+                    <option value="FABRICATION" {% if selected_operation == "FABRICATION" %}selected{% endif %}>Fabrication</option>
+                </select>
+            </div>
+
+            <!-- Champ caché pour indiquer l'exportation -->
+            <input type="hidden" name="export" id="export_input" value="False">
+
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success" id="filter_export_btn" style="margin-top: 30px;">
+                    Filtrer / Exporter en Excel
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped mt-4" id="liste_Vaccination">
+        <thead>
+            <tr>
+                
+                <th>Produit</th>
+                <th>Classes</th>
+                <th>Type</th>
+                <th>Quantité</th>
+                <th>Valeur</th>
+                <th>Unité</th>
+                <th>Structure Importatrice</th>
+                <th>Structure Exportatrice</th>
+                <th>Fabricant</th>
+                <th>Adresse</th>
+                <th>Pays</th>
+                <th>Date</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% for enr in enregistrements %}
+            <tr>
+                
+                <td>{{ enr.produit.nom_du_produit }}</td>
+                <td>{{ enr.produit.classe_therapeutique }}</td>
+                 <td>{{ enr.type_enregistrement }}</td>
+                 <td>
+                    {% if enr.type_enregistrement == 'DOTATION' %}
+                        {{ enr.quantité_de_la_dotation|intcomma }}
+                    {% elif enr.type_enregistrement == 'FABRICATION' %}
+                        {{ enr.quantité_fabriquée|intcomma }}
+                    {% elif enr.type_enregistrement == 'IMPORTATION' %}
+                        {{ enr.quantité_importée|intcomma }}
+                    {% elif enr.type_enregistrement == 'EXPORTATION' %}
+                        {{ enr.quantité_exportée|intcomma }}
+                    {% endif %}
+                </td>
+                <td>{{ enr.valeur_financiere|intcomma|default:"N/A" }}</td>
+                <td>{{ enr.unité_de_la_quantité|default:"N/A" }}</td>
+
+                <td>{{ enr.structure_importatrice.structure|default:"N/A" }}</td>
+                <td>{{ enr.structure_exportatrice.structure|default:"N/A" }}</td>
+                <td>{{ enr.firme_de_fabrication.structure|default:"N/A" }}</td>
+                <td>{{ enr.adresse|default:"N/A" }}</td>
+                <td>
+                    {% if enr.type_enregistrement == 'IMPORTATION' %}
+                        {{ enr.pays_importation.nom }}
+                    {% elif enr.type_enregistrement == 'EXPORTATION' %}
+                        {{ enr.pays_exportation.nom }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                
+                </td>
+
+                <td>
+                {% if enr.type_enregistrement == 'DOTATION' %}
+                        {{ enr.date_dotation }}
+                    {% elif enr.type_enregistrement == 'FABRICATION' %}
+                        {{ enr.date_de_fabrication }}
+                    {% elif enr.type_enregistrement == 'IMPORTATION' %}
+                        {{ enr.date_importation }}
+                    {% elif enr.type_enregistrement == 'EXPORTATION' %}
+                        {{ enr.date_exportation }}
+                    {% endif %}</td>
+               
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+
+<script>
+    document.getElementById("filter_export_btn").addEventListener("click", function() {
+        document.getElementById("export_input").value = "True";  // Active l'export en Excel lors de la soumission
+    });
+</script>
+{% endblock %}

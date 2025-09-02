@@ -1,0 +1,45 @@
+<div class="card shadow-sm h-100">
+  <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+    <span>Pièces jointes</span>
+    {% if can_edit %}
+      <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#pjForm">
+        Ajouter
+      </button>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <ul class="list-group mb-3">
+      {% for pj in pieces %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ pj.type|default:"Fichier" }}</div>
+            <div class="small text-muted">{{ pj.ajoute_le|date:"Y-m-d H:i" }}</div>
+          </div>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ pj.fichier.url }}" target="_blank">Ouvrir</a>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted">Aucune pièce jointe</li>
+      {% endfor %}
+    </ul>
+
+    {% if can_edit %}
+    <div class="collapse" id="pjForm">
+      <form method="post" action="{% url 'lims:demande_add_piece_jointe' demande.pk %}"
+            enctype="multipart/form-data" class="row g-2">
+        {% csrf_token %}
+        <div class="col-6">
+          <label class="form-label">Type</label>
+          {{ pj_form.type }}
+        </div>
+        <div class="col-6">
+          <label class="form-label">Fichier</label>
+          {{ pj_form.fichier }}
+        </div>
+        <div class="col-12">
+          <button class="btn btn-sm btn-primary">Ajouter une pièce</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>

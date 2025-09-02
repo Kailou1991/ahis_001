@@ -1,0 +1,60 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%; text-align: center;">
+    <h2>❌ Confirmer la Suppression</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">
+                Déplacement de {{ deplacement.nombre_animaux }} {{ deplacement.espece }} 
+                de {{ deplacement.commune_provenance }} à {{ deplacement.commune_destination }} 
+                le {{ deplacement.date_deplacement }}
+            </h4>
+
+            <p><strong>Espèce :</strong> {{ deplacement.espece }}</p>
+            <p><strong>Nombre :</strong> {{ deplacement.nombre_animaux }}</p>
+
+            <hr>
+            <h5>📄 Contrôles et Certificats</h5>
+            <p><strong>Certificats vaccination contrôlés :</strong> {{ deplacement.nombre_certificats_vaccination_controles }}</p>
+            <p><strong>Certificats vaccination délivrés :</strong> {{ deplacement.nombre_certificats_vaccination_delivres }}</p>
+            <p><strong>Laisser-passer contrôlés :</strong> {{ deplacement.nombre_laisser_passer_controles }}</p>
+            <p><strong>Laisser-passer délivrés :</strong> {{ deplacement.nombre_laisser_passer_delivres }}</p>
+
+            <hr>
+            <h5>📍 Localisation</h5>
+            <p><strong>Région de provenance :</strong> {{ deplacement.region_provenance }}</p>
+            <p><strong>Commune de provenance :</strong> {{ deplacement.commune_provenance }}</p>
+            <p><strong>Région de destination :</strong> {{ deplacement.region_destination }}</p>
+            <p><strong>Commune de destination :</strong> {{ deplacement.commune_destination }}</p>
+            <p><strong>Établissement d'origine :</strong> {{ deplacement.etablissement_origine }}</p>
+            <p><strong>Établissement de destination :</strong> {{ deplacement.etablissement_destination }}</p>
+
+            <hr>
+            <h5>🌐 Coordonnées GPS</h5>
+            <p><strong>Latitude :</strong> {{ deplacement.latitude_poste_controle }}</p>
+            <p><strong>Longitude :</strong> {{ deplacement.longitude_poste_controle }}</p>
+
+            <hr>
+            <h5>🚚 Transport</h5>
+            <p><strong>Durée du déplacement :</strong> {{ deplacement.duree_deplacement }} jours</p>
+            <p><strong>Mode de transport :</strong> {{ deplacement.get_mode_transport_display }}</p>
+            <p><strong>Motif :</strong> {{ deplacement.raison_deplacement }}</p>
+
+            <hr>
+            <h5>👤 Acteurs</h5>
+            <p><strong>Propriétaire :</strong> {{ deplacement.nom_proprietaire }} — {{ deplacement.contact_proprietaire }}</p>
+            <p><strong>Transporteur :</strong> {{ deplacement.nom_transporteur }} — {{ deplacement.contact_transporteur }}</p>
+        </div>
+    </div>
+
+    <p class="mt-3 text-danger"><strong>⚠️ Êtes-vous sûr de vouloir supprimer ce déplacement ? Cette action est irréversible.</strong></p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger"><i class="fa fa-trash"></i> Supprimer</button>
+        <a href="{% url 'deplacementanimaux_list' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

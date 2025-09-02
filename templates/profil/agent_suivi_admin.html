@@ -1,0 +1,78 @@
+{% extends '../base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load humanize %}
+{% block content %}
+<div class="container mt-4" style="margin-left: 17%;">
+    <h2 style="text-align: center;">Liste des demandes d'actes administratifs</h2>
+
+    <div class="mb-3">
+        <a href="{% url 'soumettre_demande' %}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> Nouveau
+        </a>
+    </div>
+
+    <form method="get" class="form-inline mb-3">
+        <label for="statut" class="mr-2">Filtrer par statut :</label>
+        <select name="statut" id="statut" class="form-control mr-3">
+            <option value="">-- Tous --</option>
+            {% for code, label in statuts %}
+                <option value="{{ code }}" {% if statut_filtre == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+    </form>
+
+    <table id="liste_Vaccination" class="table table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Acte</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Agent Suivi</th>
+                <th colspan="2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for demande in demandes %}
+                {% with demande.suivis.last as suivi %}
+                <tr>
+                    <td>{{ demande.id }}</td>
+                    <td>{{ demande.nom }} {{ demande.prenom }}</td>
+                    <td>{{ demande.acte.nom }}</td>
+                    <td>{{ demande.date_soumission|date:'d/m/Y' }}</td>
+                    <td><span class="badge badge-info">{{ demande.get_statut_display }}</span></td>
+                    <td>
+                        {% if demande.affectations.last %}
+                            {{ demande.affectations.last.agent.first_name }} {{ demande.affectations.last.agent.last_name }}
+                        {% else %}
+                            <span class="text-muted">Non affecté</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'details_acte' demande.pk %}" class="btn btn-sm btn-success">Détails et relance</a>
+                    </td>
+                    <td>
+                        {% if suivi and suivi.statut == 'en_cours' and suivi.niveau in niveaux_affectables %}
+                            {% with user.groups.all|first as first_group %}
+                                {% if first_group.name == 'Administrateur Système'  or first_group.name == 'Directeur de la Santé Animale' %}
+        
+                                     <a href="{% url 'affecter_demande' demande.pk %}" class="btn btn-sm btn-primary">Affecter à</a>
+                               
+                                  {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </td>
+                    
+                </tr>
+                {% endwith %}
+            {% empty %}
+                <tr><td colspan="8">Aucune demande trouvée.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+           

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4" >
+    <div class="d-flex justify-content-between">
+        <h2 class="text-primary" style="text-align: center;">📋 Liste des Infrastructures</h2>
+        {% with user.groups.all|first as first_group %}
+        {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+
+        <a href="{% url 'infrastructure_create' %}" class="btn btn-primary">+ Nouvelle Infrastructure</a>
+    
+     {% endif %}
+    {% endwith %}
+
+    </div>
+
+    {% if infrastructures %}
+    <div class="table-responsive" >
+        <table id="liste_Vaccination"  class="table table-hover table-bordered align-middle shadow-sm">
+            <thead class="table-light text-center">
+                <tr>
+                    <th>🏷️ Nom</th>
+                    <th>🏢 Type</th>
+                    <th>📍 Commune</th>
+                    <th>📊 État initial</th>
+                    <th>⚙️ Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for infra in infrastructures %}
+                <tr>
+                    <td>{{ infra.nom }}</td>
+                    <td>{{ infra.type_infrastructure }}</td>
+                    <td>{{ infra.commune }}</td>
+                    <td>
+                        {% if infra.etat_initial == 'FONCTIONNEL' %}
+                            <span class="badge bg-success">{{ infra.etat_initial }}</span>
+                        {% elif infra.etat_initial == 'REHABILITATION' %}
+                            <span class="badge bg-warning text-dark">{{ infra.etat_initial }}</span>
+                        {% elif infra.etat_initial == 'CONSTRUCTION' %}
+                            <span class="badge bg-info text-dark">{{ infra.etat_initial }}</span>
+                        {% elif infra.etat_initial == 'NON_FONCTIONNEL' %}
+                            <span class="badge bg-danger">{{ infra.etat_initial }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ infra.etat_initial }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'infrastructure_detail' infra.pk %}" class="btn btn-sm btn-info me-1" >Détails</a>
+                         {% with user.groups.all|first as first_group %}
+                        {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+
+                        <a href="{% url 'infrastructure_update' infra.pk %}" class="btn btn-sm btn-warning me-1">✏️Editer</a>
+                        <a href="{% url 'infrastructure_delete' infra.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Confirmer la suppression ?');">🗑️Supprimer</a>
+                    
+                        {% endif %}
+                            {% endwith %}
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <div class="alert alert-warning">Aucune infrastructure enregistrée pour le moment.</div>
+    {% endif %}
+</div>
+{% endblock %}

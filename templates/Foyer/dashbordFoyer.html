@@ -1,0 +1,649 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load form_tags %}
+
+{% block content %}
+    
+<div class="container mt-4">
+    <h2 class="mb-4">Tableau de bord de la Surveillance Zoosanitaire</h2>
+   </br></br> 
+    {% if error_message %}
+    <div class="alert alert-info">{{ error_message }}</div>
+    {% endif %}
+    
+    
+    <div class="container mt-4">
+       
+        <!-- Formulaire de filtre -->
+        <form method="post" class="needs-validation mt-4" novalidate>
+            {% csrf_token %}
+            
+            <div class="row align-items-end">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="id_region">Choisir la Région</label>
+                        {{ form.region }}
+                        {% if form.region.errors %}
+                        <div class="text-danger">
+                            {% for error in form.region.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="id_maladie">Choisir la Maladie</label>
+                        {{ form.maladie }}
+                        {% if form.maladie.errors %}
+                        <div class="text-danger">
+                            {% for error in form.maladie.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="id_periode_type">Choisir la période</label>
+                        {{ form.periode_type }}
+                        {% if form.periode_type.errors %}
+                        <div class="text-danger">
+                            {% for error in form.periode_type.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+               
+                <div class="col-md-2" id="semaine_field" style="display:none;">
+                    <div class="form-group">
+                        <label for="id_semaine">Hebdomadaire (1-52)</label>
+                        {{ form.semaine }}
+                        {% if form.semaine.errors %}
+                        <div class="text-danger">
+                            {% for error in form.semaine.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-2" id="mois_field" style="display:none;">
+                    <div class="form-group">
+                        <label for="id_mois">Mensuel</label>
+                        {{ form.mois }}
+                        {% if form.mois.errors %}
+                        <div class="text-danger">
+                            {% for error in form.mois.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-2" id="trimestre_field" style="display:none;">
+                    <div class="form-group">
+                        <label for="id_trimestre">Trimestriel</label>
+                        {{ form.trimestre }}
+                        {% if form.trimestre.errors %}
+                        <div class="text-danger">
+                            {% for error in form.trimestre.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-2" id="semestre_field" style="display:none;">
+                    <div class="form-group">
+                        <label for="id_semestre">Semestriel</label>
+                        {{ form.semestre }}
+                        {% if form.semestre.errors %}
+                        <div class="text-danger">
+                            {% for error in form.semestre.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group" id="annee_field">
+                        <label for="id_annee">Annuel</label>
+                        {{ form.annee }}
+                        {% if form.annee.errors %}
+                        <div class="text-danger">
+                            {% for error in form.annee.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success" style="margin-top: 39%; width: 150%;">Valider</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    <hr></br>
+   
+    {% if maladieSelectione == 0 and regionSelectione == 0 %}
+
+    <div class="row">
+        
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-primary" style="width: 100%;">
+                    <h3>{{ total_foyers }}</h3>
+                    <p>Nombre de Foyers</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+       
+        
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success" style="width: 100%; ">
+                    <h3>{{ TauxKBT }}%</h3>
+                    <p>Taux de rapportage KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success">
+        
+                    <h3>{{ TauxPrev }}%</h3>
+                    <p>Taux de foyer avec prélévement</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-3" style="margin-left: 4%;">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-info">
+        
+                    <h3>{{ TauxResultat }}%</h3>
+                    <p>Taux de foyer avec resultat labo</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+      
+          
+    </div>
+    <div class="row">
+        <div class="col-lg-5 col-6" >
+            <h4>Résumé des foyers par région</h4>
+            <table id="liste_Vaccination" class="display fa-table">
+                <thead>
+                    <tr>
+                        <th>Région</th>
+                        <th>Nombre Foyer</th>
+                        <th>Maladie</th>
+                        <th>Malades</th>
+                        <th>Morts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in maladie_summary %}
+                    <tr>
+                        <td>{{ entry.region }}</td>
+                        <td>{{ entry.nb_foyer }}</td>
+                        <td>{{ entry.maladie }}</td>
+                        <td>{{ entry.nb_sujets_malades }}</td>
+                        <td>{{ entry.nb_sujets_morts }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </br>
+</br>
+</br>
+        {% if chart_data2 %}
+        <div class="col-md-4 mb-3">
+            <img src="data:image/png;base64,{{ chart_data2 }}" alt="Graphique des foyers par région" class="img-fluid">
+        </div>
+        {% endif %}
+
+        
+    </div> <!-- Fermeture du .row -->
+{% endif %}
+
+{% if maladieSelectione == 0 and regionSelectione != 0 %}
+    <div class="row">
+        <!-- Nombre de Foyers -->
+        <div class="col-lg-2 col-6">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-primary" style="width: 100%;">
+                    <h3>{{ total_foyers }}</h3>
+                    <p>Nombre de Foyers</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Taux de rapportage KBT -->
+        <div class="col-lg-2 col-6">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success" style="width: 100%;">
+                    <h3>{{ TauxKBT }}%</h3>
+                    <p>Taux de rapportage KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-lg-3 col-3">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-danger" style="width: 100%; ">
+                    <h3>{{ nbre_foyer_resultat }}</h3>
+                    <p>Nombre foyers avec resultats labo</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success">
+        
+                    <h3>{{ TauxPrev }}%</h3>
+                    <p>Taux de foyer avec prélévement</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-3" style="margin-left: 4%;">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-info">
+        
+                    <h3>{{ TauxResultat }}%</h3>
+                    <p>Taux de foyer avec resultat labo</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Fermeture du .row -->
+    
+    <!-- Section des graphiques -->
+    <div class="row">
+
+        <div class="col-lg-5 col-6">
+            <h4>Résumé des foyers par commune</h4>
+            <table id="liste_Vaccination" class="display fa-table" >
+                <thead>
+                    <tr>
+                        <th>Commune</th>
+                        <th>Nombre Foyer</th>
+                        <th>Maladie</th>
+                        <th>Malades</th>
+                        <th>Morts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in maladie_summary_commune %}
+                    <tr>
+                        <td>{{ entry.commune }}</td>
+                        <td>{{ entry.nb_foyer }}</td>
+                        <td>{{ entry.maladie }}</td>
+                        <td>{{ entry.nb_sujets_malades }}</td>
+                        <td>{{ entry.nb_sujets_morts }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Graphique des foyers par Maladie -->
+       {% if chart_data2 %}
+       <div class="col-md-4">
+           <img src="data:image/png;base64,{{ chart_data2 }}" alt="Graphique des foyers par Maladie" class="img-fluid">
+       </div>
+   {% endif %}
+
+
+    </div>
+   
+    
+      
+</div>
+{% endif %}
+
+
+
+
+
+{% if maladieSelectione != 0 and regionSelectione == 0 %}
+    <div class="row">
+        <!-- Nombre de Foyers -->
+        <div class="col-lg-2 col-6">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-primary" style="width: 100%;">
+                    <h3>{{ total_foyers }}</h3>
+                    <p>Nombre de Foyers</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Taux de rapportage KBT -->
+        <div class="col-lg-2 col-6">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success" style="width: 100%;">
+                    <h3>{{ TauxKBT }}%</h3>
+                    <p>Taux de rapportage KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2 col-6">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success" style="width: 100%;">
+                    <h3>{{ TauxKBT }}%</h3>
+                    <p>Taux de rapportage KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-warning">
+                <div class="inner btn btn-warning" style="width: 100%; ">
+                    <h3>{{ total_malades }}</h3>
+                    <p>malades</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-3">
+            <div class="small-box bg-danger">
+                <div class="inner btn btn-danger" style="width: 100%; ">
+                    <h3>{{ total_morts }}</h3>
+                    <p>morts</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        
+        
+    </div> <!-- Fermeture du .row -->
+    
+    <!-- Section des graphiques -->
+    <div class="row">
+              <!-- Graphique des foyers -->
+       {% if chart_data3 %}
+       <div class="col-md-4">
+           <img src="data:image/png;base64,{{ chart_data3 }}"  class="img-fluid">
+       </div>
+   {% endif %}
+
+   <div class="col-lg-5 col-6" style="margin-left: 20%;">
+    {% if char_region_donut_chart %}
+       <div class="col-md-4">
+           <img src="data:image/png;base64,{{ char_region_donut_chart }}"  class="img-fluid">
+       </div>
+   {% endif %}
+        </div>
+
+        <div class="col-lg-5 col-6" >
+            {% if Graph_taux %}
+               <div class="col-md-4">
+                   <img src="data:image/png;base64,{{ Graph_taux }}"  class="img-fluid">
+               </div>
+           {% endif %}
+                </div>
+     
+{% endif %}
+
+
+
+
+
+
+{% if maladieSelectione != 0 and regionSelectione != 0 %}
+    <div class="row">
+        <!-- Nombre de Foyers -->
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+                <div class="inner btn btn-primary" style="width: 100%;">
+                    <h3>{{ total_foyers }}</h3>
+                    <p>Nombre de Foyers</p>
+                </div>
+                <div class="inner btn btn-success" style="width: 100%;">
+                    <h3>{{ TauxKBT }}%</h3>
+                    <p>Taux de rapportage KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner btn btn-outline-dark" style="width: 100%;">
+                    <h3>{{ moy_delai_prelevement_reception }} j</h3>
+                    <p>Délai moyen Prélèvement → Réception</p>
+                </div>
+                <div class="inner btn btn-outline-dark" style="width: 100%;">
+                    <h3>{{ moy_delai_envoi_resultat }} j</h3>
+                    <p>Délai moyen Envoi → Résultat</p>
+                </div>
+                <div class="inner btn btn-outline-dark" style="width: 100%;">
+                    <h3>{{ moy_delai_total }} j</h3>
+                    <p>Délai moyen Total de rendu resultat</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+                <div class="inner btn btn-success" style="width: 100%;">
+        
+                    <h3>{{ TauxPrev }}%</h3>
+                    <p>Taux de foyer avec prélévement</p>
+                </div>
+                <div class="inner btn btn-info" style="width: 100%;">
+        
+                    <h3>{{ TauxResultat }}%</h3>
+                    <p>Taux de foyer avec resultat labo</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner btn btn-warning" style="width: 100%; ">
+                    <h3>{{ total_malades }}</h3>
+                    <p>malades</p>
+                </div>
+                <div class="inner btn btn-danger" style="width: 100%; ">
+                    <h3>{{ total_morts }}</h3>
+                    <p>morts</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-disease"></i>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Fermeture du .row -->
+    <div>
+        <h4>Résumé des foyers confirmés</h4>
+    <table id="liste_Vaccination" class="display fa-table ">
+        <thead>
+            <tr>
+                <th>Commune</th>
+                <th>Maladie suspectée</th>
+                <th>Date résultat</th>
+                <th>Résultat</th>
+                <th>Malades</th>
+                <th>Morts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in foyers %}
+            <tr>
+                <td>{{ entry.commune }}</td>
+                <td>{{ entry.maladie }}</td>
+                <td>{{ entry.date_resultat }}</td>
+                <td>{{ entry.Commentaire_labo }}</td>
+                <td>{{ entry.nbre_sujets_malade }}</td>
+                <td>{{ entry.nbre_sujets_morts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+    <!-- Section des graphiques -->
+    <div class="row">
+   <!-- Graphique des foyers -->
+       {% if chart_data3 %}
+       <div class="col-md-4">
+           <img src="data:image/png;base64,{{ chart_data3 }}"  class="img-fluid">
+       </div>
+
+       
+   {% endif %}
+
+   <div class="col-lg-5 col-6" style="margin-left: 20%;">
+    <h4>Résumé des foyers par commune</h4>
+    <table id="liste_Vaccination" class="display fa-table">
+        <thead>
+            <tr>
+                <th>Commune</th>
+                <th>Nombre Foyer</th>
+                <th>Maladie</th>
+                <th>Malades</th>
+                <th>Morts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in maladie_summary_commune %}
+            <tr>
+                <td>{{ entry.commune }}</td>
+                <td>{{ entry.nb_foyer }}</td>
+                <td>{{ entry.maladie }}</td>
+                <td>{{ entry.nb_sujets_malades }}</td>
+                <td>{{ entry.nb_sujets_morts }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+        </div>
+      
+     <div class="col-lg-5 col-6" style="margin-left: -95%; margin-top: 40%;"> 
+            {% if Graph_taux %}
+               <div class="col-md-4">
+                   <img src="data:image/png;base64,{{ Graph_taux }}"  class="img-fluid">
+               </div>
+           {% endif %}
+                </div>
+        
+{% endif %}
+
+
+</br></br>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const periodeTypeField = document.getElementById('id_periode_type');
+            const semaineField = document.getElementById('semaine_field');
+            const moisField = document.getElementById('mois_field');
+            const trimestreField = document.getElementById('trimestre_field');
+            const semestreField = document.getElementById('semestre_field');
+            
+            function updateFields() {
+                const selectedPeriode = periodeTypeField.value;
+                
+                // Masquer tous les champs d'abord
+                semaineField.style.display = 'none';
+                moisField.style.display = 'none';
+                trimestreField.style.display = 'none';
+                semestreField.style.display = 'none';
+                
+                // Afficher le champ correspondant à la période choisie
+                if (selectedPeriode === 'Hebdomadaire') {
+                    semaineField.style.display = 'block';
+                } else if (selectedPeriode === 'Mensuel') {
+                    moisField.style.display = 'block';
+                } else if (selectedPeriode === 'Trimestriel') {
+                    trimestreField.style.display = 'block';
+                } else if (selectedPeriode === 'Semestriel') {
+                    semestreField.style.display = 'block';
+                }
+            }
+
+            updateFields();
+            periodeTypeField.addEventListener('change', updateFields);
+        });
+    </script>
+</div>
+<style>
+
+
+.leaflet-container {
+    width: 80% !important;
+    height: 80% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+</style>
+{% endblock %}

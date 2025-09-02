@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+</br></br>
+ {% with user.groups.all|first as first_group %}
+{% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+        
+    <a href="{% url 'ajouter_employe' %}" class="btn btn-primary">+Ajouter un Employé</a>
+   
+   {% endif %}
+    {% endwith %}
+    <h2>Liste des Employés</h2>
+    
+    <table class="table table-striped" id="liste_Vaccination">
+        <thead>
+            <tr>
+              
+                <th>Matricule</th>
+                <th>Nom et Prénom </th>
+                <th>Sexe</th>
+                <th>Poste actuel</th>
+                <th></th>
+                 {% with user.groups.all|first as first_group %}
+                 {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                {% endif %}
+                {% endwith %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for employe in employes %}
+                <tr>
+                   
+                    <td>{{ employe.matricule }}</td>
+                    <td>{{ employe.nom }} {{ employe.prenom }} </td>
+                    <td>{{ employe.get_sexe_display }}</td>
+                    <td>{{ employe.poste.nom }}</td>
+                    <td>
+                        <a href="{% url 'detail_employe' employe.id %}" class="btn btn-info btn-sm">Détails</a>
+                    </td>
+                    {% with user.groups.all|first as first_group %}
+                 {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+                    <td>
+                        <a href="{% url 'modifier_employe' employe.id %}" class="btn btn-warning btn-sm">Mettre à jour employé</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'mettre_a_jour_document' employe.id %}" class="btn btn-success btn-sm">Mettre à jour documents</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'carrieres' employe.id %}" class="btn btn-danger btn-sm">Hist.Carrières</a>
+                    </td>
+
+                    <td>
+                        <a href="{% url 'formations_employe' employe.id %}" class="btn btn-primary btn-sm">Mettre à jour Formations</a>
+                    </td>
+    {% endif %}
+    {% endwith %}
+                   
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="19" class="text-center">Aucun employé trouvé.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    
+</div>
+{% endblock %}

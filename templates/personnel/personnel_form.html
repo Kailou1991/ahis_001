@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="width: 60%; margin-left: 17%;">
+
+    <h2>{% if form.instance.pk %}Modifier un enregistrement du personnel {% else %}Nouvel enregistement du personnel {% endif %}</h2>
+    <form method="post" class="mt-3">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.non_field_errors }}
+        </div>
+
+        <!-- Exclure le champ produit de la boucle -->
+        {% for field in form %}
+        {% if field.name != 'user' %}
+            <div class="form-group" id="{{ field.name }}-field">
+                <div class="d-flex align-items-center">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.name == 'entite_administrative' %}
+                        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#addEntiteModal" style="margin-top: -6%; margin-left: 101%;">+</button>
+                    {% elif field.name == 'titre' %}
+                        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#addTitreModal" style="margin-top: -6%; margin-left: 101%;">+</button>
+                    {% elif field.name == 'region' %}
+                        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#addRegionModal" style="margin-top: -6%; margin-left: 101%;">+</button>
+                    {% elif field.name == 'departement' %}
+                        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#addDepartementModal" style="margin-top: -6%; margin-left: 101%;">+</button>
+                     {% elif field.name == 'commune' %}
+                        <button type="button" class="btn btn-success ml-2" data-toggle="modal" data-target="#addCommuneModal" style="margin-top: -6%; margin-left: 101%;">+</button>
+                  
+                        {% endif %}
+                </div> 
+                {{ field.errors }}
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit" class="btn btn-success mt-3" style="margin-left: 30%; width: 20%;">{% if form.instance.pk %}Modifier{% else %}Enregistrer{% endif %}</button>
+        <a href="{% url 'personnel_list' %}" class="btn btn-secondary mt-3" style="width: 20%;">Annuler</a>
+    </form>
+</div>
+
+<!-- Modal pour ajouter une nouvelle région -->
+<div class="modal fade" id="addRegionModal" tabindex="-1" role="dialog" aria-labelledby="addRegionModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addRegionModalLabel">Ajouter une nouvelle région</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addRegionForm" method="post">
+                    {% csrf_token %}
+                    {% for field in regionForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal pour ajouter un nouveau département -->
+<div class="modal fade" id="addDepartementModal" tabindex="-1" role="dialog" aria-labelledby="addDepartementModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDepartementModalLabel">Ajouter un nouveau département</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addDepartementForm" method="post">
+                    {% csrf_token %}
+                    {% for field in departementForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle commune -->
+<div class="modal fade" id="addCommuneModal" tabindex="-1" role="dialog" aria-labelledby="addCommuneModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCommuneModalLabel">Ajouter une nouvelle commune</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCommuneForm" method="post">
+                    {% csrf_token %}
+                    {% for field in communeForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter un nouveau titre -->
+<div class="modal fade" id="addTitreModal" tabindex="-1" role="dialog" aria-labelledby="addTitreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTitreModalLabel">Ajouter un nouveau titre</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addTitreForm" method="post">
+                    {% csrf_token %}
+                    {% for field in titreForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal pour ajouter une nouvelle entité -->
+<div class="modal fade" id="addEntiteModal" tabindex="-1" role="dialog" aria-labelledby="addEntiteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEntiteModalLabel">Ajouter une nouvelle entité</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addEntiteForm" method="post">
+                    {% csrf_token %}
+                    {% for field in entiteForm %}
+                    <div class="form-group" id="{{ field.name }}-field">
+                        <div class="d-flex align-items-center">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                        {{ field.errors }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gestion de la soumission du formulaire du modal pour ajouter une région
+        const addRegionForm = document.querySelector('#addRegionForm');
+        const regionSelect = document.querySelector('select[name="region"]');
+        const departementSelect = document.getElementById('departement');
+        const communeSelect = document.getElementById('commune');
+    
+        regionSelect.addEventListener('change', function() {
+            const regionId = this.value;
+            if (regionId) {
+                fetch(`/personnel/create/get_departements/?region_id=${regionId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        departementSelect.innerHTML = '<option value="">Choisir un département</option>';
+                        data.forEach(departement => {
+                            const option = document.createElement('option');
+                            option.value = departement.id;
+                            option.textContent = departement.Nom;
+                            departementSelect.appendChild(option);
+                        });
+                        communeSelect.innerHTML = '<option value="">Choisir une commune</option>';
+                    });
+            } else {
+                departementSelect.innerHTML = '<option value="">Choisir un département</option>';
+                communeSelect.innerHTML = '<option value="">Choisir une commune</option>';
+            }
+        });
+    
+        departementSelect.addEventListener('change', function() {
+            const departementId = this.value;
+            if (departementId) {
+                fetch(`/personnel/create/get_communes/?departement_id=${departementId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        communeSelect.innerHTML = '<option value="">Choisir une commune</option>';
+                        data.forEach(commune => {
+                            const option = document.createElement('option');
+                            option.value = commune.id;
+                            option.textContent = commune.Nom;
+                            communeSelect.appendChild(option);
+                        });
+                    });
+            } else {
+                communeSelect.innerHTML = '<option value="">Choisir une commune</option>';
+            }
+        });
+       
+        addRegionForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(addRegionForm);
+            fetch('/api/region/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const regionSelect = document.querySelector('select[name="region"]');
+                const newOption = new Option(data.nom, data.id, false, false);
+                regionSelect.add(newOption);
+                $('#addRegionModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter un département
+        const addDepartementForm = document.querySelector('#addDepartementForm');
+        addDepartementForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(addDepartementForm);
+            fetch('/api/departement/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const departementSelect = document.querySelector('select[name="departement"]');
+                const newOption = new Option(data.nom, data.id, false, false);
+                departementSelect.add(newOption);
+                $('#addDepartementModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+
+        // Gestion de la soumission du formulaire du modal pour ajouter une commune
+        const addCommuneForm = document.querySelector('#addCommuneForm');
+        addCommuneForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(addCommuneForm);
+            fetch('/api/commune/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const communeSelect = document.querySelector('select[name="commune"]');
+                const newOption = new Option(data.nom, data.id, false, false);
+                communeSelect.add(newOption);
+                $('#addCommuneModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+        
+        const addEntiteForm = document.querySelector('#addEntiteForm');
+addEntiteForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    const formData = new FormData(addEntiteForm);
+    const jsonData = Object.fromEntries(formData.entries()); // Convertit FormData en JSON
+
+    fetch('/api/entite/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const entiteSelect = document.querySelector('select[name="entite_administrative"]');
+        const newOption = new Option(data.nom, data.id, false, false);
+        entiteSelect.add(newOption);
+        $('#addEntiteModal').modal('hide');
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+    });
+});
+
+
+        // Gestion de la soumission du formulaire du modal pour ajouter un titre
+        const addTitreForm = document.querySelector('#addTitreForm');
+        addTitreForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(addTitreForm);
+            fetch('/api/titre/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const titreSelect = document.querySelector('select[name="titre"]');
+                const newOption = new Option(data.nom, data.id, false, false);
+                titreSelect.add(newOption);
+                $('#addTitreModal').modal('hide');
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <a href="{% url 'ajouter_facture' %}" class="btn btn-primary"> +Nouvelle</a>
+  <h2 style="text-align: center;">Liste des factures </h2>
+  <table class="table table-bordered table-striped" id="liste_Vaccination">
+    <thead><tr>
+     <th>Structure importatrice</th>
+     <th>Numéro</th>
+     <th>Date visa</th>
+     <th>Facture</th>
+     <th>Visa PIF</th>
+     <th>Validation</th>
+     <th>Suppression</th>
+    </tr></thead>
+    <tbody>
+      {% for facture in factures %}
+        <tr>
+          <td>{{ facture.Structure }}</td>
+           <td>{{ facture.numero_facture }}</td>
+          <td>{{ facture.date_visa_dsv }}</td>
+          <td><a href="{{ facture.fichier_facture.url }}" target="_blank">Voir</a></td>
+          <td>{% if facture.est_visa_pif %}✅{% else %}❌{% endif %}</td>
+        
+         
+              <td>
+  {% if not facture.est_visa_pif %}
+        Non validée
+  {% else %}
+    ✅ Validée
+  {% endif %}
+</td>
+{% with user.groups.all|first as first_group %}
+  {% if first_group.name != "Services vétérinaires au port" and first_group.name != "Services vétérinaires à l'aéroport" %}
+    <td>
+      <a href="#" class="btn btn-danger btn-sm">
+        <i class="fa fa-warning"></i> Supprimer
+      </a>
+    </td>
+  {% endif %}
+{% endwith %}
+
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

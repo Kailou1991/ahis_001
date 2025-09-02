@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Confirmation de Suppression</h4>
+        </div>
+        <div class="card-body">
+            <p class="card-text">Êtes-vous sûr de vouloir supprimer le document suivant :</p>
+            <div class="mb-3">
+                <strong>ID :</strong> {{ document.id }}<br>
+                <strong>Type :</strong> {{ document.get_type_document_display }}<br>
+                <strong>Libellé :</strong> {{ document.libelle }}<br>
+                <strong>Date de Mise en Application :</strong> {{ document.date_de_mise_en_application }}<br>
+                <strong>Date de Publication :</strong> {{ document.date_de_publication|default:"Non spécifiée" }}<br>
+                <strong>Autorité d'Émission :</strong> {{ document.autorite_emission }}<br>
+                <strong>Version :</strong> {{ document.version|default:"Non spécifiée" }}<br>
+                <strong>Mots Clés :</strong> {{ document.mots_cles|default:"Non spécifiés" }}<br>
+                <strong>Description :</strong> {{ document.description|default:"Non spécifiée" }}<br>
+                <strong>Valide :</strong> {{ document.valide|yesno:"Oui,Non" }}<br>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                    <a href="{% url 'document_list' %}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

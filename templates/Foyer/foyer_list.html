@@ -1,0 +1,76 @@
+{% extends '../base.html' %}
+{% load static %}
+{% load humanize %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Formulaire de gestion des Foyers de Maladie</h2></br></br>
+         {% with user.groups.all|first as first_group %}
+        {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+        
+    <div class="col-md-4">
+            <a href="{% url 'foyer_create' %}" 
+               class="btn btn-primary btn-lg w-100 py-3 shadow d-flex ">
+                <i class="fa fa-plus-circle me-2 fs-4"></i> Nouveau
+            </a>
+        </div>
+         {% endif %}
+         {% endwith %}
+        <table id="liste_Vaccination" class="display fa-table" style="width:150%">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Maladie</th>
+                <th>Région</th>
+                <th>Commune</th>
+                <th>Localité</th>
+                <th>Resultat</th>
+                <th>Via KBT</th>
+                <th></th>
+                {% with user.groups.all|first as first_group %}
+                {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+        
+                <th></th>
+                <th></th>
+                {% endif %}
+                {% endwith %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for foyer in foyers %}
+            <tr>
+                <td>{{ foyer.date_rapportage|default:"Non disponible" }}</td>
+                <td>{{ foyer.maladie|default:"Non disponible" }}</td>
+                <td>{{ foyer.region|default:"Non disponible" }}</td>
+                 <td>{{ foyer.commune|default:"Non disponible" }}</td>
+                <td>{{ foyer.localite|default:"Non disponible" }}</td>
+                <td>{{ foyer.resultat_laboratoire|default:"Non disponible" }}</td>
+                <td>
+
+                    {% if foyer.chiffre_kbt %}
+                         Oui
+                    {% else %}
+                          Non
+                    {% endif %}
+                </td>
+                 
+                <td>
+                   
+                    <a href="{% url 'detail_foyer' foyer.id %}" class="btn btn-info"><i class="fa fa-table"></i>Détails</a>
+                </td>
+                {% with user.groups.all|first as first_group %}
+                {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+        
+                <td>
+                    <a href="{% url 'foyer_update' foyer.id %}" class="btn btn-warning"><i class="fa fa-edit"></i>Modifier</a>
+                </td>
+                <td>
+                    <a href="{% url 'foyer_delete' foyer.id %}" class="btn btn-danger"><i class="fa fa-warning"></i>Supprimer</a>
+                </td>
+                {% endif %}
+                {% endwith %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

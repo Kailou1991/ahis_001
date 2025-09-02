@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 style="text-align: center;" class="mb-4">📊 Tableau de Bord - Mobilité animale</h1>
+
+    <!-- 🔎 Filtres -->
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Espèce</label>
+                <select class="form-control" name="espece">
+                    <option value="">Toutes les espèces</option>
+                    {% for espece in especes %}
+                        <option value="{{ espece.id }}" {% if espece.id|stringformat:"s" == request.POST.espece %}selected{% endif %}>{{ espece.Espece }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Mode de Transport</label>
+                <select class="form-control" name="mode_transport">
+                    <option value="">Tous</option>
+                    {% for mode in mode_transport_choices %}
+                        <option value="{{ mode.0 }}" {% if mode.0 == request.POST.mode_transport %}selected{% endif %}>{{ mode.1 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date début</label>
+                <input type="date" class="form-control" name="date_start" value="{{ request.POST.date_start }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date fin</label>
+                <input type="date" class="form-control" name="date_end" value="{{ request.POST.date_end }}">
+            </div>
+            <div class="col-md-2 align-self-end">
+                <button class="btn btn-success" type="submit" style="margin-top: 15%;">Filtrer</button>
+            </div>
+        </div>
+    </form>
+
+
+<!-- ✅ Ligne 1 -->
+<div class="row">
+    {% for label, value, color, icon in kpis|slice:":5" %}
+    <div class="col-lg-2 col-3">
+        <div class="small-box bg-{{ color }}">
+            <div class="inner btn btn-{{ color }}" style="width: 100%;">
+                <h3>{{ value|floatformat:0 }}</h3>
+                <p>{{ label }}</p>
+            </div>
+            <div class="icon">
+                <i class="fas {{ icon }}"></i>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 🔹 Séparateur visuel -->
+<hr class="my-2">
+
+<!-- ✅ Ligne 2 -->
+<div class="row">
+    {% for label, value, color, icon in kpis|slice:"5:" %}
+    <div class="col-lg-2 col-3">
+        <div class="small-box bg-{{ color }}">
+            <div class="inner btn btn-{{ color }}" style="width: 100%;">
+                <h3>{{ value|floatformat:0 }}</h3>
+                <p>{{ label }}</p>
+            </div>
+            <div class="icon">
+                <i class="fas {{ icon }}"></i>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+    <!-- 📍 Top Régions -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <h5>Top Régions de Provenance</h5>
+            <table class="table table-bordered table-striped">
+                <thead><tr><th>Région</th><th>Départs</th></tr></thead>
+                <tbody>
+                    {% for item in top_depart %}
+                    <tr>
+                        <td>{{ item.region_provenance__Nom }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h5>Top Régions de Destination</h5>
+            <table class="table table-bordered table-striped">
+                <thead><tr><th>Région</th><th>Arrivées</th></tr></thead>
+                <tbody>
+                    {% for item in top_arrivee %}
+                    <tr>
+                        <td>{{ item.region_destination__Nom }}</td>
+                        <td>{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 🐾 Derniers Déplacements -->
+    <div class="table-responsive mb-5">
+        <table id="deplacementTable" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Espèce</th>
+                    <th>Nombre</th>
+                    <th>Provenance</th>
+                    <th>Destination</th>
+                    <th>Mode</th>
+                    <th>État Sanitaire</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dep in derniers_deplacements %}
+                <tr>
+                    <td>{{ dep.date_deplacement }}</td>
+                    <td>{{ dep.espece }}</td>
+                    <td>{{ dep.nombre_animaux }}</td>
+                    <td>{{ dep.commune_provenance }}</td>
+                    <td>{{ dep.commune_destination }}</td>
+                    <td>{{ dep.get_mode_transport_display }}</td>
+                    <td>
+                        {% if dep.maladie_detectee == "OUI" %}
+                            <span class="badge bg-danger">Suspect</span>
+                        {% else %}
+                            <span class="badge bg-success">Sain</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 📈 Graphiques -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <h5>📊 Répartition des Modes de Transport</h5>
+            {% if transport_chart %}
+                <img src="data:image/png;base64,{{ transport_chart }}" class="img-fluid">
+            {% else %}
+                <p class="text-muted">Pas de données disponibles.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h5>🧪 Surveillance Sanitaire</h5>
+            {% if sanitary_chart %}
+                <img src="data:image/png;base64,{{ sanitary_chart }}" class="img-fluid">
+            {% else %}
+                <p class="text-muted">Pas de données sanitaires disponibles.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 🗺️ Carte Folium -->
+    <div class="row">
+        <div class="col-12">
+            <h5>📍 Carte des Mouvements d’Animaux</h5>
+            <div class="card card-body">
+                {{ movement_map|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📊 Script DataTables -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $('#deplacementTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/fr-FR.json'
+            }
+        });
+    });
+</script>
+{% endblock %}

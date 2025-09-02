@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  {% include "materiel/_messages.html" %}
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Dotations de matériel par région</h3>
+    <a class="btn btn-primary" href="{% url 'dotation_create' %}">+ Nouvelle dotations</a>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+      <label class="form-label">Région</label>
+      <select name="region" class="form-select">
+        <option value="">Toutes</option>
+        {% for r in regions %}
+          <option value="{{ r.id }}" {% if r.id|stringformat:'s' == region_id %}selected{% endif %}>{{ r.Nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Type de matériel</label>
+      <select name="type" class="form-select">
+        <option value="">Tous</option>
+        {% for t in types %}
+          <option value="{{ t.id }}" {% if t.id|stringformat:'s' == type_id %}selected{% endif %}>{{ t.nom }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Du</label>
+      <input type="date" name="d1" value="{{ d1 }}" class="form-control">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Au</label>
+      <input type="date" name="d2" value="{{ d2 }}" class="form-control">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Recherche</label>
+      <div class="input-group">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Mot-clé">
+        <button class="btn btn-outline-secondary">OK</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table table-bordered table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Campagne</th>
+        <th>Date de dotation</th>
+        <th>Région</th>
+        <th>Type de matériel</th>
+        <th class="text-end" style="width:140px">Quantité</th>
+        <th style="width:170px" class="text-end">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in dotations %}
+      <tr>
+        <td>{{ d.campagne }}</td>
+        <td>{{ d.date_dotation|date:"d/m/Y" }}</td>
+        <td>{{ d.region.Nom }}</td>
+        <td>{{ d.type_materiel.nom }}</td>
+        <td class="text-end">{{ d.quantite }}</td>
+        <td class="text-end">
+  <div class="btn-group" role="group">
+    <a href="{% url 'dotation_update' d.id %}" 
+       class="btn btn-sm btn-primary" title="Modifier">
+      <i class="fa fa-edit"></i> Modifier
+    </a>
+    <a href="{% url 'dotation_delete' d.id %}" 
+       class="btn btn-sm btn-danger" title="Supprimer"
+       onclick="return confirm('Confirmez-vous la suppression de cette dotation ?');">
+      <i class="fa fa-trash"></i> Supprimer
+    </a>
+  </div>
+</td>
+
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">Aucune dotation.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if dotations.paginator.num_pages > 1 %}
+  <nav>
+    <ul class="pagination">
+      {% if dotations.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ dotations.previous_page_number }}">Précédent</a></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ dotations.number }}/{{ dotations.paginator.num_pages }}</span></li>
+      {% if dotations.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ dotations.next_page_number }}">Suivant</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  {% include "materiel/_messages.html" %}
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Dotations en doses de vaccin</h3>
+    <a class="btn btn-primary" href="{% url 'dose_create' %}">+ Nouvelle dotation</a>
+  </div>
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Campagne</label>
+      <select name="campagne" class="form-select">
+        <option value="">Toutes</option>
+        {% for c in campagnes %}
+          <option value="{{ c.id }}" {% if c.id|stringformat:'s' == campagne_id %}selected{% endif %}>
+            {{ c.Campagne }} – {{ c.get_type_campagne_display }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Maladie</label>
+      <select name="maladie" class="form-select">
+        <option value="">Toutes</option>
+        {% for m in maladies %}
+          <option value="{{ m.id }}" {% if m.id|stringformat:'s' == maladie_id %}selected{% endif %}>
+            {{ m.Maladie }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Du</label>
+      <input type="date" name="d1" class="form-control" value="{{ d1 }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Au</label>
+      <input type="date" name="d2" class="form-control" value="{{ d2 }}">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Recherche</label>
+      <div class="input-group">
+        <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Campagne, maladie, observations…">
+        <button class="btn btn-outline-secondary">OK</button>
+      </div>
+    </div>
+  </form>
+
+  <table class="table table-bordered table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Campagne</th>
+        <th>Maladie</th>
+        <th class="text-end" style="width:160px;">Quantité (doses)</th>
+        <th class="text-end" style="width:170px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in dotations %}
+      <tr>
+        <td>{{ d.date_dotation|date:"d/m/Y" }}</td>
+        <td>{{ d.campagne.Campagne }} – {{ d.campagne.get_type_campagne_display }}</td>
+        <td>{{ d.maladie.Maladie }}</td>
+        <td class="text-end">{{ d.quantite_doses }}</td>
+       <td class="text-end">
+  <div class="btn-group" role="group">
+    <a href="{% url 'dose_update' d.id %}" 
+       class="btn btn-sm btn-primary" title="Modifier">
+      <i class="fa fa-edit"></i> Modifier
+    </a>
+    <a href="{% url 'dose_delete' d.id %}" 
+       class="btn btn-sm btn-danger" title="Supprimer"
+       onclick="return confirm('Confirmez-vous la suppression ?');">
+      <i class="fa fa-trash"></i> Supprimer
+    </a>
+  </div>
+</td>
+
+      </tr>
+      {% empty %}
+      <tr><td colspan="5">Aucune dotation.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if dotations.paginator.num_pages > 1 %}
+  <nav>
+    <ul class="pagination">
+      {% if dotations.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ dotations.previous_page_number }}">Précédent</a></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ dotations.number }}/{{ dotations.paginator.num_pages }}</span></li>
+      {% if dotations.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ dotations.next_page_number }}">Suivant</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

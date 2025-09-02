@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5" style="margin-left: 17%; max-width: 700px;">
+    <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">⚠️ Confirmation de suppression</h4>
+        </div>
+        <div class="card-body">
+            <p class="mb-3">Vous êtes sur le point de supprimer définitivement l’inspection suivante :</p>
+            
+            <ul class="list-group mb-4">
+                <li class="list-group-item"><strong>Infrastructure :</strong> {{ object.infrastructure.nom }}</li>
+                <li class="list-group-item"><strong>Type :</strong> {{ object.infrastructure.type_infrastructure.nom }}</li>
+                <li class="list-group-item"><strong>Date de l’inspection :</strong> {{ object.date_inspection }}</li>
+                <li class="list-group-item"><strong>Inspecteur :</strong> {{ object.inspecteur }}</li>
+                <li class="list-group-item"><strong>État précédent :</strong> 
+                    {% if object.etat_derniere_inspection %}
+                        {{ object.etat_derniere_inspection }}
+                    {% else %}
+                        {{ object.infrastructure.get_etat_initial_display }}
+                    {% endif %}
+                </li>
+                <li class="list-group-item"><strong>État après inspection :</strong> {{ object.etat_inspection }}</li>
+                {% if object.commentaire %}
+                <li class="list-group-item"><strong>Commentaire :</strong><br>{{ object.commentaire|linebreaks }}</li>
+                {% endif %}
+            </ul>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-danger">🗑️ Confirmer la suppression</button>
+                    <a href="{% url 'inspection_list' %}" class="btn btn-secondary">↩ Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

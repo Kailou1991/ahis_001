@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width:680px;">
+  <div class="alert alert-warning">
+    <h4 class="alert-heading">Suppression de dotation</h4>
+    <p>Confirmez-vous la suppression de la dotation du <strong>{{ obj.date_dotation|date:"d/m/Y" }}</strong> – <strong>{{ obj.region.Nom }}</strong> – <strong>{{ obj.type_materiel.nom }}</strong> ?</p>
+    <form method="post" class="d-flex gap-2">
+      {% csrf_token %}
+      <a href="{% url 'dotation_list' %}" class="btn btn-outline-secondary">Annuler</a>
+      <button class="btn btn-danger" type="submit">Supprimer</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

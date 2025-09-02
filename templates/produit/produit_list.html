@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 style="text-align: center;">Formulaire de gestion des produits Vétérinaires</h2>
+     {% with user.groups.all|first as first_group %}
+     {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+
+    <a href="{% url 'produitVet_create' %}" class="btn btn-primary">+Nouveau</a>
+    {% endif %}
+    {% endwith %}
+
+</br></br>
+    <a href="{% url 'export_produitsVet_excel' %}" class="btn btn-success"><i class="fa fa-download"></i> Exporter en Excel</a>
+    <table class="display table table-striped" id="liste_Vaccination">
+        <thead>
+            <tr>
+                <th>Nom du Produit</th>
+                <th>Type Produit</th>
+                <th>Classe</th>
+                <th>Numéro AMM</th>
+                <th>Date de Délivrance AMM</th>
+                <th>Décision AMM</th>
+                <th>Status AMM</th>
+                <th></th>
+                 {% with user.groups.all|first as first_group %}
+                {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+                <th></th>
+                <th></th>
+                {% endif %}
+                {% endwith %}
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for produit in produits %}
+            <tr>
+                <td>{{ produit.nom_du_produit }}</td>
+                <td>{{ produit.type_produit }}</td>
+                <td>{{ produit.classe_therapeutique }}</td>
+                
+               <td>{{ produit.numero_autorisation_AMM }}</td>
+               <td>{{ produit.date_delivrance_AMM|date:"d/m/Y" }}</td>
+               <td>{{ produit.numero_decision_AMM }}</td>
+               
+              <td>{% if produit.type_produit == 'MEDICAMENT' %}{{ produit.status_AMM }}</td>
+              {% else %}None {% endif %}
+                <td><a href="{% url 'produitVet_detail' produit.pk %}" class="btn btn-info btn-sm"><i class="fa fa-table"></i> Détails</a></td>
+                 {% with user.groups.all|first as first_group %}
+                {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+              
+                <td> <a href="{% url 'produitVet_update' produit.pk %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Modifier</a></td>
+                <td><a href="{% url 'produitVet_delete' produit.pk %}" class="btn btn-danger btn-sm"><i class="fa fa-warning"></i> Supprimer</a></td>
+            {% endif %}
+           {% endwith %}
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

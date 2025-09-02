@@ -1,0 +1,75 @@
+{% extends '../base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 style="text-align: center;">Formulaire de gestion des opérations de suivi des produits Vétérinaires</h2>
+    {% with user.groups.all|first as first_group %}
+    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+    <a href="{% url 'produit_create' %}" class="btn btn-primary"> +Nouveau</a>
+{% endif %}
+    {% endwith %}
+
+    <table id="liste_Vaccination" class="display fa-table">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Type Produit</th>
+                <th>Classe</th>
+                <th>Opérations</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+                <th>Valeur Fin</th>
+                <th>Date opération</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for produit in produits %}
+            <tr>
+                <td>{{ produit.produit.nom_du_produit }}</td>
+                <td>{{ produit.produit.type_produit }}</td>
+                <td>{{ produit.produit.classe_therapeutique }}</td>
+                <td>{{ produit.type_enregistrement }}</td>
+                <td>
+                    {% if produit.type_enregistrement == 'DOTATION' %}
+                        {{ produit.quantité_de_la_dotation }}
+                    {% elif produit.type_enregistrement == 'FABRICATION' %}
+                        {{ produit.quantité_fabriquée }}
+                    {% elif produit.type_enregistrement == 'IMPORTATION' %}
+                        {{ produit.quantité_importée }}
+                    {% elif produit.type_enregistrement == 'EXPORTATION' %}
+                        {{ produit.quantité_exportée }}
+                    {% endif %}
+                </td>
+                <td>{{ produit.unité_de_la_quantité }}</td>
+                <td>{{ produit.valeur_financiere }}</td>
+               
+                <td>
+                    {% if produit.type_enregistrement == 'DOTATION' %}
+                        {{ produit.date_dotation }}
+                    {% elif produit.type_enregistrement == 'FABRICATION' %}
+                        {{ produit.date_de_fabrication }}
+                    {% elif produit.type_enregistrement == 'IMPORTATION' %}
+                        {{ produit.date_importation }}
+                    {% elif produit.type_enregistrement == 'EXPORTATION' %}
+                        {{ produit.date_exportation }}
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'produit_detail' produit.pk %}" class="btn btn-info btn-sm"><i class="fa fa-table"></i>Détails</a>
+                    {% with user.groups.all|first as first_group %}
+                    {% if first_group.name != 'Directeur Générale des services vétérinaires'  %}
+   
+
+                    <a href="{% url 'produit_update' produit.pk %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i>Modifier</a>
+                    <a href="{% url 'produit_delete' produit.pk %}" class="btn btn-danger btn-sm"><i class="fa fa-warning"></i>Supprimer</a>
+                {% endif %}
+                {% endwith %}
+
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

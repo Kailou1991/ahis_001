@@ -1,0 +1,24 @@
+{% load static %}
+
+{% with user.groups.all|first as first_group %}
+    {% if first_group.name == 'Administrateur Système' %}
+        {% include 'profil/system_admin.html' %}
+    {% elif first_group.name == 'Administrateur Régional' %}
+        {% include 'profil/regional_admin.html' %}
+    {% elif first_group.name == 'Administrateur Départemental' %}
+        {% include 'profil/departemental_admin.html' %}
+    {% elif first_group.name == 'Animateur de la Surveillance' %}
+        {% include 'profil/animateur_admin.html' %}
+    {% elif first_group.name == 'Directeur de la Santé Animale' %}
+        {% include 'profil/dsa_admin.html' %}
+    {% elif first_group.name == 'Gestionnaire des Médicaments' %}
+        {% include 'profil/medicament_admin.html' %}
+    {% elif first_group.name == 'Superviseur de Campagne' %}
+        {% include 'profil/superviseur_admin.html' %}
+    {% elif first_group.name == 'Utilisateur Public' %}
+        {% include 'profil/public_admin.html' %}
+    {% else %}
+        <!-- Afficher une erreur ou une page par défaut -->
+        <p>Groupe non reconnu.</p>
+    {% endif %}
+{% endwith %}

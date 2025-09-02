@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="margin-left: 17%; margin-top: 2%;">
+
+    <!-- Formulaire de filtre -->
+    <div class="row">
+        <div class="col-lg-12">
+            <form method="GET" class="form-inline">
+                <div class="form-group">
+                    <label for="id_maladie">Maladie :</label>
+                    {{ form.maladie }}
+                </div>
+                <div class="form-group" style="margin-left: 15px;">
+                    <label for="id_campagne">Campagne :</label>
+                    {{ form.campagne }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-left: 15px;">Filtrer</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Small boxes (Stat box) -->
+    <div class="row" style="margin-top: 20px;">
+        <!-- Total Objectif -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-aqua">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.total_objectif|default:0 }}</h3>
+                    <p>Total Objectif</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-bag"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+
+        <!-- Total Effectif Vacciné -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-green">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.total_effectif_vaccine|default:0 }}</h3>
+                    <p>Total Vacciné</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-stats-bars"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+
+        <!-- Taux de Réalisation -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-yellow">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.taux_realisation|floatformat:2 }}<sup style="font-size: 20px">%</sup></h3>
+                    <p>Taux de Réalisation</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-pie-graph"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+
+        <!-- Écart -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-red">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.ecart|default:0 }}</h3>
+                    <p>Écart</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-alert"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+    </div><!-- /.row -->
+
+    <!-- Second row -->
+    <div class="row">
+        <!-- Total Effectif KBT -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-blue">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.total_effectif_kbt|default:0 }}</h3>
+                    <p>Total KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-ios-medkit"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+
+        <!-- Taux KBT -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-purple">
+                <div class="inner">
+                    <h3>{{ resultats.aggregate.taux_kbt|floatformat:2 }}<sup style="font-size: 20px">%</sup></h3>
+                    <p>Taux KBT</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-speedometer"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+        </div><!-- ./col -->
+    </div><!-- /.row -->
+
+    <!-- Results Table -->
+    <div class="row" style="margin-top: 2%;">
+        <div class="col-lg-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Maladie</th>
+                        <th>Campagne</th>
+                        <th>Total Objectif</th>
+                        <th>Total Vacciné</th>
+                        <th>Taux de Réalisation (%)</th>
+                        <th>Écart</th>
+                        <th>Total KBT</th>
+                        <th>Taux KBT (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resultat in resultats %}
+                    <tr>
+                        <td>{{ resultat.maladie__Maladie }}</td>
+                        <td>{{ resultat.campagne__Campagne }}</td>
+                        <td>{{ resultat.total_objectif }}</td>
+                        <td>{{ resultat.total_effectif_vaccine }}</td>
+                        <td>{{ resultat.taux_realisation|floatformat:2 }}</td>
+                        <td>{{ resultat.ecart }}</td>
+                        <td>{{ resultat.total_effectif_kbt }}</td>
+                        <td>{{ resultat.taux_kbt|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">Aucun résultat disponible.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div><!-- /.row -->
+
+</div>
+{% endblock %}

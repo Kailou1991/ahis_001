@@ -1,0 +1,188 @@
+{% extends '../base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 1000px; margin-left: 17%;">
+    <h2 class="mb-4 text-primary" style="text-align: center;">{% if update %}Modification des informations d'une{% else %}Enrégistrement d'une nouvelle{% endif %} infrastructure</h2>
+
+    <form method="post" enctype="multipart/form-data" class="shadow p-4 rounded bg-light">
+        {% csrf_token %}
+
+        <fieldset class="mb-4">
+            <legend class="text-dark fs-5">📌 Informations générales</legend>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.nom.label_tag }} {{ form.nom }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.type_infrastructure.label_tag }} {{ form.type_infrastructure }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.type_financement.label_tag }} {{ form.type_financement }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.etat_initial.label_tag }} {{ form.etat_initial }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.date_construction.label_tag }} {{ form.date_construction }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+            <legend class="text-dark fs-5">📍 Localisation</legend>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    {{ form.region.label_tag }} {{ form.region }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.departement.label_tag }} {{ form.departement }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.commune.label_tag }} {{ form.commune }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.localite.label_tag }} {{ form.localite }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    {{ form.latitude.label_tag }} {{ form.latitude }}
+                </div>
+                <div class="col-md-3 mb-3">
+                    {{ form.longitude.label_tag }} {{ form.longitude }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+            <legend class="text-dark fs-5">👤 Informations sur le propriétaire</legend>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.type_proprietaire.label_tag }} {{ form.type_proprietaire }}
+                </div>
+            </div>
+            <div class="row" id="proprietaire_fields">
+                <div class="col-md-6 mb-3">
+                    {{ form.nom_proprietaire.label_tag }} {{ form.nom_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.grade_proprietaire.label_tag }} {{ form.grade_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.adresse_proprietaire.label_tag }} {{ form.adresse_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.telephone_proprietaire.label_tag }} {{ form.telephone_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.email_proprietaire.label_tag }} {{ form.email_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.sexe_proprietaire.label_tag }} {{ form.sexe_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.date_naissance_proprietaire.label_tag }} {{ form.date_naissance_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.piece_identite_proprietaire.label_tag }} {{ form.piece_identite_proprietaire }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.numero_piece_identite.label_tag }} {{ form.numero_piece_identite }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.autorisation_ouverture.label_tag }} {{ form.autorisation_ouverture }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.document_autorisation.label_tag }} {{ form.document_autorisation }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    {{ form.document_justificatif.label_tag }} {{ form.document_justificatif }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="mb-4">
+            <legend class="text-dark fs-5">📎 Documents & Divers</legend>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    {{ form.photo.label_tag }} {{ form.photo }}
+                </div>
+                <div class="col-md-12 mb-3">
+                    {{ form.commentaire.label_tag }} {{ form.commentaire }}
+                </div>
+            </div>
+        </fieldset>
+    </br>
+        <div class="mt-4" style="text-align: center;">
+            <button type="submit" class="btn btn-success" style="margin-right: 10px;">💾 Enregistrer</button>
+            <a href="{% url 'infrastructure_list' %}" class="btn btn-secondary ms-2">↩ Retour</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeField = document.getElementById("id_type_proprietaire");
+        const detailsBlock = document.getElementById("proprietaire_fields");
+
+        const fieldsToToggle = [
+            "id_nom_proprietaire", "id_grade_proprietaire", "id_adresse_proprietaire",
+            "id_telephone_proprietaire", "id_email_proprietaire", "id_piece_identite_proprietaire",
+            "id_numero_piece_identite", "id_date_naissance_proprietaire", "id_sexe_proprietaire",
+            "id_document_justificatif", "id_document_autorisation"
+        ];
+
+        function toggleProprietaireFields() {
+            if (typeField.value === "PRIVEE") {
+                detailsBlock.style.display = "flex";
+                detailsBlock.style.flexWrap = "wrap";
+                fieldsToToggle.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (field) {
+                        field.setAttribute("required", "required");
+                    }
+                });
+            } else {
+                detailsBlock.style.display = "none";
+                fieldsToToggle.forEach(id => {
+                    const field = document.getElementById(id);
+                    if (field) {
+                        field.removeAttribute("required");
+                        field.value = "";
+                    }
+                });
+            }
+        }
+
+        typeField.addEventListener("change", toggleProprietaireFields);
+        toggleProprietaireFields();
+
+        // Cascade région → département → commune
+        const regionSelect = document.getElementById("id_region");
+        const departementSelect = document.getElementById("id_departement");
+        const communeSelect = document.getElementById("id_commune");
+
+        regionSelect.addEventListener("change", function() {
+            fetch(`/api/departements/?region_id=${regionSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    departementSelect.innerHTML = '<option value="">---------</option>';
+                    data.forEach(dept => {
+                        departementSelect.innerHTML += `<option value="${dept.id}">${dept.Nom}</option>`;
+                    });
+                    communeSelect.innerHTML = '<option value="">---------</option>';
+                });
+        });
+
+        departementSelect.addEventListener("change", function() {
+            fetch(`/api/communes/?departement_id=${departementSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    communeSelect.innerHTML = '<option value="">---------</option>';
+                    data.forEach(com => {
+                        communeSelect.innerHTML += `<option value="${com.id}">${com.Nom}</option>`;
+                    });
+                });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{# lims/templates/lims/delegations/panel.html #}
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h5 mb-0">Délégations — Demande {{ demande.code_demande }}</h1>
+    <a href="{% url 'lims:vlims_demandes_planification' %}" class="btn btn-sm">Retour</a>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">Ajouter / Modifier</div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label">Rôle</label>
+              {{ form.role }}
+              <div class="form-text">
+                <strong>analyse_exec</strong> (exécution d’analyses), <strong>saisie_resultats</strong>,
+                <strong>val_tech</strong>, <strong>val_bio</strong>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Utilisateur</label>
+              {{ form.utilisateur }}
+            </div>
+            <div class="form-check mb-3">
+              {{ form.actif }} <label class="form-check-label">Actif</label>
+            </div>
+            <div class="d-flex justify-content-end">
+              <button class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">Délégations existantes</div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Rôle</th>
+                <th>Utilisateur</th>
+                <th>Actif</th>
+                <th>Créé le</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in delegations %}
+              <tr>
+                <td><span class="badge text-bg-secondary">{{ d.role }}</span></td>
+                <td>{{ d.utilisateur.get_username }}</td>
+                <td>
+                  {% if d.actif %}
+                    <span class="badge text-bg-success">Actif</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Inactif</span>
+                  {% endif %}
+                </td>
+                <td>{{ d.cree_le|date:"Y-m-d H:i" }}</td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'lims:delegation_toggle_active' demande.pk d.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-sm {% if d.actif %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                      {% if d.actif %}Désactiver{% else %}Activer{% endif %}
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'lims:delegation_delete' demande.pk d.pk %}" class="d-inline ms-1"
+                        onsubmit="return confirm('Supprimer cette délégation ?');">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-muted text-center py-3">Aucune délégation.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-3 small">
+        <strong>Chronologie conseillée :</strong>
+        <ul class="mb-0">
+          <li><em>Étape 2 — Affectation :</em> déléguer <code>analyse_exec</code> si besoin (Demande au moins <strong>Reçue</strong>).</li>
+          <li><em>Étape 4 — Résultats :</em> déléguer <code>saisie_resultats</code> au Réceptionniste si nécessaire.</li>
+          <li><em>Étape 5 — Validation :</em> déléguer <code>val_tech</code> / <code>val_bio</code> aux superviseurs si mandatés.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

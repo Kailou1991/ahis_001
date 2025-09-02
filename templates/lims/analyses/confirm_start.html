@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="box box-primary">
+  <div class="box-header with-border">
+    <h3 class="box-title">Démarrer l’analyse</h3>
+  </div>
+  <div class="box-body">
+    <p>Voulez-vous démarrer l’analyse <b>{{ analyse.test.code_test }} — {{ analyse.test.nom_test }}</b> ?</p>
+    <p>Demande : <code>{{ analyse.demande.code_demande }}</code></p>
+  </div>
+  <div class="box-footer">
+    <form method="post">
+      {% csrf_token %}
+      <a href="{% url 'lims:vlims_demande_detail' analyse.demande.pk %}" class="btn btn-default">Annuler</a>
+      <button class="btn btn-primary" type="submit">
+        <i class="fa fa-play"></i> Démarrer
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

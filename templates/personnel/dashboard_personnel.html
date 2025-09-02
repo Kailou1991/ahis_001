@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2 style="text-align: center;">Tableau de Bord du Personnel</h2>
+    </br></br>
+    <!-- Formulaire de filtrage -->
+    <form method="post" class="needs-validation mt-4" novalidate style="margin-left: 20%;">
+        {% csrf_token %}
+        <div class="row align-items-end">
+            <div class="col-md-2">
+                <label for="id_annee">Année</label>
+                <select id="annee" name="annee" class="form-control">
+                    <option value="">Toutes</option>
+                    {% for annee in anneeFiltre %}
+
+                         <option value="{{ annee }}" {% if request.POST.annee == selected_annee %}selected{% endif %}>{{ annee }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="id_operation">Région</label>
+                <select id="region" name="region" class="form-control">
+                    <option value="">Toutes</option>
+                    {% for region in region_filtre %}
+                        <option value="{{ region.id }}" {% if request.POST.region == selected_region %}selected{% endif %}>{{ region.Nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary" style="width: 80%; margin-top: 12%;">Filtrer</button>
+            </div>
+        </div>
+    </form>
+    <h2 style="text-align: center;">Statistiques Générales</h2>
+    <p>Nombre total d’employés : {{ total_employes }}</p>
+    
+    <h2>Effectif par Région et Structure</h2>
+    <img src="data:image/png;base64,{{ bar_chart_data }}" alt="Effectif par Région et Structure">
+    
+    <h2>Répartition par Statut</h2>
+    <img src="data:image/png;base64,{{ pie_chart_statut_data }}" alt="Répartition par Statut">
+    
+    <h2>Tableau du Nombre de Personnel</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Subdivision</th>
+                <th>Position</th>
+                <th>Titre</th>
+                <th>Nombre de Personnel</th>
+                <th>Année</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in tableau_personnel_data %}
+            <tr>
+                <td>{% if entry.region__Nom %}
+                    
+                    {{ entry.region__Nom }}
+                    {%  elif entry.departement__Nom %}
+
+                    {{ entry.departement__Nom }}
+                    {%  elif entry.commune__Nom %}
+                    {{ entry.commune__Nom }}
+
+                    {% endif %}
+                </td>
+                <td>{{ entry.position }}</td>
+                <td>{{ entry.titre__nom }}</td>
+                <td>{{ entry.total }}</td>
+                <td>{{ entry.annee }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <h2>Répartition par Titre</h2>
+    <img src="data:image/png;base64,{{ pie_chart_titre_data }}" alt="Répartition par Titre">
+    
+</div>
+{% endblock %}

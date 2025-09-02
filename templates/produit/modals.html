@@ -1,0 +1,137 @@
+{# produit/modals.html #}
+<!-- Modal pour ajouter un nouveau produit -->
+<div class="modal fade" id="addProduitModal" tabindex="-1" role="dialog" aria-labelledby="addProduitModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProduitModalLabel">Ajouter un nouveau produit</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addProduitForm" method="post">
+                    {% csrf_token %}
+                    {% for field in formModalProd %}
+                        {% if field.name != 'user' %}
+                            <div class="form-group">
+                                {{ field.label_tag }}
+                                {{ field|add_class:"form-control" }}
+                                {{ field.errors }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter un nouveau partenaire -->
+<div class="modal fade" id="addPartenaireModal" tabindex="-1" role="dialog" aria-labelledby="addPartenaireModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPartenaireModalLabel">Ajouter un nouveau partenaire</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addPartenaireForm" method="post">
+                    {% csrf_token %}
+                    {% for field in partenaireForm %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field|add_class:"form-control" }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle firme de fabrication -->
+<div class="modal fade" id="addFirmeModal" tabindex="-1" role="dialog" aria-labelledby="addFirmeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFirmeModalLabel">Ajouter une nouvelle firme de fabrication</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addFirmeForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field|add_class:"form-control" }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle structure importatrice -->
+<div class="modal fade" id="addStructureImportModal" tabindex="-1" role="dialog" aria-labelledby="addStructureImportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStructureImportModalLabel">Ajouter une nouvelle structure importatrice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addStructureImportForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field|add_class:"form-control" }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter une nouvelle structure exportatrice -->
+<div class="modal fade" id="addStructureExportModal" tabindex="-1" role="dialog" aria-labelledby="addStructureExportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStructureExportModalLabel">Ajouter une nouvelle structure exportatrice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addStructureExportForm" method="post">
+                    {% csrf_token %}
+                    {% for field in structureForm %}
+                        <div class="form-group">
+                            {{ field.label_tag }}
+                            {{ field|add_class:"form-control" }}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

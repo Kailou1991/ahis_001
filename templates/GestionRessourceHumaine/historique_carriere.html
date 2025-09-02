@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 style="text-align: center;">Historique de Carrière</h2>
+    <h4>Employé: {{ employe.nom }} {{ employe.prenom }}</h4>
+
+    <h3 style="text-align: center;" class="mt-4">Historique de Carrière</h3>
+    <div class="card">
+        <div class="card-body">
+            {% if carrieres %}
+                <table class="table table-striped data-table">
+                    <thead>
+                        <tr>
+                            <th>Type de Changement</th>
+                            <th>Poste Occupé</th>
+                            <th>Date de Début</th>
+                            <th>Date de Fin</th>
+                            <th>Nombre d'Années</th>
+                            <th>Remarque</th>
+                            <th> </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carriere in carrieres %}
+                        <tr>
+                            <td>{{ carriere.type_changement }}</td>
+                            <td>{{ carriere.poste.nom }}</td>
+                            <td>{{ carriere.date_debut|date:"d-m-Y" }}</td>
+                            <td>{{ carriere.date_fin|date:"d-m-Y" }}</td>
+                            <td>{{ carriere.nombre_annees }}</td>
+                            <td>{{ carriere.remarque }}</td>
+                            <td>
+                                <a href="{% url 'supprimer_historique' carriere.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet historique ?');">
+                                    <i class="fa fa-trash"></i> Supprimer
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun historique de carrière enregistré.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <a href="{% url 'liste_employes' %}" class="btn btn-secondary mt-3">Retour à la liste</a>
+</div>
+{% endblock %}

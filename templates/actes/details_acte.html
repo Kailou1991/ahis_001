@@ -1,0 +1,119 @@
+{% extends '../base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container my-5" style="text-align: center; font-size: 14px;">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4>Détails de la demande d'acte</h4>
+        </div>
+        <div class="card-body">
+
+            <!-- Infos principales -->
+            <h5><strong>Demandeur :</strong> {{ demande.nom }} {{ demande.prenom }}</h5>
+            <p><strong>Grade :</strong> {{ demande.grade }}</p>
+            <p><strong>Nationalité :</strong> {{ demande.nationalite }}</p>
+            <p><strong>Contact :</strong> {{ demande.contact }} | {{ demande.email }}</p>
+            <p><strong>Localisation :</strong> {{ demande.region }} - {{ demande.departement }} - {{ demande.commune }}</p>
+            <p><strong>Catégorie :</strong> {{ demande.categorie }} | <strong>Acte :</strong> {{ demande.acte }}</p>
+
+            {% if demande.nom_etablissement %}
+                <p><strong>Établissement :</strong> {{ demande.nom_etablissement }}</p>
+            {% endif %}
+            {% if demande.nom_produit_importe_ou_exporte %}
+                <p><strong>Produit importé/exporté :</strong> {{ demande.nom_produit_importe_ou_exporte }}</p>
+            {% endif %}
+            {% if demande.nom_unité_transformation %}
+                <p><strong>Unité de transformation :</strong> {{ demande.nom_unité_transformation }}</p>
+            {% endif %}
+
+            <!-- Derniers statuts -->
+            <hr>
+            <h5><strong>Derniers statuts par niveau :</strong></h5>
+            {% for suivi in suivis %}
+                <div class="mb-2">
+                    <span>
+                        <strong>{{ suivi.niveau|title }}</strong> |
+                        {{ suivi.get_statut_display }} —
+                        <em>{{ suivi.date_action|date:"d/m/Y H:i" }}</em>
+                    </span>
+                    {% if suivi.motif_rejet %}
+                        <br><span class="text-danger">Motif du rejet : {{ suivi.motif_rejet }}</span>
+                    {% endif %}
+
+                    {% if suivi.statut == "en_cours" %}
+                        {% if suivi.niveau == "departemental" or suivi.niveau == "regional" %}
+                            {% with user.groups.all.0.name as user_role %}
+                                {% if user_role == "Administrateur Système" or user_role == "Agent de suivi de demande" or user_role == "Directeur de la Santé Animale" %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'relancer_niveau' demande.id suivi.niveau %}" class="btn btn-warning btn-sm">
+                                            🔁 Relancer le niveau {{ suivi.niveau|title }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% empty %}
+                <span>Aucun suivi disponible.</span>
+            {% endfor %}
+
+            <!-- Historique -->
+            <hr>
+            <h5><strong>Historique complet :</strong></h5>
+            {% for suivi in historique %}
+                <div>
+                    <span>
+                        <strong>{{ suivi.niveau|title }}</strong> |
+                        {{ suivi.get_statut_display }} —
+                        <em>{{ suivi.date_action|date:"d/m/Y H:i" }}</em>
+                    </span>
+                    {% if suivi.motif_rejet %}
+                        <br><span class="text-danger">Motif du rejet : {{ suivi.motif_rejet }}</span>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <span>Aucun suivi enregistré.</span>
+            {% endfor %}
+
+            <!-- Agents -->
+            <hr>
+            <h5><strong>Agents affectés :</strong></h5>
+            {% for affectation in affectations %}
+                <div class="mb-2">
+                    <span>
+                        {{ affectation.agent.get_full_name }} — le {{ affectation.date_attribution|date:"d/m/Y H:i" }}
+                    </span><br>
+                    <em>{{ affectation.commentaire }}</em>
+                </div>
+            {% empty %}
+                <span>Aucun agent affecté.</span>
+            {% endfor %}
+
+            <!-- Justificatifs -->
+            <hr>
+            <h5><strong>Pièces constitutives :</strong></h5>
+            {% for justificatif in justificatifs %}
+                <div>
+                    <a href="{{ justificatif.fichier.url }}" target="_blank">{{ justificatif.nom }}</a>
+                </div>
+            {% empty %}
+                <span>Aucun justificatif joint.</span>
+            {% endfor %}
+
+            <!-- Document final -->
+            {% if demande.document_final %}
+                <hr>
+                <h5><strong>Document final :</strong></h5>
+                <p><a href="{{ demande.document_final.url }}" target="_blank">📥 Télécharger l'acte signé</a></p>
+            {% endif %}
+
+            <!-- Bouton retour -->
+            <div class="mt-4">
+                <a href="{% url 'liste_demandes' %}" class="btn btn-secondary">⬅ Retour</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

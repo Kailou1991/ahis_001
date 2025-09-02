@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+{% load static %}
+
+  <style>
+    .kpi-box{background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:12px;text-align:center}
+    .kpi-label{color:#6c757d;font-size:12px;margin-bottom:4px}
+    .kpi-value{font-size:22px;font-weight:700;color:#212529;line-height:1}
+    .kpi-sub{color:#6c757d;font-size:11px}
+    .chart-card{border:1px solid #e9ecef;border-radius:8px;padding:10px;height:100%}
+    .chart-card h6{font-weight:600;margin:0 0 8px 0}
+    .chart-img{max-width:100%;height:auto;display:block;margin:0 auto}
+    table.table-sm th, table.table-sm td{vertical-align:middle}
+    .muted{color:#6c757d}
+    .badge-filter{background:#eef2ff;color:#334155;border:1px solid #c7d2fe}
+  </style>
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="m-0">Dashboard – Surveillance (Kobo)</h3>
+    {% if region_session_name or depart_session_name %}
+      <div>
+        {% if region_session_name %}
+          <span class="badge badge-filter">Région (session) : {{ region_session_name }}</span>
+        {% endif %}
+        {% if depart_session_name %}
+          <span class="badge badge-filter">Département (session) : {{ depart_session_name }}</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- FILTRES -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <form method="post" class="row g-2">
+        {% csrf_token %}
+        <div class="col-12 col-md-2">
+          <label class="form-label">{{ form.periode_type.label }}</label>
+          {{ form.periode_type }}
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">{{ form.annee.label }}</label>
+          {{ form.annee }}
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">{{ form.semaine.label }}</label>
+          {{ form.semaine }}
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">{{ form.mois.label }}</label>
+          {{ form.mois }}
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">{{ form.trimestre.label }}</label>
+          {{ form.trimestre }}
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label">{{ form.semestre.label }}</label>
+          {{ form.semestre }}
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">{{ form.region.label }}</label>
+          {{ form.region }}
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">{{ form.maladie.label }}</label>
+          {{ form.maladie }}
+        </div>
+
+        <div class="col-12 mt-2">
+          <button class="btn btn-primary">
+            <i class="bi bi-funnel"></i> Appliquer les filtres
+          </button>
+          {% if start_date and end_date %}
+            <span class="ms-3 muted">
+              Période :
+              <b>{{ start_date|date:"d/m/Y" }}</b> → <b>{{ end_date|date:"d/m/Y" }}</b>
+              {% if region_choice %} | Région : <b>{{ region_choice }}</b>{% endif %}
+              {% if maladie_choice %} | Maladie : <b>{{ maladie_choice }}</b>{% endif %}
+            </span>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="kpi-box">
+        <div class="kpi-label">Foyers</div>
+        <div class="kpi-value">{{ total_foyers|default:"0" }}</div>
+        <div class="kpi-sub">&nbsp;</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-box">
+        <div class="kpi-label">Exposés</div>
+        <div class="kpi-value">{{ total_exposes|default:"0" }}</div>
+        <div class="kpi-sub">&nbsp;</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-box">
+        <div class="kpi-label">Malades</div>
+        <div class="kpi-value">{{ total_malades|default:"0" }}</div>
+        <div class="kpi-sub">&nbsp;</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-box">
+        <div class="kpi-label">Morts</div>
+        <div class="kpi-value">{{ total_morts|default:"0" }}</div>
+        <div class="kpi-sub">Délai médian (signalement→soumission) :
+          <b>{{ median_delay|default:"—" }}</b> j
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRAPHIQUES (images matplolib en base64) -->
+  <div class="row g-3">
+    {% if img_rates %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Taux globaux</h6>
+          <img class="chart-img" alt="Taux globaux" src="data:image/png;base64,{{ img_rates }}">
+          <div class="small muted mt-1">
+            Létalité: {{ taux_letalite|floatformat:1 }}% |
+            Morbidité: {{ taux_morbidite|floatformat:1 }}% |
+            Mortalité: {{ taux_mortalite|floatformat:1 }}%
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if img_region %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Foyers par région</h6>
+          <img class="chart-img" alt="Foyers par région" src="data:image/png;base64,{{ img_region }}">
+        </div>
+      </div>
+    {% endif %}
+
+    {% if img_maladie %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Foyers par maladie</h6>
+          <img class="chart-img" alt="Foyers par maladie" src="data:image/png;base64,{{ img_maladie }}">
+        </div>
+      </div>
+    {% endif %}
+
+    {% if img_trend %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Foyers par mois</h6>
+          <img class="chart-img" alt="Foyers par mois" src="data:image/png;base64,{{ img_trend }}">
+        </div>
+      </div>
+    {% endif %}
+
+    {% if img_hist %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Cas malades par mois</h6>
+          <img class="chart-img" alt="Cas malades par mois" src="data:image/png;base64,{{ img_hist }}">
+        </div>
+      </div>
+    {% endif %}
+
+    {% if img_departement %}
+      <div class="col-12 col-lg-6">
+        <div class="chart-card">
+          <h6>Foyers par département</h6>
+          <img class="chart-img" alt="Foyers par département" src="data:image/png;base64,{{ img_departement }}">
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- TABLEAUX -->
+  <div class="row g-3 mt-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-header"><b>Résumé par maladie</b></div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width:40%">Maladie</th>
+                  <th class="text-end" style="width:12%">Foyers</th>
+                  <th class="text-end" style="width:16%">Exposés</th>
+                  <th class="text-end" style="width:16%">Malades</th>
+                  <th class="text-end" style="width:16%">Morts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in maladie_summary %}
+                  <tr>
+                    <td>{{ r.maladie }}</td>
+                    <td class="text-end">{{ r.foyers }}</td>
+                    <td class="text-end">{{ r.exposes }}</td>
+                    <td class="text-end">{{ r.malades }}</td>
+                    <td class="text-end">{{ r.morts }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5" class="text-center text-muted">Aucune donnée</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-header"><b>Communes les plus touchées</b></div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Région</th>
+                  <th>Commune</th>
+                  <th class="text-end">Foyers</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in maladie_summary_commune %}
+                  <tr>
+                    <td>{{ r.region }}</td>
+                    <td>{{ r.commune }}</td>
+                    <td class="text-end">{{ r.foyers }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" class="text-center text-muted">Aucune donnée</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+{% endblock %}

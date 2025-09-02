@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" style="text-align: center;">
+  <h2>Situation contrôle documentaire des importations – (PIF)</h2>
+
+  <!-- Formulaire de filtre par date -->
+  <form method="get" class="row g-2 mb-4" id="filtre-form">
+    <div class="col-md-3">
+      <label for="date_debut">Date début</label>
+      <input type="date" class="form-control" name="date_debut" value="{{ date_debut }}">
+    </div>
+    <div class="col-md-3">
+      <label for="date_fin">Date fin</label>
+      <input type="date" class="form-control" name="date_fin" value="{{ date_fin }}">
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-outline-primary">Filtrer</button>
+    </div>
+  </form>
+ <div id="print-section">
+  {% if date_debut and date_fin %}
+    <div class="alert alert-info">
+      Affichage des factures entre le {{ date_debut }} et le {{ date_fin }}
+    </div>
+  {% endif %}
+
+ 
+    <h4 class="mt-4 text-success">✅ Factures déjà visées</h4>
+    <table class="table table-bordered table-striped" >
+      <thead>
+        <tr>
+          <th>Structure importatrice</th>
+          <th>Numéro</th>
+          <th>Date visa PIF</th>
+          <th>Contrôlé par</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in visees %}
+          <tr>
+            <td>{{ f.Structure }}</td>
+            <td>{{ f.numero_facture }}</td>
+            <td>{{ f.date_visa_pif|date:"d/m/Y H:i" }}</td>
+            <td>{{ f.vise_par_pif }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">Aucune facture visée.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h4 class="mt-5 text-warning">📋 Factures visées par la DSV mais non encore contrôlées par les PIF</h4>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Structure importatrice</th>
+          <th>Numéro</th>
+          <th>Date visa DSV</th>
+          <th>Visée à la DSV par</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in non_visees %}
+          <tr>
+            <td>{{ f.Structure }}</td>
+            <td>{{ f.numero_facture }}</td>
+            <td>{{ f.date_visa_dsv|date:"d/m/Y" }}</td>
+            <td>{{ f.vise_par_dsv }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">Aucune facture en attente de visa PIF.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="text-end mt-3">
+    <button class="btn btn-outline-secondary" onclick="printSection('print-section')">
+      🖨️ Imprimer ces tableaux
+    </button>
+  </div>
+</div>
+
+<script>
+  function printSection(id) {
+    const content = document.getElementById(id).innerHTML;
+    const original = document.body.innerHTML;
+    document.body.innerHTML = content;
+    window.print();
+    document.body.innerHTML = original;
+    location.reload();
+  }
+</script>
+{% endblock %}

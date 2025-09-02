@@ -1,0 +1,18 @@
+{% extends '../base.html' %}
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Confirmer la Suppression</h2>
+    <p>Êtes-vous sûr de vouloir supprimer l'EPV suivant ?</p>
+    <p><strong>Nom de l'EPV:</strong> {{ epv.nom }}</p>
+    <p><strong>Type:</strong> {{ epv.get_type_epv_display }}</p>
+    <p><strong>Propriétaire:</strong> {{ epv.nom_proprietaire }}</p>
+    <p><strong>Région:</strong> {{ epv.region }}</p>
+    <p><strong>Département:</strong> {{ epv.departement }}</p>
+    <p><strong>Commune:</strong> {{ epv.commune }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Supprimer</button>
+        <a href="{% url 'epv_list' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load monetaires %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">📊 Tableau de bord - des demandes d'actes administratifs</h2>
+<!-- Sélecteur de région -->
+</br>
+<form method="get" class="row g-2 align-items-center mb-4">
+    <!-- Région -->
+    <div class="col-auto">
+        <label for="region" class="form-label mb-0">
+            📍 Région :
+        </label>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <select name="region" id="region" class="form-select">
+            <option value="">Toutes les régions</option>
+            {% for reg in regions %}
+                <option value="{{ reg.id }}" {% if reg.id|stringformat:"s" == region_id %}selected{% endif %}>
+                    {{ reg.Nom }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Bouton -->
+    <div class="col-auto">
+        <button type="submit" class="btn btn-success">
+            <i class="fa fa-filter me-1"></i> Filtrer
+        </button>
+    </div>
+</form>
+
+</br>
+    <!-- KPI Cards -->
+    <div class="row text-center mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">🗂️ Total demandes</h5>
+                    <p class="display-6">{{ total_demandes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">📬 En cours</h5>
+                    <p class="display-6">{{ en_cours }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title">✅ Validées</h5>
+                    <p class="display-6">{{ delivrees }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title">📄 Délivrées</h5>
+                    <p class="display-6">{{ delivrees }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row text-center mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title">❌ Rejets</h5>
+                    <p class="display-6">{{ rejetees }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">🕓 Durée moyenne</h5>
+                    <p class="display-6">
+                        {% if delais_par_niveau|length > 0 %}
+                            {{ delais_par_niveau.0.moyenne|floatformat:1 }} j
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-dark">
+                <div class="card-body">
+                    <h5 class="card-title">💰 Recettes</h5>
+                    
+                    <p class="display-6">{{ recettes|format_montant}} CFA</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">📆 Ce mois</h5>
+                    <p class="display-6">{{ demandes_ce_mois }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📊 Répartition par catégorie -->
+    <hr><h4>📊 Répartition par catégorie d’acte</h4>
+    <table class="table table-bordered">
+        <thead><tr><th>Catégorie</th><th>Nombre</th></tr></thead>
+        <tbody>
+            {% for cat in repartition_categories %}
+                <tr><td>{{ cat.categorie_nom }}</td><td>{{ cat.total }}</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Aucune donnée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 📉 Évolution mensuelle -->
+    <hr><h4>📉 Évolution mensuelle des demandes</h4>
+    <table class="table table-striped">
+        <thead><tr><th>Mois</th><th>Demandes</th></tr></thead>
+        <tbody>
+            {% for mois, total in evolution %}
+                <tr><td>{{ mois }}</td><td>{{ total }}</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Aucune donnée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 📈 Délai moyen par niveau -->
+    <hr><h4>📈 Délai moyen par niveau</h4>
+    <table class="table table-hover">
+        <thead><tr><th>Niveau</th><th>Délai moyen (j)</th></tr></thead>
+        <tbody>
+            {% for niveau in delais_par_niveau %}
+                <tr><td>{{ niveau.niveau }}</td><td>{{ niveau.moyenne|floatformat:1 }}</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Aucune donnée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 💸 Recettes par type d’acte -->
+    <hr><h4>💸 Recettes par type d’acte</h4>
+    <table class="table table-bordered">
+        <thead><tr><th>Type d’acte</th><th>Montant (CFA)</th></tr></thead>
+        <tbody>
+            {% for r in recettes_par_type %}
+                <tr><td>{{ r.acte_nom }}</td><td>{{ r.montant|format_montant }} </td></tr>
+            {% empty %}
+                <tr><td colspan="2">Aucune recette enregistrée</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 🔁 Suivis en attente -->
+    <hr><h4>🔁 Suivis en attente (depuis +3 jours)</h4>
+    <table class="table table-sm table-striped">
+        <thead><tr><th>Demandeur</th><th>Niveau</th><th>Depuis (j)</th><th>Action</th></tr></thead>
+        <tbody>
+            {% for suivi in en_attente %}
+                <tr>
+                    <td>{{ suivi.demande.nom }} {{ suivi.demande.prenom }}</td>
+                    <td>{{ suivi.niveau|title }}</td>
+                    <td>{{ suivi.date_action|timesince }}</td>
+                    <td><a href="{% url 'suivi_et_traitement_demande' suivi.demande.id %}" class="btn btn-warning btn-sm">🔁 Traiter</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4">Aucun suivi en attente</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 📌 Top Agents -->
+    <hr><h4>📌 Top 5 Agents actifs</h4>
+    <table class="table table-striped">
+        <thead><tr><th>Agent</th><th>Demandes traitées</th></tr></thead>
+        <tbody>
+            {% for agent in top_agents %}
+                <tr><td>{{ agent.nom }} {{ agent.prenom }}</td><td>{{ agent.nb }}</td></tr>
+            {% empty %}
+                <tr><td colspan="2">Aucun agent actif</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

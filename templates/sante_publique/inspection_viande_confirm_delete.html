@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 " style="margin-left: 20%;">
+  <div class="card shadow" style="max-width: 500px;">
+    <div class="card-header bg-danger text-white text-center">
+      <h5>❗ Confirmation de suppression</h5>
+    </div>
+    <div class="card-body text-center">
+      <p class="mb-4">
+        Êtes-vous sûr de vouloir supprimer l'inspection :<br>
+        <strong>{{ objet }}</strong> ?
+      </p>
+      <form method="post" class="d-flex justify-content-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
+        <a href="{% url 'liste_inspections_viande' %}" class="btn btn-secondary">↩️ Annuler</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

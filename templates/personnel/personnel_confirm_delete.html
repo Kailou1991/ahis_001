@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="margin-left: 20%;">
+    <h2>Confirmation de Suppression</h2>
+    <div class="alert alert-warning" role="alert">
+        Vous êtes sur le point de supprimer le personnel suivant :
+    </div>
+    <dl class="card">
+        <dt class="col-sm-3">ID</dt>
+        <dd class="col-sm-9">{{ personnel.id }}</dd>
+        <dt class="col-sm-3">Position</dt>
+        <dd class="col-sm-9">{{ personnel.position }}</dd>
+
+
+        <dt class="col-sm-3">Entité Administrative</dt>
+        <dd class="col-sm-9">{{ personnel.Entite_administrative.nom }}</dd>
+
+        <dt class="col-sm-3">Nombre de Personnes</dt>
+        <dd class="col-sm-9">{{ personnel.nbre }}</dd>
+
+        <dt class="col-sm-3">Titre</dt>
+        <dd class="col-sm-9">{{ personnel.titre.nom }}</dd>
+
+        <dt class="col-sm-3">Région</dt>
+        <dd class="col-sm-9">{{ personnel.region }}</dd>
+
+        <dt class="col-sm-3">Département</dt>
+        <dd class="col-sm-9">{{ personnel.departement }}</dd>
+
+        <dt class="col-sm-3">Commune</dt>
+        <dd class="col-sm-9">{{ personnel.commune }}</dd>
+
+        <dt class="col-sm-3">Année</dt>
+        <dd class="col-sm-9">{{ personnel.annee }}</dd>
+    </dl>
+    <form method="post" action="{% url 'personnel_delete' personnel.pk %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <button type="submit" class="btn btn-danger">Confirmer la Suppression</button>
+            <a href="{% url 'personnel_list' %}" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
