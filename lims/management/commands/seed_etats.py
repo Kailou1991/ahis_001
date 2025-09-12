@@ -1,20 +1,21 @@
 # lims/management/commands/seed_etats.py
 from django.core.management.base import BaseCommand
-from lims.models import DemandeEtat   # ✅ correct
+from lims.models import DemandeEtat
 
 ETATS = [
-    ("soumise",           "Soumise",                    10, "bi-inbox",                False),
-    ("recue",             "Reçue",                      20, "bi-box-arrow-in-down",   False),
-    ("affectee",          "Affectée à un analyste",     25, "bi-person-check",        False),
-    ("reaffectee",        "Réaffectée",                 28, "bi-arrow-repeat",        False),  # 🆕
-    ("analyse_demarre",   "Analyse démarrée",           30, "bi-play-fill",           False),
-    ("analyse_terminee",  "Analyse terminée",           35, "bi-flag-checkered",      False),
-    ("resultat_transmis", "Résultat brut transmis",     37, "bi-send",                False),
-    ("resultat_saisi",    "Résultat brut saisi",        38, "bi-pen",                 False),
-    ("valide_tech",       "Validée technique",          40, "bi-check-circle",        False),
-    ("valide_bio",        "Validée biologique",         50, "bi-patch-check",         False),
-    ("rapportee",         "Rapportée",                  60, "bi-file-earmark-text",   True),
-    ("annulee",           "Annulée",                    99, "bi-x-octagon",           True),
+    ("soumise",           "Soumise",                  10, "bi-inbox",              False),
+    ("recue",             "Reçue",                    20, "bi-box-arrow-in-down", False),
+    ("affectee",          "Affectée à un analyste",   25, "bi-person-check",      False),
+    ("reaffectee",        "Réaffectée",               28, "bi-arrow-repeat",      False),
+    ("analyse_demarre",   "Analyse démarrée",         30, "bi-play-fill",         False),
+    ("analyse_terminee",  "Analyse terminée",         35, "bi-flag-checkered",    False),
+    ("resultat_transmis", "Résultat brut transmis",   37, "bi-send",              False),
+    ("resultat_saisi",    "Résultat brut saisi",      38, "bi-pen",               False),
+    ("valide_tech",       "Validée technique",        40, "bi-check-circle",      False),
+    ("valide_bio",        "Validée biologique",       50, "bi-patch-check",       False),
+    # ⚠️ Corrigé : code utilisé par la vue rapport_generate/apply_etat(...)
+    ("rapporte",          "Rapport généré",           60, "bi-file-earmark-text", True),
+    ("annulee",           "Annulée",                  99, "bi-x-octagon",         True),
 ]
 
 class Command(BaseCommand):

@@ -1,0 +1,436 @@
+{% extends '../base.html' %}
+{% load static numfmt humanize %}
+{% block content %}
+  <style>
+    .filter-row .form-select{min-width:220px}
+    .kpi-card .value{font-size:1.6rem;font-weight:700;line-height:1}
+    .kpi-card .label{opacity:.85}
+    .kpi-card .bar{height:4px;border-radius:3px;overflow:hidden;background:rgba(255,255,255,.35)}
+    .kpi-card .bar>span{display:block;height:100%}
+
+    /* zone carte */
+    .leaflet-container{height:420px; width:100%;}
+    .map-card .card-body{position:relative}
+    .map-fallback{display:none} /* on ne montre le PNG qu’en cas d’échec JSON */
+
+    /* Légende Leaflet */
+    .map-legend{
+      background: rgba(255,255,255,.95);
+      padding: 8px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.15);
+      font-size: .85rem;
+      line-height: 1.1;
+      max-width: 240px;
+    }
+    .map-legend .title{ font-weight: 600; margin-bottom: 6px; }
+    .map-legend .row{ display:flex; align-items:center; gap:8px; margin:6px 0; }
+    .map-legend .dot{
+      display:inline-block; border-radius:50%;
+      background:#3388ff; opacity:.6; border:1px solid #3388ff;
+      flex:0 0 auto;
+    }
+    .map-legend hr{margin:6px 0; opacity:.25}
+    .map-legend .cats{max-height:140px; overflow:auto}
+    .map-legend .cats .row{margin:4px 0}
+    .map-legend .muted{opacity:.7}
+  </style>
+
+<div class="container-fluid py-3">
+  <h1 class="h4 mb-3" style="text-align: center;">{{ view.title }}</h1></br></br>
+
+  <!-- Filtres inline -->
+  <form id="filterForm" class="d-flex flex-wrap align-items-end gap-3" method="get">
+    {% if 'periode' in visible_filters %}
+      <div>
+        <label class="form-label small">Du</label>
+        <input type="date" class="form-control" name="from" value="{{ from_val }}">
+      </div>
+      <div>
+        <label class="form-label small">Au</label>
+        <input type="date" class="form-control" name="to" value="{{ to_val }}">
+      </div>
+    {% endif %}
+
+    {% for fb in filter_blocks %}
+      {% with sel=fb.active.0 %}
+      <div>
+        <label class="form-label small" for="f_{{fb.code}}">{{ fb.code|title }}</label>
+        <select id="f_{{fb.code}}" name="{{fb.code}}" class="form-select" data-code="{{fb.code}}">
+          <option value="" {% if not sel %}selected{% endif %}>— Tous —</option>
+          {% for opt in fb.options %}
+            <option value="{{ opt }}" {% if sel == opt %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endwith %}
+    {% endfor %}
+
+    <div>
+      <label class="form-label small">Lignes / page</label>
+      <select class="form-select" name="per" onchange="document.getElementById('filterForm').submit()">
+        {% for n in per_choices %}
+          <option value="{{ n }}" {% if per == n %}selected{% endif %}>{{ n }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Appliquer</button>
+      <a class="btn btn-outline-secondary" href="{% url 'publishing:view_detail' view.slug %}">Réinitialiser</a>
+    </div>
+  </form>
+
+  <!-- Filtres actifs -->
+  <div class="my-2">
+    <span class="fw-semibold me-2">Filtres actifs :</span>
+    {% if active_filters %}
+      {% for k,v in active_filters.items %}
+        {% if k == 'periode' %}
+          {% with from=v.0 to=v.1 %}{% if from or to %}
+            <span class="badge text-bg-primary me-1">{{ k }} : {{ from|default:"…" }} → {{ to|default:"…" }}</span>
+          {% endif %}{% endwith %}
+        {% else %}
+          <span class="badge text-bg-primary me-1">{{ k }} : {{ v|join:", " }}</span>
+        {% endif %}
+      {% endfor %}
+    {% else %}
+      <span class="badge text-bg-secondary">Aucun</span>
+    {% endif %}
+  </div>
+
+  <!-- KPI CARDS -->
+  {% if kpi_cards %}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3 mb-3">
+    {% for k in kpi_cards %}
+      <div class="col">
+        <div class="card shadow-sm text-white kpi-card bg-{{ k.color }}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="label">{{ k.title }}</div>
+              <span class="badge bg-light text-{{ k.color }}">{{ k.agg|upper }}</span>
+            </div>
+            <div class="value mt-2">{{ k.value|fr_number:0 }}</div>
+            {% if k.pct is not None %}
+              <div class="bar mt-3"><span style="width: {{ k.pct }}%; background: rgba(255,255,255,.9)"></span></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Widgets -->
+  <h2 class="h6 mt-3">Widgets</h2>
+  <div class="row row-cols-1 row-cols-lg-2 g-3 mb-3">
+    {% for w in widgets_graph %}
+      <div class="col">
+        <div class="card h-100 {% if w.type == 'map' %}map-card{% endif %}">
+          {% if w.config.title %}<div class="card-header py-2">{{ w.config.title }}</div>{% endif %}
+          <div class="card-body">
+
+            {% if w.type == 'map' %}
+              {# --- Carte Leaflet --- #}
+              <div id="map-{{ w.id }}" class="leaflet-container"
+                   data-geo-url="{% url 'publishing:widget_png' view.slug w.id %}{% if qs %}?{{ qs }}&fmt=json{% else %}?fmt=json{% endif %}"
+                   data-fallback-src="{% url 'publishing:widget_png' view.slug w.id %}{% if qs %}?{{ qs }}{% endif %}">
+              </div>
+              <img class="img-fluid map-fallback"
+                   alt="map-fallback"
+                   src="{% url 'publishing:widget_png' view.slug w.id %}{% if qs %}?{{ qs }}{% endif %}">
+            {% else %}
+              {# --- PNG (line/bar/pie) --- #}
+              <img class="img-fluid" alt="{{ w.type }}"
+                   src="{% url 'publishing:widget_png' view.slug w.id %}{% if qs %}?{{ qs }}{% endif %}">
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col"><div class="text-muted">Aucun widget activé.</div></div>
+    {% endfor %}
+  </div>
+
+  {# ======= TABLES PAR WIDGET ======= #}
+  {% if tables and tables|length %}
+    {% for t in tables %}
+      <h2 class="h6 mt-3">{{ t.title }}</h2>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle">
+          <thead class="table-light">
+            <tr>{% for h in t.headers %}<th>{{ h }}</th>{% endfor %}</tr>
+          </thead>
+          <tbody>
+            {% for row in t.rows %}
+              <tr>
+                {% for cell in row %}
+                  <td>{{ cell|fr_number:"-1" }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr><td colspan="{{ t.headers|length }}" class="text-muted">Aucune donnée</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% with p=t.page_obj %}
+        {% if p and p.paginator.num_pages > 1 %}
+          <nav aria-label="Pagination">
+            <ul class="pagination pagination-sm">
+              <li class="page-item {% if not p.has_previous %}disabled{% endif %}">
+                {% if p.has_previous %}
+                  <a class="page-link"
+                     href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}tpage_{{ t.id }}={{ p.previous_page_number }}">
+                     Précédent
+                  </a>
+                {% else %}<span class="page-link">Précédent</span>{% endif %}
+              </li>
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ p.number }} / {{ p.paginator.num_pages }}</span>
+              </li>
+              <li class="page-item {% if not p.has_next %}disabled{% endif %}">
+                {% if p.has_next %}
+                  <a class="page-link"
+                     href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}tpage_{{ t.id }}={{ p.next_page_number }}">
+                     Suivant
+                  </a>
+                {% else %}<span class="page-link">Suivant</span>{% endif %}
+              </li>
+            </ul>
+          </nav>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+  {% else %}
+    {# ======= FALLBACK : table par défaut ======= #}
+    <h2 class="h6">Table</h2>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead class="table-light">
+          <tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for cell in row %}
+                <td>{{ cell|fr_number:"-1" }}</td>
+              {% endfor %}
+            </tr>
+          {% empty %}
+            <tr><td colspan="{{ headers|length }}" class="text-muted">Aucune donnée</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj %}
+    <nav aria-label="Pagination">
+      <ul class="pagination pagination-sm">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+          {% if page_obj.has_previous %}
+            <a class="page-link" href="?{{ qs_no_page }}{% if qs_no_page %}&{% endif %}page={{ page_obj.previous_page_number }}{% if per %}&per={{ per }}{% endif %}">Précédent</a>
+          {% else %}<span class="page-link">Précédent</span>{% endif %}
+        </li>
+        {% for num in page_obj.paginator.page_range %}
+          <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?{{ qs_no_page }}{% if qs_no_page %}&{% endif %}page={{ num }}{% if per %}&per={{ per }}{% endif %}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+          {% if page_obj.has_next %}
+            <a class="page-link" href="?{{ qs_no_page }}{% if qs_no_page %}&{% endif %}page={{ page_obj.next_page_number }}{% if per %}&per={{ per }}{% endif %}">Suivant</a>
+          {% else %}<span class="page-link">Suivant</span>{% endif %}
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+  {% endif %}
+
+  {% if exports %}
+  <div class="mt-2">
+    <span class="fw-semibold me-2">Exports :</span>
+    {% for e in exports %}
+      <a class="btn btn-outline-secondary btn-sm me-1" href="{% url 'publishing:export_view' view.slug e.id %}">
+        {{ e.name }} ({{ e.format|upper }})
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{# Bootstrap #}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{# Leaflet en local #}
+<link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+<script defer src="{% static 'js/leaflet.js' %}"></script>
+
+<script>
+  // -------- Cascade dynamique
+  const order = [{% for fb in filter_blocks %}'{{ fb.code }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+  function val(id){const e=document.getElementById('f_'+id);return e? (e.value||null):null}
+  async function reloadOptions(target){
+    const idx=order.indexOf(target), parents=order.slice(0,idx), p=new URLSearchParams();
+    parents.forEach(k=>{const v=val(k); if(v!==null) p.append(k,v);});
+    const base="{% url 'publishing:filter_options_json' view.slug '___' %}";
+    const url=base.replace('___',encodeURIComponent(target))+(p.toString()?('?'+p.toString()):'');
+    const r=await fetch(url); if(!r.ok) return; const data=await r.json();
+    const sel=document.getElementById('f_'+target); if(!sel) return;
+    const cur=sel.value; sel.innerHTML='';
+    const o=document.createElement('option'); o.value=''; o.textContent='— Tous —'; sel.appendChild(o);
+    (data.options||[]).forEach(v=>{const opt=document.createElement('option'); opt.value=v; opt.textContent=v; sel.appendChild(opt);});
+    sel.value=(data.options||[]).includes(cur)?cur:'';
+  }
+  order.forEach((code,i)=>{
+    const el=document.getElementById('f_'+code); if(!el) return;
+    el.addEventListener('change', async ()=>{
+      for(const child of order.slice(i+1)){
+        const s=document.getElementById('f_'+child); if(s) s.value='';
+        await reloadOptions(child);
+      }
+    });
+  });
+
+  // -------- Initialisation Leaflet (cartes)
+  window.addEventListener('load', () => {
+    if (typeof L !== 'undefined' && L.Icon && L.Icon.Default) {
+      L.Icon.Default.imagePath = "{% static 'css/images/' %}";
+    }
+
+    document.querySelectorAll('[id^="map-"][data-geo-url]').forEach(async (el) => {
+      const geoUrl = el.getAttribute('data-geo-url');
+      const fallbackImg = el.parentElement.querySelector('.map-fallback');
+
+      // couleur stable par nom de catégorie
+      const hashColor = (str) => {
+        let h=0; const s=String(str||'');
+        for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0;
+        const r=50+(h & 0x7F), g=50+((h>>8)&0x7F), b=50+((h>>16)&0x7F);
+        return `rgb(${r},${g},${b})`;
+      };
+
+      try {
+        const resp = await fetch(geoUrl, {credentials:'same-origin'});
+        if (!resp.ok) throw new Error('no json');
+        const payload = await resp.json();
+        const pts = (payload && payload.points) ? payload.points : payload;
+
+        if (!Array.isArray(pts) || !pts.length) throw new Error('empty');
+        if (typeof L === 'undefined') throw new Error('leaflet-missing');
+
+        const map = L.map(el.id, {zoomControl:true});
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        const values = pts.map(p => Number(p.val||p.value||0)).filter(v=>!isNaN(v));
+        const vmax = values.length ? Math.max(...values) : 1;
+        const size = (v) => Math.max(10, (v / (vmax || 1)) * 300);
+
+        const bounds = [];
+        pts.forEach(p => {
+          const lon = Number(p.lon ?? p.lng ?? p.longitude),
+                lat = Number(p.lat ?? p.latitude);
+          const val = Number(p.val ?? p.value ?? 0);
+          const cat = p.cat ?? p.category ?? null;
+          if (isNaN(lon) || isNaN(lat)) return;
+
+          const r = Math.sqrt(size(val))/2;
+          const color = (cat==null || cat==='') ? '#2a7fff' : hashColor(cat);
+          const marker = L.circleMarker([lat, lon], {
+            radius:r, opacity:1, fillOpacity:0.55, color:color, fillColor:color, weight:1
+          });
+          const name = p.name || p.label || '';
+          const labelLines = [];
+          if (name) labelLines.push(name);
+          if (!isNaN(val)) labelLines.push(String(val));
+          if (cat!=null && String(cat).trim()!=='') labelLines.push('<i>'+String(cat)+'</i>');
+          marker.bindPopup(labelLines.join('<br>'));
+          marker.addTo(map);
+          bounds.push([lat, lon]);
+        });
+
+        // ---- Légende (échelle + catégories) ----
+        const fmt = (n)=> new Intl.NumberFormat('fr-FR').format(Math.round(n));
+
+        // Ticks (min / med / max) pour taille
+        const ticks = (() => {
+          const vs = values.filter(v => v > 0).sort((a,b)=>a-b);
+          if (!vs.length) return [1, 2, 3];
+          const min = vs[0];
+          const med = vs[Math.floor(vs.length * 0.5)];
+          const max = vs[vs.length - 1];
+          const uniq = [min, med, max].filter((v,i,a)=> a.indexOf(v) === i);
+          return uniq;
+        })();
+
+        // Catégories : on privilégie payload.cats [{name, weight}] si présent
+        let catsShown = [];
+        if (payload && Array.isArray(payload.cats) && payload.cats.length){
+          catsShown = payload.cats
+            .slice()
+            .sort((a,b)=>(b.weight||0)-(a.weight||0))
+            .map(c => String(c.name));
+        } else {
+          const weights = {};
+          pts.forEach(p => {
+            const c = p.cat ?? p.category;
+            if (c==null || String(c).trim()==='') return;
+            const v = Number(p.val||0);
+            weights[String(c)] = (weights[String(c)]||0) + (isNaN(v)?0:v);
+          });
+          catsShown = Object.entries(weights).sort((a,b)=>b[1]-a[1]).map(([k])=>k);
+        }
+        const MAX_CATS = 12;
+        const catsMore = Math.max(0, catsShown.length - MAX_CATS);
+        catsShown = catsShown.slice(0, MAX_CATS);
+
+        const legend = L.control({position:'bottomright'});
+        legend.onAdd = function(){
+          const div = L.DomUtil.create('div','map-legend');
+          const title = (payload && payload.title) ? payload.title : 'Échelle (taille → valeur)';
+          let html = `<div class="title">${title}</div>`;
+          // Échelle
+          ticks.forEach(t => {
+            const r = Math.sqrt(Math.max(10, (t / (vmax || 1)) * 300))/2;
+            html += `<div class="row">
+                       <span class="dot" style="width:${2*r}px;height:${2*r}px"></span>
+                       <span>${fmt(t)}</span>
+                     </div>`;
+          });
+          // Catégories
+          if (catsShown.length){
+            html += `<hr><div class="title">Catégories</div><div class="cats">`;
+            catsShown.forEach(c => {
+              const col = hashColor(c);
+              html += `<div class="row">
+                        <span class="dot" style="width:10px;height:10px;background:${col};border-color:${col};opacity:.9"></span>
+                        <span>${c}</span>
+                       </div>`;
+            });
+            if (catsMore>0){
+              html += `<div class="muted">+ ${catsMore} autre(s)</div>`;
+            }
+            html += `</div>`;
+          }
+          div.innerHTML = html;
+          return div;
+        };
+        legend.addTo(map);
+
+        if (bounds.length) map.fitBounds(bounds, {padding:[20,20]}); else map.setView([14.5, -14.5], 6);
+      } catch (e) {
+        if (fallbackImg) {
+          fallbackImg.style.display = 'block';
+          el.style.display = 'none';
+        }
+      }
+    });
+  });
+</script>
+
+{% endblock %}

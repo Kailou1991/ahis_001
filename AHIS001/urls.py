@@ -9,9 +9,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('data_initialization.urls')),
     path('accounts/', include('django.contrib.auth.urls')),  # Inclure les URL de gestion des utilisateurs
-    #path('api/foyer/', include('Foyer.urls')),
-    #path('api/chiffrevaccination/', include('ChiffreVaccination.urls')),
-    path('', include('Foyer.urls')),
     path('', include('DeplacementAnimaux.urls')),
     path('', include('Infrastructure.urls')),
     path('', include('Personnel.urls')),
@@ -28,13 +25,13 @@ urlpatterns = [
     path('', include('aibd.urls')),
     path("", include("visa_importation.urls")),
     path("", include("materiel.urls")),
-    path('kobo/', include('kobo_integration.urls')),
-    #path('modules/', include('generated_apps.urls')),
-    path('modules/vaccination_sn/', include('generated_apps.vaccination_sn.urls', namespace='vaccination_sn')),
-    path('modules/objectif_sn/', include('generated_apps.objectif_sn.urls', namespace='objectif_sn')),
-    path("modules/surveillance_sn/", include("generated_apps.surveillance_sn.urls")),
-    path("", include("lims.urls")),
     
+    
+    path("", include("lims.urls")),
+    path("", include("kobo_bridge.urls")),
+     # Namespaces requis par les boutons Admin
+    path("", include(("semantic_layer.urls", "semantic"), namespace="semantic")),
+    path("", include(("publishing.urls", "publishing"), namespace="publishing")),
 
     
     ]

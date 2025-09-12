@@ -8,7 +8,6 @@ from django.db.models.functions import TruncMonth
 from django.http import HttpResponse
 from .models import DeplacementAnimal, Espece
 from .form import DeplacementAnimauxForm
-from Foyer.models import Foyer
 from datetime import date
 import matplotlib.pyplot as plt
 import numpy as np
@@ -40,48 +39,10 @@ def deplacementanimaux_detail(request, pk):
 def deplacementanimaux_create(request):
     form = DeplacementAnimauxForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
-        deplacement = form.save()
-
-        # Création automatique du foyer suspect si maladie renseignée
-        if deplacement.maladie_suspectee:
-            foyer = Foyer.objects.create(
-                date_rapportage=now().date(),
-                maladie=deplacement.maladie_suspectee,
-                espece=deplacement.espece,
-                region=deplacement.region_destination,
-                departement=deplacement.departement_destination,
-                commune=deplacement.commune_destination,
-                localite=deplacement.etablissement_destination or "Non renseigné",
-                lieu_suspicion="Poste de controle frontalier",
-                nom_lieu_suspicion=deplacement.etablissement_destination or "",
-
-                # Coordonnées du poste de contrôle
-                latitude=deplacement.latitude_poste_controle,
-                longitude=deplacement.longitude_poste_controle,
-
-                effectif_troupeau=deplacement.nombre_animaux or 0,
-                nbre_sujets_malade=deplacement.nombre_animaux_malades or 0,
-                nbre_sujets_traites=deplacement.nombre_animaux_traites or 0,
-                nbre_sujets_vaccines=deplacement.nombre_animaux_vaccines or 0,
-                nbre_sujets_en_quarantaine=deplacement.nombre_animaux_quarantaine or 0,
-                mesure_controle=[code.strip() for code in deplacement.mesures_prises.split(',')] if deplacement.mesures_prises else [],
-                vaccinations_recentes='NON',
-                nature_prelevement='autre',
-                prelevement_envoye='NON',
-                resultat_laboratoire='NON',
-                absence_reactifs='NON',
-                fichier_resultat=None,
-                chiffre_kbt=True,
-                idkobo=None,
-                user=deplacement.user,
-            )
-            messages.success(request, "Déplacement et foyer suspect créés avec succès.")
-        else:
-            messages.success(request, "Déplacement créé avec succès.")
-
+        form.save()
         return redirect('deplacementanimaux_list')
-    
-    return render(request, 'DeplacementAnimaux/deplacementanimaux_form.html', {'form': form})
+    else:
+     return render(request, 'DeplacementAnimaux/deplacementanimaux_form.html', {'form': form})
 
 @login_required
 @group_required('Administrateur Système', 'Administrateur Régional', 'Administrateur Départemental', 'Directeur de la Santé Animale')
@@ -280,7 +241,6 @@ def tableau_de_bord(request):
         ("Total mouvements", total_deplacements, "info", "fa-truck"),
         ("Total animaux déplacés", total_animaux, "primary", "fa-paw"),
         ("Moyenne depla/dep.", moyenne_animaux, "success", "fa-balance-scale"),
-        ("Foyers suspects", cas_suspects, "danger", "fa-biohazard"),
         ("Malades", total_malades, "warning", "fa-stethoscope"),
         ("Quarantaine", total_quarantaine, "secondary", "fa-procedures"),
         ("Certificats vaccin.contrôlés", nb_certif_ctrl, "dark", "fa-clipboard-check"),

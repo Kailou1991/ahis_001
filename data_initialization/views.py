@@ -27,24 +27,19 @@ from Espece.models import Espece
 from Region.models import Region
 from Departement.models import Departement
 from Commune.models import Commune
-from Foyer.models import Foyer
 from Infrastructure.models import Infrastructure
 
 ###utilsation des vues pour le dashbord global
 from DeplacementAnimaux.views import*
 from Infrastructure.views import*
-from Foyer.views import *
 from Personnel.views import*
 from produit.views import*
 from actes_admin.views import liste_demandes
-from Foyer.views import generer_carte_foyers
 from aibd.views import dashboard_aibd
 from sante_publique.views import dashboard_sante_publique
 from lims.views_demandes import demandes_list
 from lims.views_dashboard import dashboard
 from lims.views import demandes_list_affectees
-from generated_apps.surveillance_sn.views_dashboard import dashboard_surveillance
-
 
 from datetime import timedelta
 from typing import Optional, List, Dict
@@ -55,19 +50,6 @@ from django.db.models.functions import Coalesce, Trim
 from django.shortcuts import render
 from django.utils import timezone
 
-# === Adapte ces imports aux noms réels de tes apps ===
-from generated_apps.surveillance_sn.models import (
-    SurveillanceSn,
-    SurveillanceSnChild783b28ae as SurvChild,
-)
-from generated_apps.vaccination_sn.models import (
-    VaccinationSn,
-    VaccinationSnChild0c8ff1d1 as VaccChild,
-)
-from generated_apps.objectif_sn.models import (
-    ObjectifSn,
-    ObjectifSnChild0c8ff1d1 as ObjChild,
-)
 from lims.models import (
     Demande,
     Echantillon,
@@ -115,95 +97,10 @@ def dashboard_general(request):
     # ==================================================
     # SURVEILLANCE (KOBO)
     # ==================================================
-    surv_qs = SurveillanceSn.objects.filter(submission_time__range=(start, end))
-    if region_name:
-        surv_qs = surv_qs.filter(grp3_region__iexact=region_name.strip())
-    if departement_name:
-        surv_qs = surv_qs.filter(grp3_departement__iexact=departement_name.strip())
-
-    surv_count = surv_qs.count()
-    alertes_actives = surv_qs.filter(status__icontains="aler").count()
-
-    top_signes = (
-        surv_qs.values("grp5_liste_signes")
-        .annotate(n=Count("id"))
-        .order_by("-n")[:10]
-    )
-
-    # AGG chiffrées (pas d'expressions dans le template)
-    surv_child = SurvChild.objects.filter(parent__in=surv_qs)
-    agg_surv = surv_child.aggregate(
-        total_malade=Coalesce(Sum("total_malade"), 0, output_field=IntegerField()),
-        fem_ad=Coalesce(Sum("nb_femelles_adultes_mortes"), 0, output_field=IntegerField()),
-        fem_jeunes=Coalesce(Sum("nb_jeunes_femelles_mortes"), 0, output_field=IntegerField()),
-        mal_jeunes=Coalesce(Sum("nb_jeunes_males_morts"), 0, output_field=IntegerField()),
-        mal_ad=Coalesce(Sum("nb_males_adultes_morts"), 0, output_field=IntegerField()),
-    )
-    total_malades = int(agg_surv["total_malade"])
-    total_morts = int(agg_surv["fem_ad"] + agg_surv["fem_jeunes"] + agg_surv["mal_jeunes"] + agg_surv["mal_ad"])
-
+    
     # ==================================================
     # VACCINATION (Objectif vs Réalisé)
     # ==================================================
-    # ⚠️ Filtrer sur (submission_time DANS période) OU (datesaisie DANS période) OU, à défaut, created_at
-    vacc_parents = VaccinationSn.objects.filter(
-        Q(submission_time__range=(start, end)) |
-        Q(datesaisie__range=(start.date(), end.date())) |
-        Q(created_at__range=(start, end))
-    )
-    if region_name:
-        vacc_parents = vacc_parents.filter(grp4_region__iexact=region_name.strip())
-    if departement_name:
-        vacc_parents = vacc_parents.filter(grp4_departement__iexact=departement_name.strip())
-
-    # Enfants liés aux parents retenus
-    vacc_children = VaccChild.objects.filter(parent__in=vacc_parents)
-
-    # Réalisés (NULL-safe) : public + privé ; fallback marques puis calculation
-    agg_vacc = vacc_children.aggregate(
-        v_pub=Coalesce(Sum("vaccine_public"), 0, output_field=IntegerField()),
-        v_pri=Coalesce(Sum("vaccine_prive"), 0, output_field=IntegerField()),
-        marques=Coalesce(Sum("total_marque"), 0, output_field=IntegerField()),
-        calc=Coalesce(Sum("calculation"), 0, output_field=IntegerField()),
-    )
-    vacc_realise = int(agg_vacc["v_pub"]) + int(agg_vacc["v_pri"])
-    if vacc_realise == 0:
-        vacc_realise = int(agg_vacc["marques"]) or int(agg_vacc["calc"])
-
-    # Objectifs / Éligibles (même logique de période : submission_time OU created_at)
-    obj_parents = ObjectifSn.objects.filter(
-        Q(submission_time__range=(start, end)) |
-        Q(created_at__range=(start, end))
-    )
-    if region_name:
-        obj_parents = obj_parents.filter(grp4_region__iexact=region_name.strip())
-    if departement_name:
-        obj_parents = obj_parents.filter(grp4_departement__iexact=departement_name.strip())
-
-    obj_children = ObjChild.objects.filter(parent__in=obj_parents)
-
-    vacc_objectif = int(obj_children.aggregate(total=Coalesce(Sum("effectif_cible"), 0, output_field=IntegerField()))["total"])
-    vacc_eligible = int(obj_children.aggregate(total=Coalesce(Sum("effectif_elligible"), 0, output_field=IntegerField()))["total"])
-
-    couverture_pct = round((vacc_realise / vacc_objectif) * 100, 1) if vacc_objectif else 0.0
-
-    # Top maladies (mêmes enfants filtrés) avec fallback si public/privé à 0
-    top_base = vacc_children.values("maladie_masse").annotate(
-        v_pub=Coalesce(Sum("vaccine_public"), 0, output_field=IntegerField()),
-        v_pri=Coalesce(Sum("vaccine_prive"), 0, output_field=IntegerField()),
-        marques=Coalesce(Sum("total_marque"), 0, output_field=IntegerField()),
-        calc=Coalesce(Sum("calculation"), 0, output_field=IntegerField()),
-    )
-
-    vacc_top_maladies: List[Dict] = []
-    for r in top_base:
-        total = int(r["v_pub"]) + int(r["v_pri"])
-        if total == 0:
-            total = int(r["marques"]) or int(r["calc"])
-        vacc_top_maladies.append({"maladie_masse": r["maladie_masse"], "total": total})
-    vacc_top_maladies.sort(key=lambda x: x["total"], reverse=True)
-    vacc_top_maladies = vacc_top_maladies[:10]
-
     # ==================================================
     # LIMS (Demandes / Échantillons / Confirmées)
     # ==================================================
@@ -248,14 +145,6 @@ def dashboard_general(request):
     # ==================================================
     kpi = {
         "jours": days,
-        "surv_total": surv_count,
-        "surv_alertes": alertes_actives,
-        "surv_malades": total_malades,
-        "surv_morts": total_morts,
-        "vacc_objectif": vacc_objectif,
-        "vacc_eligible": vacc_eligible,
-        "vacc_realise": vacc_realise,
-        "vacc_couverture": couverture_pct,
         "lims_demandes": nb_demandes,
         "lims_echantillons": nb_echantillons,
         "lims_non_conformes": nb_non_conformes,
@@ -265,8 +154,6 @@ def dashboard_general(request):
         "kpi": kpi,
         "start": start,
         "end": end,
-        "top_signes": top_signes,
-        "vacc_top_maladies": vacc_top_maladies,
         "demandes_par_etat": demandes_par_etat,
         "top_matrices": top_matrices,
         "lims_confirme_par_maladie": lims_confirme_par_maladie,

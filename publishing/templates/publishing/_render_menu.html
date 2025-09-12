@@ -1,0 +1,18 @@
+<ul class="sidebar-menu">
+  {% for it in items %}
+    <li class="treeview">
+      <a href="{{ it.url }}">
+        <i class="{{ it.icon_class|default:'fa fa-angle-double-right' }}"></i>
+        <span>{{ it.title }}</span>
+        {% if it.children_render %}<i class="fa fa-angle-left pull-right"></i>{% endif %}
+      </a>
+      {% if it.children_render %}
+        <ul class="treeview-menu">
+          {% for c in it.children_render %}
+            <li><a href="{{ c.url }}"><i class="{{ c.icon_class|default:'fa fa-angle-right' }}"></i> {{ c.title }}</a></li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>

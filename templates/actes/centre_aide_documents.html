@@ -54,16 +54,37 @@
 <div class="container mt-5" style="margin-left: 20%;" >
     
     
-    
-    <div class="text-center mb-4" id="printable-header">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <img src="{% static 'img/drapeau.jpg' %}" alt="Drapeau Sénégal" style="height: 60px;">
-            <div>
-                <h5 class="mb-0 text-uppercase fw-bold">République du Sénégal</h5>
-                <p class="mb-0 fst-italic">Un peuple - un but - Une foi</p>
-            </div>
-            <img src="{% static 'img/armoirie.png' %}" alt="Armoiries Niger" style="height: 60px;">
+    {% load static %}
+
+<div class="text-center mb-4" id="printable-header">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        {# drapeau #}
+        {% if country.drapeau %}
+            <img src="{% static country.drapeau %}"
+                 alt="Drapeau {{ country.pays }}"
+                 style="height: 60px;">
+        {% endif %}
+
+        {# appellation + devise #}
+        <div>
+            <h5 class="mb-0 text-uppercase fw-bold">
+                {{ country.appellation }}
+            </h5>
+            <p class="mb-0 fst-italic">
+                {{ country.devise }}
+            </p>
         </div>
+
+        {# armoirie #}
+        {% if country.armoirie %}
+            <img src="{% static country.armoirie %}"
+                 alt="Armoirie {{ country.pays }}"
+                 style="height: 60px;">
+        {% endif %}
+    </div>
+</div>
+
+    
         <hr>
         <h3 class="text-center text-primary">
             <i class="fa fa-file-text"></i>Pièces à fournir pour l'établissement des actes administratifs vétérinaires
@@ -71,10 +92,10 @@
     </div>
 
     <!-- Filtres -->
-    <form method="get" class="row align-items-end mb-4 g-2">
+    <form method="get" class="row align-items-end mb-4 g-2" style="margin-left: 50px;">
         <div class="col-md-6">
-            <label for="type_acte" class="form-label fw-bold" style="font-size: 15px;">📝 Type d'acte</label>
-            <select name="type_acte" id="type_acte" class="form-select" style="height:30px;">
+            <label for="type_acte" class="form-label fw-bold" style="font-size: 15px;"></label>
+            <select name="type_acte" id="type_acte" class="form-select" style="height:50px;">
                 <option value="">Tous les types</option>
                 {% for t in types_actes %}
                     <option value="{{ t.id }}" {% if t.id|stringformat:"s" == type_acte_id %}selected{% endif %}>

@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <div class="module">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <p><strong>Dataset :</strong> {{ dataset.name }}</p>
+      {{ form.as_p }}
+
+      {% if repeat_candidates %}
+        <fieldset class="module aligned" style="margin-top:12px;">
+          <h3>Répétitions détectées (group repeats Kobo)</h3>
+          <p class="help">
+            Cochez les chemins à <strong>déplier</strong> en lignes (attention : peut multiplier le volume).
+          </p>
+          {% for p in repeat_candidates %}
+            <div>
+              <label>
+                <input type="checkbox" name="repeat_paths" value="{{ p }}"
+                       {% if selected_repeat_paths and p in selected_repeat_paths %}checked{% endif %}>
+                <code>{{ p }}</code>
+              </label>
+            </div>
+          {% empty %}
+            <p><em>Aucune répétition détectée sur l'échantillon.</em></p>
+          {% endfor %}
+        </fieldset>
+      {% endif %}
+
+      <p style="margin-top:12px;">
+        <button type="submit" class="default">Analyser &amp; (éventuellement) créer</button>
+      </p>
+    </form>
+  </div>
+
+  {% if suggestions %}
+    <h2>Suggestions détectées</h2>
+    <div class="module">
+      <h3>Dimensions ({{ suggestions.dimensions|length }})</h3>
+      <ul>
+        {% for d in suggestions.dimensions %}
+          <li><code>{{ d.code }}</code> — path: <code>{{ d.path }}</code> — dtype: {{ d.dtype }} {% if d.is_time %}(time){% endif %}</li>
+        {% empty %}<li><em>Aucune</em></li>{% endfor %}
+      </ul>
+
+      <h3>Mesures ({{ suggestions.measures|length }})</h3>
+      <ul>
+        {% for m in suggestions.measures %}
+          <li><code>{{ m.code }}</code> — path: <code>{{ m.path }}</code> — agg: {{ m.default_agg }}</li>
+        {% empty %}<li><em>Aucune</em></li>{% endfor %}
+      </ul>
+
+      <h3>Filtres ({{ suggestions.filters|length }})</h3>
+      <ul>
+        {% for f in suggestions.filters %}
+          <li><code>{{ f.code }}</code> — dimension: <code>{{ f.dim_code }}</code> — op: {{ f.op }}</li>
+        {% empty %}<li><em>Aucun</em></li>{% endfor %}
+      </ul>
+
+      <p class="help">
+        Astuces : cochez “Déplier toutes les répétitions détectées” pour extraire chaque item des groupes (attention au volume).<br>
+        Utilisez “Renommage des codes” pour imposer vos codes (ex. <code>DateVaccination → date</code>).
+      </p>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -70,7 +70,6 @@ INSTALLED_APPS = [
     "Pays",
     "Laboratoire",
     "TypeTestLabo",
-    "Foyer",
     "Partenaire",
     "DeplacementAnimaux",
     "Infrastructure",
@@ -88,22 +87,19 @@ INSTALLED_APPS = [
     "actes_admin",
     "localisation_api",
     "sante_publique",
-    "integration_kobo",
     "inspection_medicaments",
     "aibd",
     "visa_importation",
     "materiel",
     "alerts",
-    "kobo_integration",
-    "generated_apps",   # agrégateur
     "core_menu",
+    'core',
     "parametre",
     "lims",
+    "kobo_bridge",
+    "semantic_layer",
+    "publishing",
 
-    # Générées automatiquement
-    "generated_apps.vaccination_sn",
-    "generated_apps.objectif_sn",
-    "generated_apps.surveillance_sn",
 ]
 
 # ============
@@ -251,13 +247,20 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/1")
 CELERY_TASK_ALWAYS_EAGER = env_bool("CELERY_TASK_ALWAYS_EAGER", True)  # True en DEV si pas de worker
 
+from celery.schedules import crontab
 CELERY_BEAT_SCHEDULE = {
-    "sync-kobo-every-30min": {
-        "task": "kobo_integration.tasks.sync_all_kobo_data_task",
-        "schedule": crontab(minute="*/30"),
-        "kwargs": {"use_since": True, "overlap_minutes": 5, "limit": None},
+    "pull-kobo-every-15": {
+        "task": "kobo_bridge.tasks.pull_kobo_source",
+        "schedule": 15*60,
+        "args": (1,),
+    },
+    "rebuild-widerow-every-15": {
+        "task": "semantic_layer.tasks.rebuild_widerow",
+        "schedule": 15*60,
+        "args": (1,),  # dataset_id
     },
 }
+
 
 # ============
 # Alertes CAMVAC
@@ -275,3 +278,9 @@ CAMVAC_ALERT_THRESHOLDS = {
 AHIS_RESULTS_ENDPOINT = os.getenv("AHIS_RESULTS_ENDPOINT")  # None par défaut
 AHIS_API_TOKEN = os.getenv("AHIS_API_TOKEN")  # None par défaut
 DEFAULT_FROM_NAME = "Notification AHIS"
+
+
+TEMPLATES[0]["OPTIONS"]["context_processors"] += [
+    "core.context_processors.country_header",
+]
+

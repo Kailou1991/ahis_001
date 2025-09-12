@@ -45,17 +45,43 @@
                 </a>
             </div>
         
-            <!-- Drapeau du Niger au centre -->
-            <div class="text-center flex-grow-1">
-                <img src="{% static 'img/drapeau.jpg' %}" alt="Drapeau du Sénégal" style="height: 30px;">
-                <div class="fw-bold text-uppercase text-dark small mt-1">République du Sénégal</div>
-            </div>
-        
+           
+
+    
             
         </header>
     <body>
 <div class="container mt-5">
-    
+    {% load static %}
+
+<div class="text-center mb-4" id="printable-header">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        {# drapeau #}
+        {% if country.drapeau %}
+            <img src="{% static country.drapeau %}"
+                 alt="Drapeau {{ country.pays }}"
+                 style="height: 60px;">
+        {% endif %}
+
+        {# appellation + devise #}
+        <div>
+            <h5 class="mb-0 text-uppercase fw-bold">
+                {{ country.appellation }}
+            </h5>
+            <p class="mb-0 fst-italic">
+                {{ country.devise }}
+            </p>
+        </div>
+
+        {# armoirie #}
+        {% if country.armoirie %}
+            <img src="{% static country.armoirie %}"
+                 alt="Armoirie {{ country.pays }}"
+                 style="height: 60px;">
+        {% endif %}
+    </div>
+</div>
+
     {% if confirmation %}
       <div class="text-success fs-5 mb-4 text-center">
         ✅ {{ confirmation }}

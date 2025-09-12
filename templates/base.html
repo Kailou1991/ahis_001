@@ -45,11 +45,25 @@
             </div>
         
             <!-- Drapeau du Niger au centre -->
-            <div class="text-center flex-grow-1">
-                <img src="{% static 'img/drapeau.jpg' %}" alt="Drapeau du Sénégal" style="height: 30px;">
-                <div class="fw-bold text-uppercase text-dark small mt-1">République du Sénégal</div>
-            </div>
+            
         
+
+{% get_static_prefix as STATIC_PREFIX %}
+
+<div class="text-center flex-grow-1">
+  <img
+    src="{{ STATIC_PREFIX }}{{ country.drapeau|default:'img/default.png' }}"
+    alt="Drapeau de {{ country.appellation|default:'' }}"
+    style="height: 30px;"
+  >
+  <div class="fw-bold text-uppercase text-dark small mt-1">
+    {{ country.appellation|default:'' }}
+  </div>
+  {# Optionnel: devise #}
+  {# <div class="small text-muted">{{ country.devise|default:'' }}</div> #}
+</div>
+
+            
             <!-- Déconnexion + utilisateur à droite -->
             {% if user.is_authenticated %}
             <div class="text-end">
@@ -59,9 +73,16 @@
                     <i class="fas fa-sign-out-alt"></i> <span>Se déconnecter</span>
                 </a>
             </div>
-           
+            {% with user.groups.all|first as first_group %}
+            {% if first_group.name == 'Administrateur Système' %}
+     
+            <nav class="mb-3">
+  <a class="btn btn-sm btn-outline-secondary" href="/admin/">Admin</a>
+       </nav>
+     {% endif %}
+    {% endwith %}
         </header>
-        
+       
         <div class="wrapper row-offcanvas row-offcanvas-left">
             <!-- Left side column. contains the logo and sidebar -->
             <aside class="left-side sidebar-offcanvas">
@@ -86,14 +107,14 @@
                         {% if first_group.name == 'Administrateur Système' or first_group.name == 'Administrateur Régional' or first_group.name == 'Administrateur Départemental' or first_group.name == 'Superviseur de Campagne' or first_group.name == 'Directeur de la Santé Animale' or first_group.name == 'Directeur Générale des services vétérinaires' %}
      
                         <li class="treeview">
-                            <a href="{% url 'vaccination_sn:stats' %}">
+                            <a href="#">
                                 <i class="fa fa-laptop"></i>
                                 <span>Vaccinations</span>
                                 <i class="fa fa-angle-left pull-right"></i>
                             </a>
                             <ul class="treeview-menu">
                       
-                                 <li><a href="{% url 'objectif_sn:stats_objectifs' %}"><i class="fa fa-angle-double-right"></i> Objectifs</a></li>
+                                 <li><a href="#"><i class="fa fa-angle-double-right"></i> Objectifs</a></li>
                                
                                 {% with user.groups.all|first as first_group %}
                                  {% if first_group.name == 'Administrateur Système' or first_group.name == 'Superviseur de Campagne' or first_group.name == 'Directeur de la Santé Animale' or first_group.name == 'Directeur Générale des services vétérinaires' %}
@@ -102,15 +123,9 @@
                                 <li><a href="{% url 'dose_list' %}"><i class="fa fa-angle-double-right"></i>Dotation vaccin</a></li>
                                {% endif %}
                                {% endwith %}
-                                <li><a href="{% url 'vaccination_sn:stats' %}"><i class="fa fa-angle-double-right"></i>Effectif vacciné</a></li>
-                                 <li><a href="{% url 'vaccination_sn:vaccination_dashboard' %}"><i class="fa fa-angle-double-right"></i>Tableau de bord</a></li>
-                                
-                                 {% with user.groups.all|first as first_group %}
-                                 {% if first_group.name == 'Administrateur Système' or first_group.name == 'Superviseur de Campagne' or first_group.name == 'Directeur de la Santé Animale' or first_group.name == 'Directeur Générale des services vétérinaires' %}
-     
-                                 <li><a href="{% url 'vaccination_sn:rapport_camvac' %}"><i class="fa fa-angle-double-right"></i> Rapport de vaccination</a></li>
-                               {% endif %}
-                               {% endwith %}
+                                <li><a href="#"><i class="fa fa-angle-double-right"></i>Effectif vacciné</a></li>
+                                 <li><a href="#"><i class="fa fa-angle-double-right"></i>Tableau de bord</a></li>
+                               
                             </ul>
                         </li>
                         {% endif %}
@@ -126,11 +141,8 @@
                             </a>
                             <ul class="treeview-menu">
                                 
-                                <li><a href="{% url 'surveillance_sn:stats_surveillance' %}"><i class="fa fa-angle-double-right"></i>Foyers</a></li>
-                                <li><a href="{% url 'surveillance_sn:bulletin_surveillance' %}"><i class="fa fa-angle-double-right"></i>Bulletin épidémiologique</a></li>
-                               
-                                <li><a href="{% url 'surveillance_sn:dashboard_surveillance' %}"><i class="fa fa-angle-double-right"></i>Tableau de bord</a></li>
-                                <li><a href="{% url 'surveillance_sn:surv_export' %}"><i class="fa fa-angle-double-right"></i>Exportation des données</a></li>
+                                <li><a href="#"><i class="fa fa-angle-double-right"></i>Foyers</a></li>
+                                <li><a href="#"><i class="fa fa-angle-double-right"></i>Tableau de bord</a></li>
                             </ul>
                         </li>
                         {% endif %}
@@ -406,6 +418,7 @@
 
                    
                     {% endif %}
+                    
 
                     <main class="flex-grow-1" style="margin-left: 20%;">
                         <div class="container-fluid py-4">
