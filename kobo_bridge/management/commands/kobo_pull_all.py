@@ -9,7 +9,6 @@ from urllib.parse import urlencode, quote
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, models
 from django.utils.timezone import now, make_naive, utc
-from django.utils.dateparse import parse_datetime
 
 import requests
 
@@ -44,58 +43,41 @@ def _odata_entity(server_url: str, asset_uid: str) -> str:
 def _odata_main_table_url(
     server_url: str, asset_uid: str, token: str, session: requests.Session
 ) -> str:
-    """Découvre l’EntitySet principale (souvent 'Submissions')."""
+    """
+    Découvre l’EntitySet principale (souvent 'Submissions'; parfois 'Items' selon instances).
+    On lit le service document et on prend le premier EntitySet, avec préférence Submissions.
+    """
     ent = _odata_entity(server_url, asset_uid)
     r = session.get(ent, headers={"Authorization": f"Token {token}"}, timeout=HTTP_TIMEOUT)
     r.raise_for_status()
     j = r.json()
-    coll = next((x.get("name") for x in j.get("value", []) if x.get("kind") == "EntitySet"), None)
-    if not coll:
-        coll = "Submissions"
-    return ent + quote(coll)
+    value = j.get("value", []) if isinstance(j, dict) else []
+    # Préférence Submissions → Items → premier
+    preferred = None
+    for name in ("Submissions", "Items", "data"):
+        preferred = next((x.get("name") for x in value if x.get("name") == name or x.get("url") == name), None)
+        if preferred:
+            break
+    if not preferred and value:
+        preferred = value[0].get("name") or value[0].get("url")
+    if not preferred:
+        preferred = "Submissions"
+    return ent + quote(preferred)
 
 
-def _iso_odata(dt: Optional[datetime.datetime]) -> Optional[str]:
+def _iso_odata(dt: datetime.datetime | None) -> Optional[str]:
     if dt is None:
         return None
-    # S'assurer que l'heure est UTC et naive au format OData
     if getattr(dt, "tzinfo", None) is not None:
         dt = make_naive(dt.astimezone(utc), timezone=utc)
     return dt.strftime("%Y-%m-%dT%H:%M:%S")
-
-
-def _norm_instance_id(v: Optional[str]) -> Optional[str]:
-    """Normalise l'instance_id: enlève 'uuid:' / décors, retourne en minuscules."""
-    if not v:
-        return None
-    v = str(v).strip()
-    v = v.strip("{}()<>").strip()
-    if v.lower().startswith("uuid:"):
-        v = v[5:]
-    return v.lower()
-
-
-def _parse_dt_any(s: Optional[str]) -> Optional[datetime.datetime]:
-    """Parse une date (ISO, 'Z', offsets). Retourne un datetime aware (UTC) si possible."""
-    if not s:
-        return None
-    dt = parse_datetime(s)
-    if dt is None:
-        try:
-            ds = s.replace("Z", "+00:00")
-            dt = datetime.datetime.fromisoformat(ds)
-        except Exception:
-            return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=utc)
-    return dt
 
 
 def iter_submissions(
     server_url: str,
     asset_uid: str,
     token: str,
-    since_dt: Optional[datetime.datetime],
+    since_dt: datetime.datetime | None,
     page_size: int = DEFAULT_PAGE_SIZE,
 ) -> Iterable[Dict[str, Any]]:
     """
@@ -125,10 +107,10 @@ def iter_submissions(
             j = r.json()
             for item in j.get("value", []):
                 yield item
-            next_url = j.get("@odata.nextLink")
+            next_url = j.get("@odata.nextLink") or j.get("@odata.nextlink") or j.get("@odata.next")
         return
     except Exception:
-        # Fallback REST
+        # Fallback REST si OData KO
         pass
 
     # ---- 2) REST JSON ----
@@ -136,15 +118,18 @@ def iter_submissions(
         f"{server_url.rstrip('/')}/api/v2/assets/{asset_uid}/data/",
         f"{server_url.rstrip('/')}/api/v2/assets/{asset_uid}/data.json",
         f"{server_url.rstrip('/')}/api/v1/data/{asset_uid}",
+        f"{server_url.rstrip('/')}/assets/{asset_uid}/submissions/?format=json",  # legacy
+        f"{server_url.rstrip('/')}/assets/{asset_uid}/data/?format=json",         # legacy
     ]
     params = {"limit": page_size}
     if since_dt:
-        params["_submission_time__gte"] = _iso_odata(since_dt)  # si supporté
+        # Certaines instances REST le supportent ; sinon on filtrera côté client
+        params["_submission_time__gte"] = _iso_odata(since_dt)
 
     next_url = None
     for u in candidates:
         try:
-            r = sess.get(u, headers=auth, params=params, timeout=HTTP_TIMEOUT)
+            r = sess.get(u, headers=auth, params=params if "?" not in u else None, timeout=HTTP_TIMEOUT)
             if r.status_code == 200:
                 next_url = r.url
                 break
@@ -163,7 +148,7 @@ def iter_submissions(
             continue
         r.raise_for_status()
         j = r.json()
-        items = j if isinstance(j, list) else j.get("results") or j.get("data") or []
+        items = j if isinstance(j, list) else j.get("results") or j.get("data") or j.get("submissions") or []
         # Filtre client si besoin
         if since_dt:
             iso = _iso_odata(since_dt)
@@ -188,6 +173,20 @@ def iter_submissions(
 # Extraction champs + persistence
 # ------------------------------
 
+def _normalize_instance_id(iid: Optional[str]) -> Optional[str]:
+    """
+    Normalise l'instanceID (ex: enlève préfixe 'uuid:' ou espaces).
+    """
+    if not iid:
+        return None
+    iid = str(iid).strip()
+    if iid.lower().startswith("uuid:"):
+        iid = iid[5:]
+        # On garde un format standard avec préfixe pour éviter collision éventuelle
+        iid = f"uuid:{iid}"
+    return iid
+
+
 def _extract_instance_id(row: Dict[str, Any]) -> Optional[str]:
     iid_candidates = [
         row.get("meta/instanceID"),
@@ -201,39 +200,47 @@ def _extract_instance_id(row: Dict[str, Any]) -> Optional[str]:
         _id = row.get("_id") or row.get("id")
         if _id is not None:
             instance_id = f"oid:{_id}"
-    return _norm_instance_id(instance_id)
+    return _normalize_instance_id(instance_id)
 
 
-def _extract_submitted_at(row: Dict[str, Any]) -> Optional[datetime.datetime]:
-    s = (
+def _extract_submitted_at(row: Dict[str, Any]) -> Optional[str]:
+    return (
         row.get("_submission_time")
         or row.get("submission_time")
         or row.get("end")
         or row.get("start")
         or row.get("date_modified")
     )
-    return _parse_dt_any(s)
 
 
 def _objects_from_rows(source: KoboSource, rows: Iterable[Dict[str, Any]]):
     """
-    Prépare deux listes : (news, updates) pour bulk_create / bulk_update
-    Renvoie (to_create, to_update, seen_count)
+    Prépare deux listes : (to_create, to_update) pour bulk_create / bulk_update
+    Renvoie (to_create, to_update, seen_count).
+    Déduplique en mémoire pour éviter les doublons intra-batch.
     """
+    # 1) Collecte + déduplication intra-batch
     instance_ids: List[str] = []
     cache_rows: List[tuple[str, Dict[str, Any]]] = []
+    seen_in_batch: set[tuple[int, str]] = set()  # (source_id, instance_id)
+
     for row in rows:
-        iid = _extract_instance_id(row)  # normalisé
+        iid = _extract_instance_id(row)
         if not iid:
             continue
+        key = (source.pk, iid)
+        if key in seen_in_batch:
+            continue
+        seen_in_batch.add(key)
         instance_ids.append(iid)
         cache_rows.append((iid, row))
 
     if not cache_rows:
         return [], [], 0
 
+    # 2) Existant en base (pour CE batch)
     existing = {
-        _norm_instance_id(obj.instance_id): obj
+        obj.instance_id: obj
         for obj in RawSubmission.objects.filter(source=source, instance_id__in=instance_ids)
     }
 
@@ -241,7 +248,7 @@ def _objects_from_rows(source: KoboSource, rows: Iterable[Dict[str, Any]]):
     to_update: List[RawSubmission] = []
 
     for iid, row in cache_rows:
-        submitted_at = _extract_submitted_at(row)  # datetime aware ou None
+        submitted_at = _extract_submitted_at(row)
         submission_id = row.get("_id") or row.get("id")
         xform_id = row.get("_xform_id_string") or row.get("xform_id") or row.get("form_id")
         form_version = row.get("_version") or row.get("version")
@@ -311,7 +318,7 @@ class Command(BaseCommand):
         since_dt_global: Optional[datetime.datetime] = None
         if since_str:
             try:
-                since_dt_global = datetime.datetime.fromisoformat(since_str.replace("Z", "+00:00"))
+                since_dt_global = datetime.datetime.fromisoformat(since_str)
             except Exception as e:
                 raise CommandError(f"--since invalide: {e}")
         elif backfill_days:
@@ -319,6 +326,7 @@ class Command(BaseCommand):
 
         qs = KoboSource.objects.filter(active=True)
         if sources_filter:
+            # match sur pk OU name
             qs = qs.filter(
                 models.Q(pk__in=[s for s in sources_filter if str(s).isdigit()])
                 | models.Q(name__in=sources_filter)
@@ -355,32 +363,42 @@ class Command(BaseCommand):
                 nonlocal new_, upd_, seen_
                 if not batch_rows:
                     return
+
                 to_create, to_update, count_in = _objects_from_rows(src, batch_rows)
                 seen_ += count_in
-                # Transaction + bulk opérations
+
                 with transaction.atomic():
+                    # --- Créations ---
                     if to_create:
-                        # ---- Option par défaut : tolérer les conflits ----
+                        iids_to_create = [o.instance_id for o in to_create]
+                        before_count = RawSubmission.objects.filter(
+                            source=src, instance_id__in=iids_to_create
+                        ).count()
+
+                        # ⚠️ Ignorer les conflits pour éviter IntegrityError (uniq_source_instance)
                         RawSubmission.objects.bulk_create(
                             to_create,
                             batch_size=1000,
-                            ignore_conflicts=True,  # évite IntegrityError si (source, instance_id) existe déjà
+                            ignore_conflicts=True,
                         )
-                        new_ += len(to_create)
-                        # ---- Option Django 5 (upsert vrai) ----
-                        # RawSubmission.objects.bulk_create(
-                        #     to_create,
-                        #     update_conflicts=True,
-                        #     unique_fields=["source", "instance_id"],
-                        #     update_fields=["submission_id", "submitted_at", "xform_id", "form_version", "payload"],
-                        #     batch_size=1000,
-                        # )
-                        # new_ += len(to_create)
 
+                        after_count = RawSubmission.objects.filter(
+                            source=src, instance_id__in=iids_to_create
+                        ).count()
+                        created_now = max(0, after_count - before_count)
+                        new_ += created_now
+
+                    # --- Mises à jour ---
                     if to_update:
                         RawSubmission.objects.bulk_update(
                             to_update,
-                            fields=["submission_id", "submitted_at", "xform_id", "form_version", "payload"],
+                            fields=[
+                                "submission_id",
+                                "submitted_at",
+                                "xform_id",
+                                "form_version",
+                                "payload",
+                            ],
                             batch_size=1000,
                         )
                         upd_ += len(to_update)
