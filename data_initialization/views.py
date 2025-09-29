@@ -165,6 +165,7 @@ def dashboard_general(request):
    
     return render(request, "homedashboard/home.html", context)
 
+
 #Gestion des groupes utilisateurs
 @group_required('Administrateur Système')
 def system_admin_view(request):
@@ -280,7 +281,6 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-       # Region.objects.filter(Nom='Ouaddaï').delete()
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
@@ -325,7 +325,7 @@ def login_view(request):
             
             
             else:
-                return redirect('login')  # Redirection par défaut
+                return render(request,'base.html')
         else:
             return render(request, 'index.html', {'error': 'Identifiants invalides'})
     return render(request,'index.html')
